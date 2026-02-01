@@ -68,7 +68,7 @@ export default function RootLayout({
         <CalFloatingButton />
         <ThemeSwitcher />
         <main className="flex-auto min-w-0 flex flex-col">
-          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-20 sm:pt-24 pb-4 sm:pb-8">
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-36 sm:pt-44 pb-4 sm:pb-8">
             {children}
             <Footer />
           </div>
