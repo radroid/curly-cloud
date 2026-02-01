@@ -2,8 +2,11 @@
 
 import { getCalApi } from "@calcom/embed-react"
 import { useEffect, useState } from "react"
+import { motion } from "framer-motion"
+import { MessageCircle } from "lucide-react"
 
 export function CalFloatingButton() {
+  const [isHovered, setIsHovered] = useState(false)
   const [colors, setColors] = useState({
     foreground: "15, 23, 42",
     background: "255, 255, 255",
@@ -51,17 +54,6 @@ export function CalFloatingButton() {
     (async function () {
       const cal = await getCalApi({ namespace: "problem-ranter" })
 
-      // Custom styles to match your theme
-      cal("floatingButton", {
-        calLink: "createclub/problem-ranter",
-        config: {
-          layout: "month_view"
-        },
-        buttonText: "Let's talk",
-        buttonColor: `rgb(${colors.foreground})`,
-        buttonTextColor: `rgb(${colors.background})`,
-      })
-
       cal("ui", {
         hideEventTypeDetails: false,
         layout: "month_view",
@@ -86,7 +78,61 @@ export function CalFloatingButton() {
     })()
   }, [colors])
 
-  return null
+  const handleClick = async () => {
+    const cal = await getCalApi({ namespace: "problem-ranter" })
+    cal("modal", {
+      calLink: "createclub/problem-ranter",
+      config: {
+        layout: "month_view"
+      }
+    })
+  }
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <motion.button
+        onClick={handleClick}
+        initial={{ width: 48, height: 48 }}
+        whileHover={{ width: 140 }}
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-center overflow-hidden relative shadow-lg cursor-pointer"
+        style={{
+          borderRadius: 24,
+          backgroundColor: `rgb(${colors.foreground})`,
+        }}
+      >
+        <motion.div
+          className="absolute"
+          animate={{
+            opacity: isHovered ? 0 : 1,
+            scale: isHovered ? 0.8 : 1
+          }}
+          transition={{ duration: 0.2 }}
+        >
+          <MessageCircle
+            size={20}
+            style={{ color: `rgb(${colors.background})` }}
+          />
+        </motion.div>
+
+        <motion.div
+          className="w-full flex justify-center items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isHovered ? 1 : 0 }}
+          transition={{ duration: 0.2, delay: isHovered ? 0.1 : 0 }}
+        >
+          <span
+            className="text-sm font-medium whitespace-nowrap"
+            style={{ color: `rgb(${colors.background})` }}
+          >
+            Let's talk
+          </span>
+        </motion.div>
+      </motion.button>
+    </div>
+  )
 }
 
 
