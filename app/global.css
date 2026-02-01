@@ -56,10 +56,6 @@ html[data-theme='morning'] {
   --orb-center: 30 58 138;
   --orb-date: 107 114 128;
   --orb-clock-bg: 255 255 255;
-  /* Daytime fonts */
-  --font-sans: 'Oxanium', sans-serif;
-  --font-serif: 'Merriweather', serif;
-  --font-mono: 'Fira Code', monospace;
 }
 
 /* Afternoon Theme (12 PM - 6 PM) - Vibrant, energetic daylight */
@@ -97,10 +93,6 @@ html[data-theme='afternoon'] {
   --orb-center: 15 23 42;
   --orb-date: 107 114 128;
   --orb-clock-bg: 255 255 255;
-  /* Daytime fonts */
-  --font-sans: 'Oxanium', sans-serif;
-  --font-serif: 'Merriweather', serif;
-  --font-mono: 'Fira Code', monospace;
 }
 
 /* Night Theme (6 PM - 12 AM) - Warm evening, dusk tones */
@@ -138,8 +130,6 @@ html[data-theme='night'] {
   --orb-center: 248 250 252;
   --orb-date: 148 163 184;
   --orb-clock-bg: 15 23 42;
-  /* Night fonts */
-  --font-sans: 'Montserrat', sans-serif;
 }
 
 /* Starry Theme (12 AM - 6 AM) - Deep night sky with star accents */
@@ -177,8 +167,6 @@ html[data-theme='starry'] {
   --orb-center: 248 250 252;
   --orb-date: 148 163 184;
   --orb-clock-bg: 2 6 23;
-  /* Night fonts */
-  --font-sans: 'Montserrat', sans-serif;
 }
 
 /* Default to morning theme if no theme is set */

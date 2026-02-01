@@ -2,6 +2,7 @@ import './global.css'
 import type { Metadata } from 'next'
 import { JetBrains_Mono } from 'next/font/google'
 import { Navbar } from './components/nav'
+import { ThemeSwitcher } from './components/theme-switcher'
 
 import Footer from './components/footer'
 import { ThemeProvider } from './components/theme-provider'
@@ -62,11 +63,12 @@ export default function RootLayout({
     >
       <body className="antialiased min-h-screen transition-colors duration-300">
         <ThemeProvider />
+        <Navbar />
         <ClockWrapper />
         <CalFloatingButton />
+        <ThemeSwitcher />
         <main className="flex-auto min-w-0 flex flex-col">
-          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-14 sm:pt-24 pb-4 sm:pb-8">
-            <Navbar />
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-20 sm:pt-24 pb-4 sm:pb-8">
             {children}
             <Footer />
           </div>

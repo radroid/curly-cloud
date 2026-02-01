@@ -36,7 +36,7 @@ export function ClockWrapper() {
     <>
       {/* Desktop: Show analog clock */}
       <div
-        className={`hidden sm:block fixed top-4 right-2 sm:top-8 sm:right-4 md:right-8 z-40 transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        className={`hidden sm:block fixed top-4 right-2 sm:top-8 sm:right-4 md:right-8 z-[60] transition-opacity duration-300 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
       >
         <OrbitalClock />
