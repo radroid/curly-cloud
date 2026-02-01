@@ -10,30 +10,33 @@ export default function Page() {
   return (
     <>
       <section className="w-full">
+        {/* Hero Section */}
         <div className="mb-8">
           <h1 className="text-xl sm:text-2xl font-semibold tracking-tighter mb-4">
             I build experiences—both digital and physical—for humans.
           </h1>
           <p className="mb-4 font-semibold" style={{ color: 'rgb(var(--foreground))' }}>
-            AI Product Manager & Product Engineer
+            Full-Stack Engineer · Product Thinker · Builder
           </p>
           <p className="mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            Building and shipping AI-native products across SaaS, tools, and real-world experiences. Open to Product Developer / AI Product Manager roles in Toronto or remote across North America.
+            4+ years shipping web applications from zero to production. I write the code, think about the user, and care about the business outcome. My stack is React, TypeScript, Next.js, Node.js, Python, and PostgreSQL—and lately I've been deep in AI agents and LLM workflows.
+          </p>
+          <p className="mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            I've shipped 10+ products across startups in Toronto and Silicon Valley. From event platforms to AI-powered tools to e-commerce. I don't just write features—I ask why we're building them, ship fast, measure what matters, and iterate.
           </p>
           <p className="mb-6" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            Blend of rigorous engineering and product thinking: translate fuzzy business problems into scoped bets, ship iteratively with design and engineering, and measure impact with data. Comfortable working with LLMs, AI APIs, and analytics to drive roadmap decisions.
+            Open to Full-Stack / AI Developer roles at high-growth startups. Toronto or remote across North America.
           </p>
         </div>
 
-        {/* What I Do Section */}
+        {/* What I Build Section */}
         <div className="mb-8">
-          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-4">What I do</h2>
-          <ul className="space-y-2" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            <li>• <strong>Product discovery</strong>: Talk to users, synthesize qual & quant insights, and define clear problem statements and success metrics.</li>
-            <li>• <strong>AI use-case design</strong>: Identify where AI meaningfully improves UX (automation, summarization, recommendations) and validate value vs. cost.</li>
-            <li>• <strong>Specs & execution</strong>: Write product specs, prioritize roadmaps, and work closely with engineering/design to ship to production.</li>
-            <li>• <strong>Data & experimentation</strong>: Define events, dashboards, and simple experiments to track adoption, accuracy, and retention.</li>
-            <li>• <strong>Go-to-market</strong>: Craft narratives, onboarding flows, and feedback loops for beta/alpha launches.</li>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-4">What I Build</h2>
+          <ul className="space-y-3" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            <li>• <strong>Full-stack applications</strong> — React/Next.js frontends, Node.js/Python backends, PostgreSQL databases. Auth flows, payment integration, real-time features. I ship the whole stack.</li>
+            <li>• <strong>AI-native features</strong> — LLM integrations, AI agents, prompt engineering, workflow automation. I know when AI adds real value and when it's just a buzzword.</li>
+            <li>• <strong>Infrastructure that doesn't break at 3am</strong> — Docker, AWS, CI/CD pipelines, Vercel, Cloudflare. I care about what happens after deploy: monitoring, reliability, and keeping things boring in the best way.</li>
+            <li>• <strong>Product-aware code</strong> — I talk to users before writing a line of code. Every feature ships with a "why," success metrics, and a plan to iterate.</li>
           </ul>
         </div>
 
@@ -47,14 +50,14 @@ export default function Page() {
           technologies: p.technologies,
         }))} />
 
-        {/* Experience for AI PM Section */}
+        {/* What I've Shipped Recently Section */}
         <div className="mt-12 mb-8">
-          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-4">Experience relevant to AI Product roles</h2>
-          <ul className="space-y-2" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            <li>• <strong>Cross-functional collaboration</strong>: Partnered with designers and co-founders to shape ARK's game mechanics, pricing, and onboarding flows.</li>
-            <li>• <strong>End-to-end shipping</strong>: Took Bridger from idea → scoped MVP → pricing tiers → live production app with subscription plans.</li>
-            <li>• <strong>AI integration</strong>: Implemented LLM-based features (email filtering logic, image generation flows), balancing cost, latency, and UX.</li>
-            <li>• <strong>Analytics & iteration</strong>: Instrumented events (signups, completion, conversion) and used them to refine copy, flows, and pricing.</li>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-4">What I've Shipped Recently</h2>
+          <ul className="space-y-3" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            <li>• <strong>Zero to production, fast</strong> — Shipped ARK Experiences' full platform in under 3 weeks. React/Next.js frontend, Node.js/PostgreSQL backend, automated workflows. Customer satisfaction jumped from 4.0 to 4.8 stars.</li>
+            <li>• <strong>AI integration with taste</strong> — Built Penguin Mail's LLM-based email filtering and Bridger's AI image generation. Balanced cost, latency, and UX—not just "slap an API on it."</li>
+            <li>• <strong>Team leadership</strong> — Led 12 developers at Pinhous. Built the AWS/Docker deployment pipeline, ran code reviews, and cut deploy time from 2 hours to 15 minutes.</li>
+            <li>• <strong>Client delivery at scale</strong> — Through Create Club, shipped 10+ production apps for clients across Toronto and Silicon Valley. Full lifecycle: requirements → architecture → deploy → iterate.</li>
           </ul>
         </div>
 
@@ -63,60 +66,81 @@ export default function Page() {
           <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-4">Skills</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" style={{ color: 'rgb(var(--muted-foreground))' }}>
             <div>
-              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>Product & strategy</h3>
-              <ul className="space-y-1 text-sm">
-                <li>• Roadmapping</li>
-                <li>• PRDs/specs</li>
-                <li>• User interviews</li>
-                <li>• JTBD</li>
-                <li>• A/B testing</li>
-                <li>• KPI definition</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>AI & data</h3>
-              <ul className="space-y-1 text-sm">
-                <li>• LLMs (OpenAI, Gemini)</li>
-                <li>• Prompt design</li>
-                <li>• Evaluation metrics</li>
-                <li>• Vector search</li>
-                <li>• Analytics (PostHog, GA)</li>
-                <li>• SQL</li>
-              </ul>
-            </div>
-            <div>
               <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>Engineering</h3>
               <ul className="space-y-1 text-sm">
                 <li>• Next.js, TypeScript</li>
-                <li>• React, Node.js</li>
-                <li>• Supabase/Convex/PostgreSQL</li>
-                <li>• Cloudflare, Vercel</li>
-                <li>• Stripe</li>
+                <li>• React, Node.js, Express.js</li>
+                <li>• Python, PostgreSQL, MongoDB</li>
+                <li>• Docker, AWS, CI/CD</li>
+                <li>• Supabase, Convex, Vercel</li>
+                <li>• Stripe, Cloudflare</li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>Collaboration & ops</h3>
+              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>AI & Automation</h3>
               <ul className="space-y-1 text-sm">
-                <li>• Working with founders/clients</li>
-                <li>• Running experiments</li>
-                <li>• Shipping on tight timelines</li>
+                <li>• LLMs (OpenAI, Gemini, Claude)</li>
+                <li>• AI Agents, LangChain</li>
+                <li>• Prompt engineering</li>
+                <li>• Vector search & embeddings</li>
+                <li>• Workflow automation</li>
+                <li>• Analytics (PostHog, GA)</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>Product Thinking</h3>
+              <ul className="space-y-1 text-sm">
+                <li>• User research & interviews</li>
+                <li>• Roadmapping & specs</li>
+                <li>• A/B testing & experimentation</li>
+                <li>• KPI definition & dashboards</li>
+                <li>• JTBD framework</li>
+                <li>• SQL & data analysis</li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2" style={{ color: 'rgb(var(--foreground))' }}>Collaboration</h3>
+              <ul className="space-y-1 text-sm">
+                <li>• Async-first communication</li>
+                <li>• Working directly with founders</li>
+                <li>• Shipping on startup timelines</li>
+                <li>• Code reviews & mentorship</li>
+                <li>• Cross-functional teamwork</li>
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Currently Exploring Section */}
-        <div className="mb-8 p-4 rounded-lg" style={{ backgroundColor: 'rgb(var(--card))' }}>
-          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3">Currently exploring</h2>
-          <p className="mb-3" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            Product Developer / AI Product Manager / Product Engineer roles at SaaS and AI-native companies in:
+        {/* Pilot Project Offer Section */}
+        <div className="mb-8 p-6 rounded-lg border-2" style={{ backgroundColor: 'rgb(var(--card))', borderColor: 'rgb(var(--primary))' }}>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3">Want proof before you hire?</h2>
+          <p className="mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            I believe the best way to evaluate a developer is to watch them build. That's why I offer a 1-week pilot project for any company I'm seriously interested in joining.
           </p>
+          <p className="mb-2 font-medium" style={{ color: 'rgb(var(--foreground))' }}>Here's how it works:</p>
           <ul className="space-y-1 mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            <li>• Toronto (onsite/hybrid)</li>
-            <li>• Remote across Canada & US time zones</li>
+            <li>→ 30-minute call to pick a feature or backlog item</li>
+            <li>→ I build it in one week, using your stack</li>
+            <li>→ You evaluate the code, the thinking, and the output</li>
+            <li>→ If it's a fit, we talk full-time. If not, the code is yours. No strings.</li>
           </ul>
+          <p className="font-semibold" style={{ color: 'rgb(var(--foreground))' }}>No risk. Just results.</p>
+        </div>
+
+        {/* Currently Building Section */}
+        <div className="mb-8 p-4 rounded-lg" style={{ backgroundColor: 'rgb(var(--card))' }}>
+          <h2 className="text-lg sm:text-xl font-semibold tracking-tight mb-3">Currently building</h2>
+          <p className="mb-3 font-medium" style={{ color: 'rgb(var(--foreground))' }}>
+            Full-Stack Engineer · AI Developer · Product Engineer
+          </p>
+          <p className="mb-3" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            At Series B/C startups and AI-native companies that ship fast, care about craft, and measure impact over hours logged.
+          </p>
+          <p className="mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>
+            Toronto (onsite/hybrid) · Remote across North America
+          </p>
           <p className="text-sm" style={{ color: 'rgb(var(--muted-foreground))' }}>
-            Connect on <a href="https://linkedin.com/in/raj-dholakia" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-70">LinkedIn</a>.
+            Let's talk → <a href="https://linkedin.com/in/raj-dholakia" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-70">LinkedIn</a> · <a href="mailto:raj9dholakia@gmail.com" className="underline hover:opacity-70">raj9dholakia@gmail.com</a>
           </p>
         </div>
       </section>
