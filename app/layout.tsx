@@ -7,7 +7,7 @@ import { ThemeSwitcher } from './components/theme-switcher'
 import Footer from './components/footer'
 import { ThemeProvider } from './components/theme-provider'
 import { ClockWrapper } from './components/clock-wrapper'
-import { NatureFooter } from './components/nature-footer'
+import { MouseFollowingEyes } from './components/ui/mouse-following-eyes'
 import { CalFloatingButton } from './components/cal-floating-button'
 import { baseUrl } from './sitemap'
 
@@ -73,7 +73,7 @@ export default function RootLayout({
             <Footer />
           </div>
         </main>
-        <NatureFooter />
+        <MouseFollowingEyes />
       </body>
     </html>
   )
