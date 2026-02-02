@@ -46,6 +46,10 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@types/sharp": "^0.32.0",
+    "puppeteer": "^24.34.0",
+    "sharp": "^0.34.5",
+    "tsx": "^4.21.0",
     "wrangler": "^4.56.0"
   }
 }

@@ -4,7 +4,7 @@ const timelineData = [
   {
     year: '2025 – Present',
     title: 'Building & Shipping',
-    description: 'Co-founded ARK Experiences — built the full-stack event platform from scratch (React, Next.js, Node.js, PostgreSQL). Scaled to 2000+ participants. Running Create Club simultaneously — shipping production apps for startups across Toronto and Silicon Valley. Launched Stella 56 Diamonds as an e-commerce platform. Three ventures, three different problem spaces, all running on code I wrote.',
+    description: 'Co-founded ARK Experiences — built the full-stack event platform from scratch (React, Next.js, Node.js, PostgreSQL). Scaled to 20+ participants. Running Create Club simultaneously — shipping production apps for startups across Toronto and Silicon Valley. Launched Stella 56 Diamonds as an e-commerce platform. Three ventures, three different problem spaces, all running on code I wrote.',
     emoji: '🚀',
   },
   {

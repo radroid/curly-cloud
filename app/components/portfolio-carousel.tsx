@@ -263,7 +263,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
 
               {/* Video/Iframe Container */}
               <div
-                className="w-full relative transition-colors duration-300 cursor-pointer group flex items-center justify-center"
+                className="pb-5 w-full relative transition-colors duration-300 cursor-pointer group flex items-center justify-center"
                 style={{ backgroundColor: 'rgb(var(--background))' }}
                 onClick={() => router.push(`/projects/${project.id}`)}
               >
@@ -277,7 +277,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                       }
                     }}
                     src={index === currentIndex ? project.video : undefined}
-                    className="w-full h-auto max-h-[80vh] object-contain rounded-xl transition-opacity group-hover:opacity-90"
+                    className="w-full h-auto max-h-[80vh] object-contain transition-opacity group-hover:opacity-90"
                     autoPlay
                     playsInline
                     preload={index === currentIndex ? "auto" : "none"}
