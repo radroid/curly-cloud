@@ -2,7 +2,6 @@
 
 import { Avatar, AvatarImage, AvatarFallback } from '@/app/components/ui/avatar'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip'
-import { Diagnostics } from '@/app/components/diagnostics'
 
 // Social Media Icons
 function XIcon({ className }: { className?: string }) {
@@ -102,9 +101,6 @@ export default function Footer() {
                 </a>
               ))}
             </div>
-          </div>
-          <div className="flex-shrink-0 hidden sm:block">
-            <Diagnostics />
           </div>
         </div>
         <p

@@ -40,9 +40,10 @@ interface DiagnosticsProps {
   onClose?: () => void
   showButton?: boolean
   className?: string
+  invertColors?: boolean
 }
 
-export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true, className = '' }: DiagnosticsProps = {}) {
+export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true, className = '', invertColors = false }: DiagnosticsProps = {}) {
   const [data, setData] = useState<DiagnosticsData | null>(null)
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [time, setTime] = useState<TimeData | null>(null)
@@ -245,17 +246,22 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
     }
   }, [])
 
+  // Color scheme based on invertColors prop - defined before any returns
+  const bgColor = invertColors ? 'rgb(var(--foreground))' : 'rgb(var(--card))'
+  const textColor = invertColors ? 'rgb(var(--background))' : 'rgb(var(--foreground))'
+  const mutedColor = invertColors ? 'rgb(var(--background) / 0.7)' : 'rgb(var(--muted-foreground))'
+  const borderColor = invertColors ? 'rgba(var(--background), 0.2)' : 'rgba(var(--border), 0.5)'
+
   if (!data) {
     return (
       <div className="relative">
         <div
           className="rounded-lg p-3 text-xs font-mono shadow-lg transition-colors duration-300"
           style={{
-            backgroundColor: 'rgb(var(--card))',
-            color: 'rgb(var(--card-foreground))',
+            backgroundColor: bgColor,
           }}
         >
-          <div style={{ color: 'rgb(var(--muted-foreground))' }}>LOADING...</div>
+          <div style={{ color: mutedColor }}>LOADING...</div>
         </div>
       </div>
     )
@@ -263,16 +269,16 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
 
   const diagnosticsContent = (
     <div
-      className={`rounded-lg p-4 text-xs font-mono max-w-md max-h-[60vh] overflow-y-auto shadow-lg transition-colors duration-300 ${className}`}
+      className={`rounded-lg p-4 text-xs font-mono max-w-md max-h-[70vh] overflow-y-auto shadow-lg transition-colors duration-300 ${className}`}
       style={{
-        backgroundColor: 'rgb(var(--card))',
+        backgroundColor: bgColor,
       }}
     >
       <div
         className="mb-3 font-semibold text-sm border-b pb-2"
         style={{
-          color: 'rgb(var(--foreground))',
-          borderBottomColor: 'rgba(var(--border), 0.5)',
+          color: textColor,
+          borderBottomColor: borderColor,
           borderBottomWidth: '1px',
           borderBottomStyle: 'solid',
         }}
@@ -281,103 +287,103 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
       </div>
       <div className="space-y-1.5">
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>LOCATION:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.location}</span>
+          <span style={{ color: mutedColor }}>LOCATION:</span>
+          <span style={{ color: textColor }}>{data.location}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>PLATFORM:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.platform}</span>
+          <span style={{ color: mutedColor }}>PLATFORM:</span>
+          <span style={{ color: textColor }}>{data.platform}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>LANGUAGE:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.language}</span>
+          <span style={{ color: mutedColor }}>LANGUAGE:</span>
+          <span style={{ color: textColor }}>{data.language}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>NETWORK:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.network}</span>
+          <span style={{ color: mutedColor }}>NETWORK:</span>
+          <span style={{ color: textColor }}>{data.network}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>MEMORY:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.memory}</span>
+          <span style={{ color: mutedColor }}>MEMORY:</span>
+          <span style={{ color: textColor }}>{data.memory}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>CORES:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.cores}</span>
+          <span style={{ color: mutedColor }}>CORES:</span>
+          <span style={{ color: textColor }}>{data.cores}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>UPTIME:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.uptime}</span>
+          <span style={{ color: mutedColor }}>UPTIME:</span>
+          <span style={{ color: textColor }}>{data.uptime}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>VIEWPORT:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.viewport}</span>
+          <span style={{ color: mutedColor }}>VIEWPORT:</span>
+          <span style={{ color: textColor }}>{data.viewport}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>SCREEN:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.screen}</span>
+          <span style={{ color: mutedColor }}>SCREEN:</span>
+          <span style={{ color: textColor }}>{data.screen}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>COLOR DEPTH:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.colorDepth}</span>
+          <span style={{ color: mutedColor }}>COLOR DEPTH:</span>
+          <span style={{ color: textColor }}>{data.colorDepth}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>PIXEL RATIO:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.pixelRatio}</span>
+          <span style={{ color: mutedColor }}>PIXEL RATIO:</span>
+          <span style={{ color: textColor }}>{data.pixelRatio}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>TIMEZONE:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.timezone}</span>
+          <span style={{ color: mutedColor }}>TIMEZONE:</span>
+          <span style={{ color: textColor }}>{data.timezone}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>HOST:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.host}</span>
+          <span style={{ color: mutedColor }}>HOST:</span>
+          <span style={{ color: textColor }}>{data.host}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>COOKIES:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.cookies}</span>
+          <span style={{ color: mutedColor }}>COOKIES:</span>
+          <span style={{ color: textColor }}>{data.cookies}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>JAVA:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.java}</span>
+          <span style={{ color: mutedColor }}>JAVA:</span>
+          <span style={{ color: textColor }}>{data.java}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>WEBGL:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.webgl}</span>
+          <span style={{ color: mutedColor }}>WEBGL:</span>
+          <span style={{ color: textColor }}>{data.webgl}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>BATTERY:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.battery}</span>
+          <span style={{ color: mutedColor }}>BATTERY:</span>
+          <span style={{ color: textColor }}>{data.battery}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>GEOLOCATION:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.geolocation}</span>
+          <span style={{ color: mutedColor }}>GEOLOCATION:</span>
+          <span style={{ color: textColor }}>{data.geolocation}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>LOCAL STORAGE:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.localStorage}</span>
+          <span style={{ color: mutedColor }}>LOCAL STORAGE:</span>
+          <span style={{ color: textColor }}>{data.localStorage}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>SESSION STORAGE:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.sessionStorage}</span>
+          <span style={{ color: mutedColor }}>SESSION STORAGE:</span>
+          <span style={{ color: textColor }}>{data.sessionStorage}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>INDEXEDDB:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.indexedDB}</span>
+          <span style={{ color: mutedColor }}>INDEXEDDB:</span>
+          <span style={{ color: textColor }}>{data.indexedDB}</span>
         </div>
         <div className="flex justify-between">
-          <span style={{ color: 'rgb(var(--muted-foreground))' }}>STAT:</span>
-          <span style={{ color: 'rgb(var(--foreground))' }}>{data.stat}</span>
+          <span style={{ color: mutedColor }}>STAT:</span>
+          <span style={{ color: textColor }}>{data.stat}</span>
         </div>
         <div
           className="mt-3 pt-3"
           style={{
-            borderTopColor: 'rgba(var(--border), 0.5)',
+            borderTopColor: borderColor,
             borderTopWidth: '1px',
             borderTopStyle: 'solid',
           }}
         >
-          <div className="mb-1" style={{ color: 'rgb(var(--muted-foreground))' }}>USER AGENT:</div>
-          <div className="break-all text-[10px]" style={{ color: 'rgb(var(--foreground))' }}>
+          <div className="mb-1" style={{ color: mutedColor }}>USER AGENT:</div>
+          <div className="break-all text-[10px]" style={{ color: textColor }}>
             {data.userAgent}
           </div>
         </div>
@@ -387,7 +393,7 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
         <div
           className="mt-4 pt-4"
           style={{
-            borderTopColor: 'rgba(var(--border), 0.5)',
+            borderTopColor: borderColor,
             borderTopWidth: '1px',
             borderTopStyle: 'solid',
           }}
@@ -395,8 +401,8 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
           <div
             className="mb-2 font-semibold text-sm border-b pb-2"
             style={{
-              color: 'rgb(var(--foreground))',
-              borderBottomColor: 'rgba(var(--border), 0.5)',
+              color: textColor,
+              borderBottomColor: borderColor,
               borderBottomWidth: '1px',
               borderBottomStyle: 'solid',
             }}
@@ -405,20 +411,20 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
           </div>
           <div className="space-y-1.5">
             <div className="flex justify-between">
-              <span style={{ color: 'rgb(var(--muted-foreground))' }}>UTC:</span>
-              <span style={{ color: 'rgb(var(--foreground))' }}>{time.utc}</span>
+              <span style={{ color: mutedColor }}>UTC:</span>
+              <span style={{ color: textColor }}>{time.utc}</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'rgb(var(--muted-foreground))' }}>LOCAL:</span>
-              <span style={{ color: 'rgb(var(--foreground))' }}>{time.local}</span>
+              <span style={{ color: mutedColor }}>LOCAL:</span>
+              <span style={{ color: textColor }}>{time.local}</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'rgb(var(--muted-foreground))' }}>UNIX:</span>
-              <span style={{ color: 'rgb(var(--foreground))' }}>{time.unix}</span>
+              <span style={{ color: mutedColor }}>UNIX:</span>
+              <span style={{ color: textColor }}>{time.unix}</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: 'rgb(var(--muted-foreground))' }}>ZONE:</span>
-              <span style={{ color: 'rgb(var(--foreground))' }}>{time.zone}</span>
+              <span style={{ color: mutedColor }}>ZONE:</span>
+              <span style={{ color: textColor }}>{time.zone}</span>
             </div>
           </div>
         </div>
@@ -455,10 +461,10 @@ export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true
           e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
         }}
       >
-        <div style={{ color: 'rgb(var(--foreground))' }}>
+        <div style={{ color: textColor }}>
           LOCATION: {data.location}
         </div>
-        <div className="mt-1" style={{ color: 'rgb(var(--muted-foreground))' }}>
+        <div className="mt-1" style={{ color: mutedColor }}>
           {data.stat} • {data.platform}
         </div>
       </button>

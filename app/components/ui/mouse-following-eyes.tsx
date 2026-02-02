@@ -2,10 +2,14 @@
 
 import * as React from "react"
 import { useState, useRef, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Diagnostics } from "@/app/components/diagnostics"
 
 const MouseFollowingEyes: React.FC = () => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
+  const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false)
+  const [showTooltip, setShowTooltip] = useState(false)
   const eye1Ref = useRef<HTMLDivElement>(null)
   const eye2Ref = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -23,35 +27,126 @@ const MouseFollowingEyes: React.FC = () => {
 
     window.addEventListener("mousemove", handleMouseMove)
 
+    // Show tooltip if user hasn't seen it before
+    let showTimer: NodeJS.Timeout | undefined
+    let hideTimer: NodeJS.Timeout | undefined
+
+    const hasSeenEyesTooltip = localStorage.getItem("eyes-tooltip-seen")
+    if (!hasSeenEyesTooltip) {
+      showTimer = setTimeout(() => {
+        setShowTooltip(true)
+      }, 1500)
+
+      hideTimer = setTimeout(() => {
+        setShowTooltip(false)
+        localStorage.setItem("eyes-tooltip-seen", "true")
+      }, 8000)
+    }
+
     return () => {
       clearTimeout(timer)
+      if (showTimer) clearTimeout(showTimer)
+      if (hideTimer) clearTimeout(hideTimer)
       window.removeEventListener("mousemove", handleMouseMove)
     }
   }, [])
 
+  const handleEyesClick = () => {
+    setIsDiagnosticsOpen(!isDiagnosticsOpen)
+    if (showTooltip) {
+      setShowTooltip(false)
+      localStorage.setItem("eyes-tooltip-seen", "true")
+    }
+  }
+
+  // Calculate the width of both eyes plus the gap between them
+  // Eyes: h-20 (80px) on mobile, h-24 (96px) on sm, h-28 (112px) on md
+  // Gap: gap-4 (16px) on mobile, gap-6 (24px) on sm, gap-8 (32px) on md
+  // Total width: 2 * eye_width + gap
+
   return (
     <div
       ref={containerRef}
-      className="relative w-full overflow-hidden -mt-4 sm:-mt-6 md:-mt-8"
+      className="relative w-full -mt-4 sm:-mt-6 md:-mt-8"
       style={{
         opacity: isVisible ? 1 : 0,
         transition: "opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1)",
       }}
-      aria-hidden="true"
     >
-      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] flex justify-center items-center gap-4 sm:gap-6 md:gap-8">
-        <Eye
-          mouseX={mousePos.x}
-          mouseY={mousePos.y}
-          selfRef={eye1Ref as React.RefObject<HTMLDivElement>}
-          otherRef={eye2Ref as React.RefObject<HTMLDivElement>}
-        />
-        <Eye
-          mouseX={mousePos.x}
-          mouseY={mousePos.y}
-          selfRef={eye2Ref as React.RefObject<HTMLDivElement>}
-          otherRef={eye1Ref as React.RefObject<HTMLDivElement>}
-        />
+      <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] flex justify-center items-center overflow-visible">
+        <div className="relative flex items-center gap-4 sm:gap-6 md:gap-8">
+          <Eye
+            mouseX={mousePos.x}
+            mouseY={mousePos.y}
+            selfRef={eye1Ref as React.RefObject<HTMLDivElement>}
+            otherRef={eye2Ref as React.RefObject<HTMLDivElement>}
+          />
+
+          {/* Clickable area between eyes */}
+          <button
+            onClick={handleEyesClick}
+            className="absolute left-1/2 -translate-x-1/2 w-16 sm:w-20 md:w-24 h-20 sm:h-24 md:h-28 z-10 cursor-pointer"
+            aria-label="Open diagnostics"
+          />
+
+          <Eye
+            mouseX={mousePos.x}
+            mouseY={mousePos.y}
+            selfRef={eye2Ref as React.RefObject<HTMLDivElement>}
+            otherRef={eye1Ref as React.RefObject<HTMLDivElement>}
+          />
+
+          {/* Tooltip - positioned below eyes */}
+          <AnimatePresence>
+            {showTooltip && !isDiagnosticsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.3 }}
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full mt-4 whitespace-nowrap px-4 py-2 rounded-lg shadow-lg pointer-events-none z-30"
+                style={{
+                  backgroundColor: "rgb(var(--card))",
+                  border: "1px solid rgb(var(--border))",
+                }}
+              >
+                <p className="text-sm font-medium" style={{ color: "rgb(var(--foreground))" }}>
+                  Click between to see what I see
+                </p>
+                <div
+                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2"
+                  style={{
+                    backgroundColor: "rgb(var(--card))",
+                    border: "1px solid rgb(var(--border))",
+                    borderBottom: "none",
+                    borderRight: "none",
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Diagnostics Panel - positioned above eyes */}
+          <AnimatePresence>
+            {isDiagnosticsOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[100] w-[176px] sm:w-[216px] md:w-[256px]"
+              >
+                <Diagnostics
+                  isOpen={true}
+                  onClose={() => setIsDiagnosticsOpen(false)}
+                  showButton={false}
+                  invertColors={true}
+                  className="!max-w-none w-full shadow-2xl"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   )
