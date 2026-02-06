@@ -35,8 +35,9 @@ function Reveal({ children, className = '', delay = 0 }: {
   return (
     <div ref={ref} className={className} style={{
       opacity: isVisible ? 1 : 0,
-      transform: isVisible ? 'translateY(0)' : 'translateY(35px)',
-      transition: `all 0.7s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
+      transform: isVisible ? 'translate3d(0,0,0)' : 'translate3d(0,24px,0)',
+      transition: `opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1) ${delay}s`,
+      willChange: isVisible ? 'auto' : 'opacity, transform',
     }}>
       {children}
     </div>

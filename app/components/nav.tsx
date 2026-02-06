@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { TextScramble } from '@/app/components/ui/text-scramble'
 
 const navItems = {
@@ -18,40 +19,76 @@ const navItems = {
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
+  const rafRef = useRef(0)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
-      // Consider "scrolled" when user has scrolled more than 100px
-      setScrolled(window.scrollY > 10)
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 20)
+      })
     }
 
-    // Check initial scroll position
     handleScroll()
-
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      cancelAnimationFrame(rafRef.current)
+    }
   }, [])
 
   return (
     <nav
-      className="fixed left-0 right-0 z-50 py-3 transition-all duration-300"
+      className="fixed left-0 right-0 z-50 transition-all duration-500 ease-out"
       style={{
-        backgroundColor: scrolled ? 'rgb(var(--background) / 0.9)' : 'transparent',
-        backdropFilter: scrolled ? 'blur(8px)' : 'none',
-        top: scrolled ? '0px' : '100px',
+        top: scrolled ? '0px' : '16px',
+        padding: scrolled ? '0' : '0 16px',
       }}
       id="nav"
     >
-      <div className="max-w-7xl mx-auto px-4 md:px-8 flex flex-row items-center">
-        <div className="flex flex-row items-center gap-6 sm:gap-8">
+      <div
+        className="transition-all duration-500 ease-out"
+        style={{
+          backgroundColor: scrolled
+            ? 'rgb(var(--background) / 0.85)'
+            : 'rgb(var(--card) / 0.6)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: scrolled ? '0' : '12px',
+          maxWidth: scrolled ? '100%' : 'fit-content',
+          margin: '0 auto',
+          borderBottom: scrolled ? '1px solid rgb(var(--border) / 0.5)' : 'none',
+          border: scrolled ? 'none' : '1px solid rgb(var(--border) / 0.3)',
+          boxShadow: scrolled
+            ? 'none'
+            : '0 4px 24px rgb(var(--foreground) / 0.04)',
+        }}
+      >
+        <div className="flex flex-row items-center justify-center gap-1 py-2 px-2">
           {Object.entries(navItems).map(([path, { name }]) => {
+            const isActive = pathname === path
             return (
               <Link
                 key={path}
                 href={path}
-                className="flex align-middle relative py-1"
+                className="relative py-2 px-4 rounded-lg transition-colors duration-200"
+                style={{
+                  backgroundColor: isActive
+                    ? 'rgb(var(--primary) / 0.1)'
+                    : 'transparent',
+                }}
               >
-                <TextScramble text={name} textSize="text-sm" />
+                <TextScramble
+                  text={name}
+                  textSize="text-xs"
+                />
+                {isActive && (
+                  <span
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                    style={{ backgroundColor: 'rgb(var(--primary))' }}
+                  />
+                )}
               </Link>
             )
           })}
