@@ -29,6 +29,37 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
   const isDarkTheme = useIsDarkTheme()
   const router = useRouter()
 
+  // Custom cursor state
+  const cursorRef = useRef<HTMLDivElement>(null)
+  const [cursorVisible, setCursorVisible] = useState(false)
+  const cursorPos = useRef({ x: 0, y: 0 })
+  const animFrameRef = useRef<number>(0)
+
+  const updateCursorPosition = useCallback(() => {
+    if (cursorRef.current) {
+      cursorRef.current.style.transform = `translate(${cursorPos.current.x}px, ${cursorPos.current.y}px)`
+    }
+    animFrameRef.current = requestAnimationFrame(updateCursorPosition)
+  }, [])
+
+  useEffect(() => {
+    if (cursorVisible) {
+      animFrameRef.current = requestAnimationFrame(updateCursorPosition)
+    }
+    return () => cancelAnimationFrame(animFrameRef.current)
+  }, [cursorVisible, updateCursorPosition])
+
+  const handleVideoMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    cursorPos.current = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    }
+  }, [])
+
+  const handleVideoMouseEnter = useCallback(() => { setCursorVisible(true) }, [])
+  const handleVideoMouseLeave = useCallback(() => { setCursorVisible(false) }, [])
+
   // Simple theme-aware shadow
   const buttonShadow = useMemo(() => {
     if (isDarkTheme) {
@@ -263,9 +294,12 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
 
               {/* Video/Iframe Container */}
               <div
-                className="pb-5 w-full relative transition-colors duration-300 cursor-pointer group flex items-center justify-center"
-                style={{ backgroundColor: 'rgb(var(--background))' }}
-                onClick={() => router.push(`/projects/${project.id}`)}
+                className="pb-5 w-full relative transition-colors duration-300 flex items-center justify-center"
+                style={{ backgroundColor: 'rgb(var(--background))', cursor: 'none' }}
+                onClick={() => window.open(`/projects/${project.id}`, '_blank')}
+                onMouseMove={handleVideoMouseMove}
+                onMouseEnter={handleVideoMouseEnter}
+                onMouseLeave={handleVideoMouseLeave}
               >
                 {project.video ? (
                   <video
@@ -277,7 +311,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                       }
                     }}
                     src={index === currentIndex ? project.video : undefined}
-                    className="w-full h-auto max-h-[80vh] object-contain transition-opacity group-hover:opacity-90"
+                    className="w-full h-auto max-h-[80vh] object-contain pointer-events-none"
                     autoPlay
                     playsInline
                     preload={index === currentIndex ? "auto" : "none"}
@@ -289,22 +323,48 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                 ) : project.url ? (
                   <iframe
                     src={project.url}
-                    className="w-full aspect-[16/10] border-0 rounded-xl transition-opacity group-hover:opacity-90"
+                    className="w-full aspect-[16/10] border-0 rounded-xl pointer-events-none"
                     title={project.title}
                     loading="lazy"
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation"
                   />
                 ) : null}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <div className="px-4 py-2 rounded-lg backdrop-blur-sm" style={{ backgroundColor: 'rgba(var(--card), 0.9)' }}>
-                    <p className="text-sm font-medium" style={{ color: 'rgb(var(--foreground))' }}>
-                      View details →
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Custom Cursor Badge */}
+        <div
+          ref={cursorRef}
+          className="absolute top-0 left-0 z-50 pointer-events-none"
+          style={{
+            opacity: cursorVisible ? 1 : 0,
+            transition: 'opacity 0.2s ease, scale 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+            scale: cursorVisible ? '1' : '0.5',
+            willChange: 'transform',
+          }}
+        >
+          <div
+            className="flex items-center gap-1.5 rounded-full px-4 py-2.5 backdrop-blur-md"
+            style={{
+              backgroundColor: 'rgb(var(--primary))',
+              color: 'rgb(var(--primary-foreground))',
+              boxShadow: '0 4px 20px rgb(var(--primary) / 0.4), 0 0 0 1px rgb(var(--primary) / 0.2)',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <span className="text-xs font-semibold tracking-wide whitespace-nowrap">Open</span>
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 17L17 7M17 7H7M17 7v10" />
+            </svg>
+          </div>
         </div>
       </div>
 
