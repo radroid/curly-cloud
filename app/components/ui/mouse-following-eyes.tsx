@@ -20,9 +20,20 @@ const MouseFollowingEyes: React.FC = () => {
       setIsVisible(true)
     }, 300)
 
-    // Track mouse position globally
+    // Track mouse position globally, throttled to one update per animation frame
+    let rafId: number | null = null
+    let latestX = 0
+    let latestY = 0
+
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY })
+      latestX = e.clientX
+      latestY = e.clientY
+      if (rafId === null) {
+        rafId = requestAnimationFrame(() => {
+          setMousePos({ x: latestX, y: latestY })
+          rafId = null
+        })
+      }
     }
 
     window.addEventListener("mousemove", handleMouseMove)
@@ -47,6 +58,7 @@ const MouseFollowingEyes: React.FC = () => {
       clearTimeout(timer)
       if (showTimer) clearTimeout(showTimer)
       if (hideTimer) clearTimeout(hideTimer)
+      if (rafId !== null) cancelAnimationFrame(rafId)
       window.removeEventListener("mousemove", handleMouseMove)
     }
   }, [])

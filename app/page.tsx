@@ -1,12 +1,8 @@
-'use client'
-
 import { PortfolioCarousel } from 'app/components/portfolio-carousel'
-import { TechnologyCarousel, extractUniqueTechnologies } from 'app/components/technology-carousel'
+import { TechnologyCarousel } from 'app/components/technology-carousel'
 import { portfolioProjects } from '@/app/lib/projects'
 
 export default function Page() {
-  const uniqueTechnologies = extractUniqueTechnologies(portfolioProjects)
-
   return (
     <>
       <section className="w-full">
@@ -40,7 +36,7 @@ export default function Page() {
           </ul>
         </div>
 
-        <TechnologyCarousel technologies={uniqueTechnologies} />
+        <TechnologyCarousel projectTechnologies={portfolioProjects.map(p => p.technologies)} />
         <PortfolioCarousel projects={portfolioProjects.map(p => ({
           id: p.id,
           title: p.shortTitle,

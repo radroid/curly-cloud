@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import url('https://fonts.googleapis.com/css2?family=Antic&family=Montserrat:wght@400;500;600;700&family=Oxanium:wght@400;500;600;700&family=Merriweather:wght@400;700&family=Fira+Code:wght@400;500;600&display=swap');
 
 ::selection {
   background-color: #47a3f3;
@@ -16,7 +15,7 @@
   --sh-jsxliterals: #6266d1;
   --sh-property: #e25a1c;
   --sh-entity: #e25a1c;
-  --font-sans: 'Antic', ui-sans-serif, sans-serif, system-ui;
+  --font-sans: var(--font-antic), ui-sans-serif, sans-serif, system-ui;
   --font-serif: 'Signifier', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 }

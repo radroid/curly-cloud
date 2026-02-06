@@ -1,14 +1,12 @@
 import './global.css'
 import type { Metadata } from 'next'
-import { JetBrains_Mono } from 'next/font/google'
+import { Antic, JetBrains_Mono } from 'next/font/google'
 import { Navbar } from './components/nav'
 import { ThemeSwitcher } from './components/theme-switcher'
 
 import Footer from './components/footer'
 import { ThemeProvider } from './components/theme-provider'
-import { ClockWrapper } from './components/clock-wrapper'
-import { MouseFollowingEyes } from './components/ui/mouse-following-eyes'
-import { CalFloatingButton } from './components/cal-floating-button'
+import { LazyClockWrapper, LazyMouseFollowingEyes, LazyCalFloatingButton } from './components/lazy-components'
 import { baseUrl } from './sitemap'
 
 export const metadata: Metadata = {
@@ -43,6 +41,13 @@ export const metadata: Metadata = {
   },
 }
 
+const antic = Antic({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-antic',
+  display: 'swap',
+})
+
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
@@ -59,13 +64,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cx(jetbrainsMono.variable)}
+      className={cx(antic.variable, jetbrainsMono.variable)}
     >
       <body className="antialiased min-h-screen transition-colors duration-300">
         <ThemeProvider />
         <Navbar />
-        <ClockWrapper />
-        <CalFloatingButton />
+        <LazyClockWrapper />
+        <LazyCalFloatingButton />
         <ThemeSwitcher />
         <main className="flex-auto min-w-0 flex flex-col">
           <div className="max-w-7xl mx-auto w-full px-4 md:px-8 pt-36 sm:pt-44 pb-4 sm:pb-8">
@@ -73,7 +78,7 @@ export default function RootLayout({
             <Footer />
           </div>
         </main>
-        <MouseFollowingEyes />
+        <LazyMouseFollowingEyes />
       </body>
     </html>
   )

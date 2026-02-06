@@ -17,7 +17,7 @@ export function OrbitalClock() {
     
     const interval = setInterval(() => {
       setTime(new Date())
-    }, 50)
+    }, 1000)
     
     // Check if mobile on mount and resize
     const checkMobile = () => {

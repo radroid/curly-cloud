@@ -46,6 +46,7 @@ interface Technology {
 
 interface TechnologyCarouselProps {
   technologies?: Technology[]
+  projectTechnologies?: string[][]
   heading?: string
   className?: string
 }
@@ -168,10 +169,15 @@ export function extractUniqueTechnologies(projects: Array<{ technologies?: strin
 }
 
 export function TechnologyCarousel({
-  technologies = [],
+  technologies: technologiesProp,
+  projectTechnologies,
   heading,
   className
 }: TechnologyCarouselProps) {
+  const technologies = technologiesProp ?? (projectTechnologies
+    ? extractUniqueTechnologies(projectTechnologies.map(techs => ({ technologies: techs })))
+    : [])
+
   if (technologies.length === 0) {
     return null
   }
