@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import { useIsDarkTheme } from '@/app/lib/theme-utils'
 
 interface PortfolioProject {
@@ -27,7 +26,6 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
   const slidesContainerRef = useRef<HTMLDivElement>(null)
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map())
   const isDarkTheme = useIsDarkTheme()
-  const router = useRouter()
 
   // Custom cursor state
   const cursorRef = useRef<HTMLDivElement>(null)
@@ -60,14 +58,9 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
   const handleVideoMouseEnter = useCallback(() => { setCursorVisible(true) }, [])
   const handleVideoMouseLeave = useCallback(() => { setCursorVisible(false) }, [])
 
-  // Simple theme-aware shadow
-  const buttonShadow = useMemo(() => {
-    if (isDarkTheme) {
-      return '0 2px 8px rgba(255, 255, 255, 0.1)'
-    } else {
-      return '0 2px 8px rgba(0, 0, 0, 0.2)'
-    }
-  }, [isDarkTheme])
+  // Arrow hover state
+  const [prevHovered, setPrevHovered] = useState(false)
+  const [nextHovered, setNextHovered] = useState(false)
 
   // Create extended array with duplicates for infinite scroll
   const extendedProjects = projects.length > 1
@@ -175,83 +168,15 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
 
   return (
     <div className="w-full flex flex-col relative">
-      {/* Previous Button */}
-      <button
-        onClick={() => {
-          goToPrevious()
-          setIsPaused(true)
-          setTimeout(() => setIsPaused(false), 6000) // Resume after 10 seconds
-        }}
-        className="absolute left-2 sm:left-0 top-1/2 -translate-y-1/2 sm:-translate-x-12 z-10 p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg"
-        style={{
-          backgroundColor: 'rgba(var(--card), 0.9)',
-          color: 'rgb(var(--foreground))',
-          boxShadow: buttonShadow,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(var(--card), 1)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(var(--card), 0.9)'
-        }}
-        aria-label="Previous project"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 19l-7-7 7-7"
-          />
-        </svg>
-      </button>
-
-      {/* Next Button */}
-      <button
-        onClick={() => {
-          goToNext()
-          setIsPaused(true)
-          setTimeout(() => setIsPaused(false), 6000) // Resume after 6 seconds
-        }}
-        className="absolute right-2 sm:right-0 top-1/2 -translate-y-1/2 sm:translate-x-12 z-10 p-2 rounded-full backdrop-blur-sm transition-colors shadow-lg"
-        style={{
-          backgroundColor: 'rgba(var(--card), 0.9)',
-          color: 'rgb(var(--foreground))',
-          boxShadow: buttonShadow,
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(var(--card), 1)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgba(var(--card), 0.9)'
-        }}
-        aria-label="Next project"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5l7 7-7 7"
-          />
-        </svg>
-      </button>
-
+      {/* Carousel Card */}
       <div
-        className="w-full relative overflow-hidden rounded-lg transition-colors duration-300 shadow-lg"
+        className="w-full relative overflow-hidden rounded-2xl transition-colors duration-300"
         style={{
-          backgroundColor: 'rgb(var(--background))',
-          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+          backgroundColor: 'rgb(var(--card))',
+          border: '1px solid rgb(var(--border) / 0.6)',
+          boxShadow: isDarkTheme
+            ? '0 1px 3px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.2)'
+            : '0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.08)',
         }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -271,36 +196,46 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
             >
               {/* Project Title Bar */}
               <div
-                className="px-4 sm:px-6 py-3 sm:py-4 transition-colors duration-300 backdrop-blur-sm"
-                style={{
-                  backgroundColor: 'rgb(var(--background))',
-                }}
+                className="px-5 sm:px-6 pt-5 pb-3 sm:pt-6 sm:pb-4 transition-colors duration-300"
+                style={{ borderBottom: '1px solid rgb(var(--border) / 0.4)' }}
               >
-                <h3
-                  className="text-lg sm:text-xl font-semibold tracking-tight transition-colors duration-300"
-                  style={{ color: 'rgb(var(--foreground))' }}
-                >
-                  {project.title}
-                </h3>
-                {(project.shortDescription || project.description) && (
-                  <p
-                    className="text-xs sm:text-sm mt-1 transition-colors duration-300"
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3
+                      className="text-base sm:text-lg font-semibold tracking-tight transition-colors duration-300"
+                      style={{ color: 'rgb(var(--foreground))' }}
+                    >
+                      {project.title}
+                    </h3>
+                    {(project.shortDescription || project.description) && (
+                      <p
+                        className="text-xs sm:text-sm mt-1 transition-colors duration-300 line-clamp-1"
+                        style={{ color: 'rgb(var(--muted-foreground))' }}
+                      >
+                        {project.shortDescription || project.description}
+                      </p>
+                    )}
+                  </div>
+                  {/* Slide counter */}
+                  <span
+                    className="text-xs font-medium tabular-nums shrink-0 mt-0.5"
                     style={{ color: 'rgb(var(--muted-foreground))' }}
                   >
-                    {project.shortDescription || project.description}
-                  </p>
-                )}
+                    {String(
+                      currentIndex === 0
+                        ? projects.length
+                        : currentIndex > projects.length
+                          ? 1
+                          : currentIndex
+                    ).padStart(2, '0')}{' '}
+                    <span style={{ opacity: 0.4 }}>/</span>{' '}
+                    {String(projects.length).padStart(2, '0')}
+                  </span>
+                </div>
               </div>
 
               {/* Video/Iframe Container */}
-              <div
-                className="pb-5 w-full relative transition-colors duration-300 flex items-center justify-center"
-                style={{ backgroundColor: 'rgb(var(--background))', cursor: 'none' }}
-                onClick={() => window.open(`/projects/${project.id}`, '_blank')}
-                onMouseMove={handleVideoMouseMove}
-                onMouseEnter={handleVideoMouseEnter}
-                onMouseLeave={handleVideoMouseLeave}
-              >
+              <div className="w-full relative transition-colors duration-300 flex items-center justify-center">
                 {project.video ? (
                   <video
                     ref={(el) => {
@@ -311,7 +246,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                       }
                     }}
                     src={index === currentIndex ? project.video : undefined}
-                    className="w-full h-auto max-h-[80vh] object-contain pointer-events-none"
+                    className="w-full h-auto max-h-[75vh] object-contain pointer-events-none"
                     autoPlay
                     playsInline
                     preload={index === currentIndex ? "auto" : "none"}
@@ -323,16 +258,86 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                 ) : project.url ? (
                   <iframe
                     src={project.url}
-                    className="w-full aspect-[16/10] border-0 rounded-xl pointer-events-none"
+                    className="w-full aspect-[16/10] border-0 pointer-events-none"
                     title={project.title}
                     loading="lazy"
                     sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-top-navigation"
                   />
                 ) : null}
+                {/* Clickable zone — inset from edges to avoid overlapping arrow buttons */}
+                <div
+                  className="absolute inset-y-0 left-56 right-56 z-[5]"
+                  style={{ cursor: 'none' }}
+                  onClick={() => window.open(`/projects/${project.id}`, '_blank')}
+                  onMouseMove={handleVideoMouseMove}
+                  onMouseEnter={handleVideoMouseEnter}
+                  onMouseLeave={handleVideoMouseLeave}
+                />
               </div>
             </div>
           ))}
         </div>
+
+        {/* Navigation Arrows — inside the card, vertically centered on the video area */}
+        <button
+          onClick={() => {
+            goToPrevious()
+            setIsPaused(true)
+            setTimeout(() => setIsPaused(false), 6000)
+          }}
+          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-all duration-200"
+          style={{
+            width: '44px',
+            height: '44px',
+            backgroundColor: prevHovered
+              ? 'rgb(var(--foreground))'
+              : 'rgb(var(--card) / 0.85)',
+            color: prevHovered
+              ? 'rgb(var(--card))'
+              : 'rgb(var(--foreground))',
+            backdropFilter: 'blur(8px)',
+            boxShadow: isDarkTheme
+              ? '0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08)'
+              : '0 2px 8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)',
+          }}
+          onMouseEnter={() => setPrevHovered(true)}
+          onMouseLeave={() => setPrevHovered(false)}
+          aria-label="Previous project"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          onClick={() => {
+            goToNext()
+            setIsPaused(true)
+            setTimeout(() => setIsPaused(false), 6000)
+          }}
+          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-all duration-200"
+          style={{
+            width: '44px',
+            height: '44px',
+            backgroundColor: nextHovered
+              ? 'rgb(var(--foreground))'
+              : 'rgb(var(--card) / 0.85)',
+            color: nextHovered
+              ? 'rgb(var(--card))'
+              : 'rgb(var(--foreground))',
+            backdropFilter: 'blur(8px)',
+            boxShadow: isDarkTheme
+              ? '0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.08)'
+              : '0 2px 8px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)',
+          }}
+          onMouseEnter={() => setNextHovered(true)}
+          onMouseLeave={() => setNextHovered(false)}
+          aria-label="Next project"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
 
         {/* Custom Cursor Badge */}
         <div
@@ -369,9 +374,8 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
       </div>
 
       {/* Dots Navigation */}
-      <div className="flex justify-center gap-2 mt-4 sm:mt-6">
+      <div className="flex justify-center gap-2.5 mt-5 sm:mt-6">
         {projects.map((_, index) => {
-          // Map extended array index to original array index for dots
           const activeIndex = currentIndex === 0
             ? projects.length - 1
             : currentIndex === extendedProjects.length - 1
@@ -385,26 +389,26 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
               onClick={() => {
                 goToSlide(index)
                 setIsPaused(true)
-                setTimeout(() => setIsPaused(false), 3000) // Resume after 3 seconds
+                setTimeout(() => setIsPaused(false), 3000)
               }}
-              className="rounded-full transition-all duration-300"
+              className="rounded-full transition-all duration-300 cursor-pointer"
               style={{
-                width: isActive ? '2rem' : '0.5rem',
+                width: isActive ? '1.75rem' : '0.5rem',
                 height: '0.5rem',
                 backgroundColor: isActive
-                  ? `rgb(var(--primary))`
-                  : `rgb(var(--muted-foreground))`,
-                opacity: isActive ? 1 : 0.3,
+                  ? 'rgb(var(--primary))'
+                  : 'rgb(var(--muted-foreground))',
+                opacity: isActive ? 1 : 0.25,
+                /* Pad touch target without changing visual size */
+                padding: 0,
+                border: 'none',
+                margin: '0.375rem 0',
               }}
               onMouseEnter={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.opacity = '0.5'
-                }
+                if (!isActive) e.currentTarget.style.opacity = '0.5'
               }}
               onMouseLeave={(e) => {
-                if (!isActive) {
-                  e.currentTarget.style.opacity = '0.3'
-                }
+                if (!isActive) e.currentTarget.style.opacity = '0.25'
               }}
               aria-label={`Go to project ${index + 1}`}
             />

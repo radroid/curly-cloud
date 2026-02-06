@@ -591,11 +591,16 @@ export default function Page() {
                   I offer a 1-week pilot project for any company I'm seriously interested in joining. 30-min call, I build it in one week, you evaluate. No risk, just results.
                 </p>
                 <div className="flex flex-wrap gap-3">
-                  <a href="https://linkedin.com/in/raj-dholakia" target="_blank" rel="noopener noreferrer"
-                    className="text-sm font-bold px-6 py-3 rounded-xl transition-all hover:scale-105"
+                  <button
+                    onClick={async () => {
+                      const { getCalApi } = await import('@calcom/embed-react')
+                      const cal = await getCalApi({ namespace: 'problem-ranter' })
+                      cal('modal', { calLink: 'createclub/problem-ranter', config: { layout: 'month_view' } })
+                    }}
+                    className="text-sm font-bold px-6 py-3 rounded-xl transition-all hover:scale-105 cursor-pointer"
                     style={{ backgroundColor: 'rgb(var(--primary-foreground))', color: 'rgb(var(--primary))' }}>
                     Let&apos;s Talk
-                  </a>
+                  </button>
                   <a href="mailto:raj9dholakia@gmail.com"
                     className="text-sm font-medium px-6 py-3 rounded-xl border-2 transition-all hover:scale-105"
                     style={{ borderColor: 'currentColor' }}>
