@@ -150,9 +150,23 @@ function BoldEntry({ entry, index }: { entry: (typeof timelineData)[number]; ind
   )
 }
 
+const current2026 = {
+  year: '2026',
+  title: 'Looking for What\u2019s Next',
+  line1: 'Full-Stack AI Developer · AI Product Manager',
+  line2: 'Vector search & app workflows — web and iOS',
+  location: 'Toronto, CA',
+  coords: '43.65\u00b0N, 79.38\u00b0W',
+}
+
 export default function HistoryPage() {
   const [heroVisible, setHeroVisible] = useState(false)
   const heroRef = useRef<HTMLDivElement>(null)
+  const pastHeroRef = useRef(false)
+  const reachedEndRef = useRef(false)
+  const [bannerVisible, setBannerVisible] = useState(false)
+  const [inlineRevealed, setInlineRevealed] = useState(false)
+  const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const link = document.createElement('link')
@@ -168,6 +182,32 @@ export default function HistoryPage() {
     const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setHeroVisible(true) }, { threshold: 0.1 })
     obs.observe(el)
     return () => obs.disconnect()
+  }, [])
+
+  // Single observer: hero out of view = show banner, end in view = hide banner + reveal inline
+  useEffect(() => {
+    const heroEl = heroRef.current
+    const endEl = endRef.current
+    if (!heroEl || !endEl) return
+
+    const updateBanner = () => {
+      setBannerVisible(pastHeroRef.current && !reachedEndRef.current)
+    }
+
+    const heroObs = new IntersectionObserver(([e]) => {
+      pastHeroRef.current = !e.isIntersecting
+      updateBanner()
+    }, { threshold: 0 })
+
+    const endObs = new IntersectionObserver(([e]) => {
+      reachedEndRef.current = e.isIntersecting
+      if (e.isIntersecting) setInlineRevealed(true)
+      updateBanner()
+    }, { threshold: 0.1 })
+
+    heroObs.observe(heroEl)
+    endObs.observe(endEl)
+    return () => { heroObs.disconnect(); endObs.disconnect() }
   }, [])
 
   return (
@@ -218,22 +258,179 @@ export default function HistoryPage() {
         {timelineData.map((entry, index) => (
           <BoldEntry key={index} entry={entry} index={index} />
         ))}
+
+        {/* 2026 inline entry — revealed when user scrolls to end */}
+        <div
+          ref={endRef}
+          style={{
+            opacity: inlineRevealed ? 1 : 0,
+            transform: inlineRevealed ? 'translateY(0)' : 'translateY(24px)',
+            transition: 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {/* Desktop 2026 */}
+          <div className="hidden md:grid" style={{ gridTemplateColumns: '140px 48px 1fr 260px' }}>
+            <div className="pt-5 text-right pr-4">
+              <div
+                className="text-3xl font-bold tabular-nums"
+                style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
+              >
+                {current2026.year}
+              </div>
+              <div className="text-[9px] mt-1.5 tracking-wider font-medium" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))', opacity: 0.4 }}>
+                {current2026.coords}
+              </div>
+            </div>
+            <div className="flex flex-col items-center">
+              <div
+                className="w-[10px] h-[10px] rounded-full mt-6 flex-shrink-0"
+                style={{ background: 'rgb(var(--primary))', boxShadow: '0 0 0 4px rgb(var(--primary) / 0.15)' }}
+              />
+              <div className="flex-1" style={{ width: '3px', background: 'rgb(var(--border))' }} />
+            </div>
+            <div className="pt-4 pb-14 pl-5">
+              <div className="flex items-baseline gap-3 mb-2">
+                <span className="text-[11px] font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>
+                  {String(timelineData.length + 1).padStart(2, '0')}
+                </span>
+                <h3 className="text-xl font-semibold tracking-tight" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
+                  <span className="relative">
+                    {current2026.title}
+                    <span className="absolute bottom-[-2px] left-0 h-[2px]" style={{ width: '100%', background: 'rgb(var(--primary))' }} />
+                  </span>
+                </h3>
+              </div>
+              <p className="text-[12px] leading-[1.8]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
+                {current2026.line1}
+              </p>
+              <p className="text-[12px] leading-[1.8]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
+                {current2026.line2}
+              </p>
+            </div>
+            <div />
+          </div>
+
+          {/* Mobile 2026 */}
+          <div className="md:hidden pb-14">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'rgb(var(--primary))' }} />
+              <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>{current2026.year}</span>
+              <span className="text-[10px] font-medium" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{current2026.location}</span>
+            </div>
+            <div className="pl-5 ml-[3px]" style={{ borderLeft: '3px solid rgb(var(--border))' }}>
+              <h3 className="text-base font-semibold mb-1 tracking-tight" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.02em' }}>
+                <span className="text-[10px] font-bold mr-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>{String(timelineData.length + 1).padStart(2, '0')}</span>
+                {current2026.title}
+              </h3>
+              <p className="text-[11px] leading-[1.75]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{current2026.line1}</p>
+              <p className="text-[11px] leading-[1.75]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{current2026.line2}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* NOW node */}
+        <div className="hidden md:grid pb-16" style={{ gridTemplateColumns: '140px 48px 1fr 260px' }}>
+          <div />
+          <div className="flex justify-center"><div className="w-3 h-3 rounded-full" style={{ background: 'rgb(var(--primary))' }} /></div>
+          <div className="pl-5">
+            <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>Now</span>
+          </div>
+          <div />
+        </div>
+
+        {/* Mobile NOW */}
+        <div className="md:hidden pb-14">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: 'rgb(var(--primary))' }} />
+            <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>Now</span>
+          </div>
+        </div>
       </div>
 
-      {/* End */}
-      <div className="hidden md:grid pb-16" style={{ gridTemplateColumns: '140px 48px 1fr 260px' }}>
-        <div />
-        <div className="flex justify-center"><div className="w-3 h-3 rounded-full" style={{ background: 'rgb(var(--primary))' }} /></div>
-        <div className="pl-5">
-          <span className="text-[10px] tracking-[0.15em] uppercase font-bold" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>Now</span>
+      {/* Frozen bottom banner — visible after scrolling past hero, hidden when 2026 is inline */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none"
+        style={{
+          opacity: bannerVisible ? 1 : 0,
+          transform: bannerVisible ? 'translateY(0)' : 'translateY(100%)',
+          transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        <div
+          className="pointer-events-auto"
+          style={{
+            background: 'linear-gradient(to top, rgb(var(--background)) 60%, rgb(var(--background) / 0))',
+            paddingTop: '48px',
+          }}
+        >
+          <div className="max-w-7xl mx-auto w-full px-4 md:px-8">
+          <div className="max-w-6xl pb-6">
+            {/* Desktop banner */}
+            <div className="hidden md:grid" style={{ gridTemplateColumns: '140px 48px 1fr 260px' }}>
+              <div className="text-right pr-4">
+                <div
+                  className="text-2xl font-bold tabular-nums"
+                  style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
+                >
+                  2026
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <div
+                  className="w-[10px] h-[10px] rounded-full flex-shrink-0"
+                  style={{
+                    background: 'rgb(var(--primary))',
+                    boxShadow: '0 0 0 4px rgb(var(--primary) / 0.15)',
+                    animation: 'bannerPulse 2s ease-in-out infinite',
+                  }}
+                />
+              </div>
+              <div className="pl-5">
+                <div className="flex items-baseline gap-3 mb-1">
+                  <span className="text-[11px] font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>
+                    {String(timelineData.length + 1).padStart(2, '0')}
+                  </span>
+                  <span className="text-base font-semibold tracking-tight" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
+                    {current2026.title}
+                  </span>
+                </div>
+                <p className="text-[11px]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
+                  {current2026.line1}
+                </p>
+                <p className="text-[11px]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
+                  {current2026.line2}
+                </p>
+              </div>
+              <div />
+            </div>
+
+            {/* Mobile banner */}
+            <div className="md:hidden">
+              <div className="flex items-center gap-3 mb-1">
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ background: 'rgb(var(--primary))', animation: 'bannerPulse 2s ease-in-out infinite' }}
+                />
+                <span className="text-lg font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>2026</span>
+                <span className="text-sm font-semibold" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))' }}>{current2026.title}</span>
+              </div>
+              <p className="pl-5 ml-[3px] text-[10px] leading-[1.6]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
+                {current2026.line1}<br />{current2026.line2}
+              </p>
+            </div>
+          </div>
+          </div>
         </div>
-        <div />
       </div>
 
       <style jsx>{`
         @keyframes boldBob {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(6px); }
+        }
+        @keyframes bannerPulse {
+          0%, 100% { box-shadow: 0 0 0 4px rgb(var(--primary) / 0.15); }
+          50% { box-shadow: 0 0 0 8px rgb(var(--primary) / 0.08); }
         }
       `}</style>
     </section>
