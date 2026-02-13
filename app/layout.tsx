@@ -12,8 +12,8 @@ import { baseUrl } from './sitemap'
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: 'Generalist Builder | Engineering + Product + Businesses',
-    template: '%s | Generalist Builder',
+    default: 'Raj | Software Engineer & Entrepreneur',
+    template: '%s | Software Engineer & Entrepreneur',
   },
   description: 'I build experiences—both digital and physical. Engineering background. Founder at ARK Expereinces.',
   icons: {
@@ -21,10 +21,10 @@ export const metadata: Metadata = {
     apple: '/raj-avatar.webp',
   },
   openGraph: {
-    title: 'Generalist Builder | Engineering + Product + Businesses',
+    title: 'Raj | Software Engineer & Entrepreneur',
     description: 'I build experiences—both digital and physical. Engineering background. Founder at ARK Expereinces.',
     url: baseUrl,
-    siteName: 'Generalist Builder',
+    siteName: 'Raj',
     locale: 'en_US',
     type: 'website',
   },

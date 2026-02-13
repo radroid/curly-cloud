@@ -74,7 +74,7 @@ export default async function Blog({ params }: { params: Promise<{ slug: string 
     url: `${baseUrl}/blog/${post.slug}`,
     author: {
       '@type': 'Person',
-      name: 'Generalist Builder',
+      name: 'Raj',
     },
   }
 
