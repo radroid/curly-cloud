@@ -316,7 +316,12 @@ function TechIcon({ Icon, name }: {
 // ─── Page ───────────────────────────────────────────────────
 
 export default function Page() {
-  const [bootDone, setBootDone] = useState(false)
+  const [bootDone, setBootDone] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('bootDone') === 'true'
+    }
+    return false
+  })
 
   const projects = portfolioProjects
 
@@ -372,7 +377,10 @@ export default function Page() {
 
   return (
     <div className="w-full" style={{ color: 'rgb(var(--foreground))' }}>
-      {!bootDone && <BootSequence onComplete={() => setBootDone(true)} />}
+      {!bootDone && <BootSequence onComplete={() => {
+        setBootDone(true)
+        sessionStorage.setItem('bootDone', 'true')
+      }} />}
 
       <div style={{ opacity: bootDone ? 1 : 0, transition: 'opacity 0.6s ease 0.2s' }}>
 
