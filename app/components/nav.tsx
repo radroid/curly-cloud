@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { TextScramble } from '@/app/components/ui/text-scramble'
 
 const navItems = {
@@ -72,23 +73,22 @@ export function Navbar() {
               <Link
                 key={path}
                 href={path}
-                className="relative py-2 px-4 rounded-lg transition-colors duration-200"
-                style={{
-                  backgroundColor: isActive
-                    ? 'rgb(var(--primary) / 0.1)'
-                    : 'transparent',
-                }}
+                className="relative py-2 px-4 rounded-lg"
               >
-                <TextScramble
-                  text={name}
-                  textSize="text-xs"
-                />
                 {isActive && (
-                  <span
-                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                    style={{ backgroundColor: 'rgb(var(--primary))' }}
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-0 rounded-lg"
+                    style={{ backgroundColor: 'rgb(var(--primary) / 0.1)' }}
+                    transition={{ type: 'spring', stiffness: 250, damping: 50 }}
                   />
                 )}
+                <span className="relative z-10">
+                  <TextScramble
+                    text={name}
+                    textSize="text-xs"
+                  />
+                </span>
               </Link>
             )
           })}
