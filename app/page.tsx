@@ -586,34 +586,71 @@ export default function Page() {
         {/* ── Pilot CTA ──────────────────────────────── */}
         <section className="py-12 sm:py-16">
           <Reveal>
-            <div className="rounded-2xl p-8 sm:p-12 relative overflow-hidden" style={{
+            <div className="group/cta rounded-2xl p-8 sm:p-12 relative overflow-hidden" style={{
               background: 'linear-gradient(135deg, rgb(var(--primary)), rgb(var(--accent)))',
-              color: 'rgb(var(--primary-foreground))',
-              boxShadow: '0 20px 60px rgb(var(--primary) / 0.2)',
+              color: '#ffffff',
+              boxShadow: '0 20px 60px rgb(var(--primary) / 0.25)',
             }}>
-              {/* Layered depth strips */}
-              <div className="absolute top-0 right-0 w-1/3 h-full opacity-10" style={{ background: 'linear-gradient(90deg, transparent, currentColor)' }} />
-              <div className="absolute bottom-0 left-0 w-full h-1/3 opacity-5" style={{ background: 'linear-gradient(0deg, currentColor, transparent)' }} />
-              <div className="relative">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-4">Want proof before you hire?</h2>
-                <p className="text-sm sm:text-base mb-6 opacity-90 max-w-2xl leading-relaxed">
-                  I offer a 1-week pilot project for any company I'm seriously interested in joining. 30-min call, I build it in one week, you evaluate. No risk, just results.
+              {/* Dark overlay for guaranteed text contrast across all themes */}
+              <div className="absolute inset-0 bg-gradient-to-br from-black/30 via-black/15 to-black/10" />
+              {/* Radial highlight for depth */}
+              <div className="absolute inset-0 opacity-30 transition-opacity duration-700 group-hover/cta:opacity-40" style={{
+                background: 'radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.25), transparent 60%)',
+              }} />
+              {/* Dot texture */}
+              <div className="absolute inset-0 opacity-[0.04]" style={{
+                backgroundImage: 'radial-gradient(rgba(255,255,255,0.8) 1px, transparent 1px)',
+                backgroundSize: '20px 20px',
+              }} />
+
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold mb-5 tracking-wider uppercase bg-white/15 border border-white/20 backdrop-blur-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                  Zero Risk Offer
+                </div>
+
+                <h2 className="text-2xl sm:text-3xl font-bold mb-3 drop-shadow-sm">Want proof before you hire?</h2>
+                <p className="text-sm sm:text-base mb-8 max-w-2xl leading-relaxed text-white/80">
+                  I offer a 1-week pilot project for any company I&apos;m seriously interested in joining. 30-min call, I build it in one week, you evaluate. No risk, just results.
                 </p>
-                <div className="flex flex-wrap gap-3">
-                  <button
-                    onClick={async () => {
-                      const { getCalApi } = await import('@calcom/embed-react')
-                      const cal = await getCalApi({ namespace: 'problem-ranter' })
-                      cal('modal', { calLink: 'createclub/problem-ranter', config: { layout: 'month_view' } })
-                    }}
-                    className="text-sm font-bold px-6 py-3 rounded-xl transition-all hover:scale-105 cursor-pointer"
-                    style={{ backgroundColor: 'rgb(var(--primary-foreground))', color: 'rgb(var(--primary))' }}>
-                    Let&apos;s Talk
-                  </button>
+
+                <div className="flex flex-wrap gap-4">
+                  {/* ── Primary CTA with shimmer + glow ── */}
+                  <div className="relative">
+                    <div className="absolute -inset-1.5 rounded-xl bg-white/40 blur-lg opacity-50" />
+                    <button
+                      onClick={async () => {
+                        const { getCalApi } = await import('@calcom/embed-react')
+                        const cal = await getCalApi({ namespace: 'problem-ranter' })
+                        cal('modal', { calLink: 'createclub/problem-ranter', config: { layout: 'month_view' } })
+                      }}
+                      className="group/btn relative text-sm font-bold px-7 py-3.5 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-0.5 overflow-hidden bg-white text-slate-900"
+                      style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
+                      <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/[0.06] to-transparent pointer-events-none" />
+                      <span className="relative z-10 flex items-center gap-2">
+                        Let&apos;s Talk
+                        <svg className="w-4 h-4 transition-transform duration-300 group-hover/btn:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                        </svg>
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* ── Email button with envelope→paper plane morph ── */}
                   <a href="mailto:raj9dholakia@gmail.com"
-                    className="text-sm font-medium px-6 py-3 rounded-xl border-2 transition-all hover:scale-105"
-                    style={{ borderColor: 'currentColor' }}>
-                    raj9dholakia@gmail.com
+                    className="group/email relative text-sm font-bold px-7 py-3.5 rounded-xl border-2 border-white/30 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/50 overflow-hidden">
+                    <div className="absolute inset-0 rounded-[10px] bg-white/0 group-hover/email:bg-white/15 transition-all duration-300" />
+                    <span className="relative z-10 flex items-center gap-2 text-white/85 group-hover/email:text-white transition-colors duration-300">
+                      <span className="relative w-4 h-4">
+                        <svg className="absolute inset-0 w-4 h-4 transition-all duration-300 group-hover/email:opacity-0 group-hover/email:-translate-y-1 group-hover/email:scale-75" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                        </svg>
+                        <svg className="absolute inset-0 w-4 h-4 transition-all duration-300 opacity-0 translate-y-1 scale-75 group-hover/email:opacity-100 group-hover/email:translate-y-0 group-hover/email:scale-100 group-hover/email:-rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                        </svg>
+                      </span>
+                      Email Me
+                    </span>
                   </a>
                 </div>
               </div>
@@ -621,35 +658,6 @@ export default function Page() {
           </Reveal>
         </section>
 
-        {/* ── Contact Footer ─────────────────────────── */}
-        <section className="py-8 pb-4">
-          <Reveal>
-            <DepthCard depth={1} className="p-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#28c840' }} />
-                  <span className="text-sm" style={{ color: 'rgb(var(--muted-foreground))' }}>
-                    Open to Full-Stack / AI Developer roles
-                  </span>
-                </div>
-                <div className="flex gap-5">
-                  <a href="https://linkedin.com/in/raj-dholakia" target="_blank" rel="noopener noreferrer"
-                    className="text-sm font-semibold hover:opacity-70 transition-opacity" style={{ color: 'rgb(var(--primary))' }}>
-                    LinkedIn
-                  </a>
-                  <a href="mailto:raj9dholakia@gmail.com"
-                    className="text-sm font-semibold hover:opacity-70 transition-opacity" style={{ color: 'rgb(var(--primary))' }}>
-                    Email
-                  </a>
-                  <a href="https://github.com/radroid" target="_blank" rel="noopener noreferrer"
-                    className="text-sm font-semibold hover:opacity-70 transition-opacity" style={{ color: 'rgb(var(--primary))' }}>
-                    GitHub
-                  </a>
-                </div>
-              </div>
-            </DepthCard>
-          </Reveal>
-        </section>
 
       </div>
     </div>
