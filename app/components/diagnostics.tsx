@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
+import { useLocation } from '@/app/lib/use-location'
 
 interface DiagnosticsData {
-  location: string
   platform: string
   language: string
   network: string
@@ -16,16 +17,14 @@ interface DiagnosticsData {
   pixelRatio: string
   timezone: string
   host: string
-  cookies: string
-  java: string
-  webgl: string
+  cookies: boolean
+  webgl: boolean
   battery: string
-  geolocation: string
-  localStorage: string
-  sessionStorage: string
-  indexedDB: string
-  stat: string
-  userAgent: string
+  geolocation: boolean
+  localStorage: boolean
+  sessionStorage: boolean
+  indexedDB: boolean
+  online: boolean
 }
 
 interface TimeData {
@@ -36,447 +35,421 @@ interface TimeData {
 }
 
 interface DiagnosticsProps {
-  isOpen?: boolean
-  onClose?: () => void
-  showButton?: boolean
-  className?: string
-  invertColors?: boolean
+  isOpen: boolean
+  onClose: () => void
 }
 
-export function Diagnostics({ isOpen: externalIsOpen, onClose, showButton = true, className = '', invertColors = false }: DiagnosticsProps = {}) {
+export function Diagnostics({ isOpen, onClose }: DiagnosticsProps) {
   const [data, setData] = useState<DiagnosticsData | null>(null)
-  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [time, setTime] = useState<TimeData | null>(null)
+  const [mounted, setMounted] = useState(false)
   const startTimeRef = useRef<number>(Date.now())
+  const cardRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+  const location = useLocation()
 
-  // Use external isOpen if provided, otherwise use internal state
-  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
-  const setIsOpen = (open: boolean) => {
-    if (externalIsOpen === undefined) {
-      setInternalIsOpen(open)
-    } else if (!open && onClose) {
-      onClose()
-    }
-  }
-
+  // Track mount for portal
   useEffect(() => {
-    const fetchDiagnostics = async () => {
-      const diagnostics: Partial<DiagnosticsData> = {}
+    setMounted(true)
+  }, [])
 
-      // Platform
-      diagnostics.platform = navigator.platform || 'Unknown'
+  // Gather diagnostics data
+  useEffect(() => {
+    const gather = async () => {
+      const d: Partial<DiagnosticsData> = {}
 
-      // Language
-      diagnostics.language = navigator.language || 'Unknown'
+      d.platform = navigator.platform || 'Unknown'
+      d.language = navigator.language || 'Unknown'
 
-      // Network (using connection API if available)
-      const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
-      diagnostics.network = connection?.effectiveType || 'Unknown'
+      const conn = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection
+      d.network = conn?.effectiveType || 'Unknown'
 
-      // Memory (if available)
-      const memory = (performance as any).memory
-      if (memory) {
-        const usedMB = Math.round(memory.usedJSHeapSize / 1048576)
-        const totalMB = Math.round(memory.totalJSHeapSize / 1048576)
-        diagnostics.memory = `${usedMB}/${totalMB}MB`
+      const mem = (performance as any).memory
+      if (mem) {
+        d.memory = `${Math.round(mem.usedJSHeapSize / 1048576)}/${Math.round(mem.totalJSHeapSize / 1048576)}MB`
       } else {
-        diagnostics.memory = 'N/A'
+        d.memory = 'N/A'
       }
 
-      // CPU Cores
-      diagnostics.cores = navigator.hardwareConcurrency?.toString() || 'Unknown'
+      d.cores = navigator.hardwareConcurrency?.toString() || 'Unknown'
+      d.uptime = `${Math.floor((Date.now() - startTimeRef.current) / 1000)}S`
+      d.viewport = `${window.innerWidth}x${window.innerHeight}`
+      d.screen = `${window.screen.width}x${window.screen.height}`
+      d.colorDepth = `${window.screen.colorDepth}BIT`
+      d.pixelRatio = `${window.devicePixelRatio || 1}x`
+      d.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown'
+      d.host = window.location.hostname || 'Unknown'
+      d.cookies = navigator.cookieEnabled
+      d.online = navigator.onLine
 
-      // Uptime (time since page load)
-      const uptimeSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
-      diagnostics.uptime = `${uptimeSeconds}S`
-
-      // Viewport
-      diagnostics.viewport = `${window.innerWidth}x${window.innerHeight}`
-
-      // Screen
-      diagnostics.screen = `${window.screen.width}x${window.screen.height}`
-
-      // Color Depth
-      diagnostics.colorDepth = `${window.screen.colorDepth}BIT`
-
-      // Pixel Ratio
-      diagnostics.pixelRatio = window.devicePixelRatio?.toString() || '1'
-
-      // Timezone
-      diagnostics.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown'
-
-      // Host
-      diagnostics.host = window.location.hostname || 'Unknown'
-
-      // Cookies
-      diagnostics.cookies = navigator.cookieEnabled ? 'ENABLED' : 'DISABLED'
-
-      // Java
-      diagnostics.java = (navigator as any).javaEnabled?.() ? 'ENABLED' : 'DISABLED'
-
-      // WebGL
       const canvas = document.createElement('canvas')
       const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
-      diagnostics.webgl = gl ? 'ENABLED' : 'DISABLED'
+      d.webgl = !!gl
 
-      // Battery (if available)
       if ('getBattery' in navigator) {
         try {
-          const battery = await (navigator as any).getBattery()
-          const level = Math.round(battery.level * 100)
-          const charging = battery.charging ? 'CHG' : ''
-          diagnostics.battery = `${level}% ${charging}`.trim()
+          const bat = await (navigator as any).getBattery()
+          const level = Math.round(bat.level * 100)
+          d.battery = bat.charging ? `${level}% CHG` : `${level}%`
         } catch {
-          diagnostics.battery = 'N/A'
+          d.battery = 'N/A'
         }
       } else {
-        diagnostics.battery = 'N/A'
+        d.battery = 'N/A'
       }
 
-      // Geolocation
-      diagnostics.geolocation = 'geolocation' in navigator ? 'AVAILABLE' : 'UNAVAILABLE'
+      d.geolocation = 'geolocation' in navigator
 
-      // Local Storage
       try {
-        localStorage.setItem('test', 'test')
-        localStorage.removeItem('test')
-        diagnostics.localStorage = 'AVAILABLE'
+        window.localStorage.setItem('__test', '1')
+        window.localStorage.removeItem('__test')
+        d.localStorage = true
       } catch {
-        diagnostics.localStorage = 'UNAVAILABLE'
+        d.localStorage = false
       }
 
-      // Session Storage
       try {
-        sessionStorage.setItem('test', 'test')
-        sessionStorage.removeItem('test')
-        diagnostics.sessionStorage = 'AVAILABLE'
+        window.sessionStorage.setItem('__test', '1')
+        window.sessionStorage.removeItem('__test')
+        d.sessionStorage = true
       } catch {
-        diagnostics.sessionStorage = 'UNAVAILABLE'
+        d.sessionStorage = false
       }
 
-      // IndexedDB
-      diagnostics.indexedDB = 'indexedDB' in window ? 'AVAILABLE' : 'UNAVAILABLE'
+      d.indexedDB = 'indexedDB' in window
 
-      // Stat (Online/Offline)
-      diagnostics.stat = navigator.onLine ? '• ONLINE' : '• OFFLINE'
-
-      // User Agent
-      diagnostics.userAgent = navigator.userAgent || 'Unknown'
-
-      // Fetch IP location
-      try {
-        const ipResponse = await fetch('https://ipapi.co/json/')
-        const ipData = await ipResponse.json()
-        if (ipData.city && ipData.region) {
-          diagnostics.location = `${ipData.city}, ${ipData.region}, ${ipData.country_name}`
-        } else if (ipData.country_name) {
-          diagnostics.location = ipData.country_name
-        } else {
-          diagnostics.location = 'Unknown'
-        }
-      } catch (error) {
-        // Fallback to another IP service
-        try {
-          const fallbackResponse = await fetch('https://ip-api.com/json/')
-          const fallbackData = await fallbackResponse.json()
-          if (fallbackData.city && fallbackData.regionName) {
-            diagnostics.location = `${fallbackData.city}, ${fallbackData.regionName}, ${fallbackData.country}`
-          } else if (fallbackData.country) {
-            diagnostics.location = fallbackData.country
-          } else {
-            diagnostics.location = 'Unknown'
-          }
-        } catch {
-          diagnostics.location = 'Unknown'
-        }
-      }
-
-      setData(diagnostics as DiagnosticsData)
+      setData(d as DiagnosticsData)
     }
 
-    fetchDiagnostics()
+    gather()
 
-    // Update time function
     const updateTime = () => {
       const now = new Date()
-      const utcTime = now.toISOString().substring(11, 19) // HH:MM:SS
-      const localTime = now.toTimeString().substring(0, 8) // HH:MM:SS
-      const unixTime = Math.floor(now.getTime() / 1000)
-
-      // Get timezone offset
       const offset = -now.getTimezoneOffset()
       const offsetHours = Math.floor(Math.abs(offset) / 60)
       const offsetMinutes = Math.abs(offset) % 60
-      const offsetSign = offset >= 0 ? '+' : '-'
-      const zone = `GMT${offsetSign}${offsetHours.toString().padStart(2, '0')}:${offsetMinutes.toString().padStart(2, '0')}`
+      const sign = offset >= 0 ? '+' : '-'
 
       setTime({
-        utc: utcTime,
-        local: localTime,
-        unix: unixTime,
-        zone,
+        utc: now.toISOString().substring(11, 19),
+        local: now.toTimeString().substring(0, 8),
+        unix: Math.floor(now.getTime() / 1000),
+        zone: `GMT${sign}${String(offsetHours).padStart(2, '0')}:${String(offsetMinutes).padStart(2, '0')}`,
       })
     }
 
-    // Initialize time
     updateTime()
 
-    // Update viewport on resize
-    const updateViewport = () => {
-      setData((prev) => {
-        if (!prev) return prev
-        return { ...prev, viewport: `${window.innerWidth}x${window.innerHeight}` }
-      })
+    const handleResize = () => {
+      setData((prev) => prev ? { ...prev, viewport: `${window.innerWidth}x${window.innerHeight}` } : prev)
     }
-    window.addEventListener('resize', updateViewport)
+    window.addEventListener('resize', handleResize)
 
-    // Update uptime and time every second
     const interval = setInterval(() => {
       setData((prev) => {
         if (!prev) return prev
-        const uptimeSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
-        return { ...prev, uptime: `${uptimeSeconds}S` }
+        return { ...prev, uptime: `${Math.floor((Date.now() - startTimeRef.current) / 1000)}S` }
       })
       updateTime()
     }, 1000)
 
     return () => {
       clearInterval(interval)
-      window.removeEventListener('resize', updateViewport)
+      window.removeEventListener('resize', handleResize)
     }
   }, [])
 
-  // Color scheme based on invertColors prop - defined before any returns
-  const bgColor = invertColors ? 'rgb(var(--foreground))' : 'rgb(var(--card))'
-  const textColor = invertColors ? 'rgb(var(--background))' : 'rgb(var(--foreground))'
-  const mutedColor = invertColors ? 'rgb(var(--background) / 0.7)' : 'rgb(var(--muted-foreground))'
-  const borderColor = invertColors ? 'rgba(var(--background), 0.2)' : 'rgba(var(--border), 0.5)'
+  // Scroll lock + focus management
+  useEffect(() => {
+    if (!isOpen) return
 
-  if (!data) {
-    return (
-      <div className="relative">
-        <div
-          className="rounded-lg p-3 text-xs font-mono shadow-lg transition-colors duration-300"
-          style={{
-            backgroundColor: bgColor,
-          }}
-        >
-          <div style={{ color: mutedColor }}>LOADING...</div>
-        </div>
-      </div>
+    previousFocusRef.current = document.activeElement as HTMLElement
+    document.body.style.overflow = 'hidden'
+
+    // Focus close button after portal renders
+    requestAnimationFrame(() => {
+      closeButtonRef.current?.focus()
+    })
+
+    return () => {
+      document.body.style.overflow = ''
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
+
+  // Escape key
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
+  // Focus trap
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab') return
+
+    const card = cardRef.current
+    if (!card) return
+
+    const focusable = card.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     )
-  }
+    if (focusable.length === 0) return
 
-  const diagnosticsContent = (
-    <div
-      className={`rounded-lg p-4 text-xs font-mono max-w-md max-h-[70vh] overflow-y-auto shadow-lg transition-colors duration-300 ${className}`}
-      style={{
-        backgroundColor: bgColor,
-      }}
-    >
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault()
+      last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault()
+      first.focus()
+    }
+  }, [])
+
+  // Check reduced motion
+  const prefersReducedMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  if (!isOpen || !mounted) return null
+
+  const shortTimezone = data?.timezone?.split('/').pop()?.replace(/_/g, ' ') || ''
+
+  const capabilities = [
+    { label: 'COOKIES', active: data?.cookies },
+    { label: 'WEBGL', active: data?.webgl },
+    { label: 'STORAGE', active: data?.localStorage },
+    { label: 'SESSION', active: data?.sessionStorage },
+    { label: 'IDB', active: data?.indexedDB },
+    { label: 'GEO', active: data?.geolocation },
+  ]
+
+  const gridRows: [string, string, string, string][] = data ? [
+    ['LANG', data.language, 'VIEW', data.viewport],
+    ['NET', data.network, 'SCREEN', data.screen],
+    ['MEM', data.memory, 'DEPTH', data.colorDepth],
+    ['CORES', data.cores, 'DPI', data.pixelRatio],
+    ['UP', data.uptime, 'TZ', shortTimezone],
+    ['BATT', data.battery, 'HOST', data.host],
+  ] : []
+
+  const overlay = (
+    <>
+      {/* Blur overlay */}
       <div
-        className="mb-3 font-semibold text-sm border-b pb-2"
+        className="fixed inset-0 z-[90]"
         style={{
-          color: textColor,
-          borderBottomColor: borderColor,
-          borderBottomWidth: '1px',
-          borderBottomStyle: 'solid',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          backgroundColor: 'rgb(var(--background) / 0.3)',
+          transition: prefersReducedMotion ? 'none' : 'opacity 200ms ease-out',
         }}
-      >
-        DIAGNOSTICS
-      </div>
-      <div className="space-y-1.5">
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>LOCATION:</span>
-          <span style={{ color: textColor }}>{data.location}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>PLATFORM:</span>
-          <span style={{ color: textColor }}>{data.platform}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>LANGUAGE:</span>
-          <span style={{ color: textColor }}>{data.language}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>NETWORK:</span>
-          <span style={{ color: textColor }}>{data.network}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>MEMORY:</span>
-          <span style={{ color: textColor }}>{data.memory}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>CORES:</span>
-          <span style={{ color: textColor }}>{data.cores}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>UPTIME:</span>
-          <span style={{ color: textColor }}>{data.uptime}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>VIEWPORT:</span>
-          <span style={{ color: textColor }}>{data.viewport}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>SCREEN:</span>
-          <span style={{ color: textColor }}>{data.screen}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>COLOR DEPTH:</span>
-          <span style={{ color: textColor }}>{data.colorDepth}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>PIXEL RATIO:</span>
-          <span style={{ color: textColor }}>{data.pixelRatio}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>TIMEZONE:</span>
-          <span style={{ color: textColor }}>{data.timezone}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>HOST:</span>
-          <span style={{ color: textColor }}>{data.host}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>COOKIES:</span>
-          <span style={{ color: textColor }}>{data.cookies}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>JAVA:</span>
-          <span style={{ color: textColor }}>{data.java}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>WEBGL:</span>
-          <span style={{ color: textColor }}>{data.webgl}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>BATTERY:</span>
-          <span style={{ color: textColor }}>{data.battery}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>GEOLOCATION:</span>
-          <span style={{ color: textColor }}>{data.geolocation}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>LOCAL STORAGE:</span>
-          <span style={{ color: textColor }}>{data.localStorage}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>SESSION STORAGE:</span>
-          <span style={{ color: textColor }}>{data.sessionStorage}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>INDEXEDDB:</span>
-          <span style={{ color: textColor }}>{data.indexedDB}</span>
-        </div>
-        <div className="flex justify-between">
-          <span style={{ color: mutedColor }}>STAT:</span>
-          <span style={{ color: textColor }}>{data.stat}</span>
-        </div>
-        <div
-          className="mt-3 pt-3"
-          style={{
-            borderTopColor: borderColor,
-            borderTopWidth: '1px',
-            borderTopStyle: 'solid',
-          }}
-        >
-          <div className="mb-1" style={{ color: mutedColor }}>USER AGENT:</div>
-          <div className="break-all text-[10px]" style={{ color: textColor }}>
-            {data.userAgent}
-          </div>
-        </div>
-      </div>
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-      {time && (
+      {/* Card container */}
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-label="System diagnostics"
+        onKeyDown={handleKeyDown}
+      >
         <div
-          className="mt-4 pt-4"
+          ref={cardRef}
+          className="w-full max-w-[380px] max-h-[85vh] overflow-y-auto font-mono text-xs"
           style={{
-            borderTopColor: borderColor,
-            borderTopWidth: '1px',
-            borderTopStyle: 'solid',
+            backgroundColor: 'rgb(var(--card))',
+            color: 'rgb(var(--foreground))',
+            border: '4px solid rgb(var(--foreground))',
+            animation: prefersReducedMotion ? 'none' : 'diagnostics-in 200ms ease-out',
           }}
+          onClick={(e) => e.stopPropagation()}
         >
+          {/* Close button row */}
+          <div className="flex justify-end" style={{ borderBottom: '2px solid rgb(var(--foreground))' }}>
+            <button
+              ref={closeButtonRef}
+              onClick={onClose}
+              className="flex items-center justify-center font-bold text-base cursor-pointer"
+              style={{
+                width: '44px',
+                height: '44px',
+                color: 'rgb(var(--foreground))',
+                outline: 'none',
+              }}
+              aria-label="Close diagnostics"
+              onFocus={(e) => {
+                e.currentTarget.style.outline = '2px solid rgb(var(--primary))'
+                e.currentTarget.style.outlineOffset = '-2px'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.outline = 'none'
+              }}
+            >
+              X
+            </button>
+          </div>
+
+          {/* Inverted header bar */}
           <div
-            className="mb-2 font-semibold text-sm border-b pb-2"
+            className="px-4 py-3 text-sm font-bold tracking-wider"
             style={{
-              color: textColor,
-              borderBottomColor: borderColor,
-              borderBottomWidth: '1px',
-              borderBottomStyle: 'solid',
+              backgroundColor: 'rgb(var(--foreground))',
+              color: 'rgb(var(--background))',
             }}
           >
-            TIME
+            YOUR DATA. EXPOSED.
           </div>
-          <div className="space-y-1.5">
-            <div className="flex justify-between">
-              <span style={{ color: mutedColor }}>UTC:</span>
-              <span style={{ color: textColor }}>{time.utc}</span>
+
+          {/* Location */}
+          <div className="px-4 pt-4 pb-3">
+            <div
+              className="font-bold uppercase leading-tight"
+              style={{
+                fontSize: '20px',
+                color: 'rgb(var(--foreground))',
+              }}
+            >
+              {location.full}
             </div>
-            <div className="flex justify-between">
-              <span style={{ color: mutedColor }}>LOCAL:</span>
-              <span style={{ color: textColor }}>{time.local}</span>
+            {location.estimated && (
+              <div
+                className="mt-1 text-[10px] uppercase tracking-wider"
+                style={{ color: 'rgb(var(--muted-foreground))' }}
+              >
+                * Estimated from timezone
+              </div>
+            )}
+          </div>
+
+          {/* Heavy border */}
+          <div style={{ borderBottom: '4px solid rgb(var(--foreground))' }} />
+
+          {/* Platform + status */}
+          <div
+            className="px-4 py-3 flex items-center justify-between"
+            style={{ borderBottom: '2px solid rgb(var(--foreground))' }}
+          >
+            <span className="font-bold" style={{ color: 'rgb(var(--foreground))' }}>
+              {data?.platform || 'Unknown'}
+            </span>
+            <span
+              className="px-2 py-0.5 text-[10px] font-bold tracking-wider"
+              style={{
+                backgroundColor: data?.online ? 'rgb(var(--primary))' : 'rgb(var(--muted-foreground))',
+                color: data?.online ? 'rgb(var(--primary-foreground))' : 'rgb(var(--background))',
+              }}
+            >
+              {data?.online ? 'ONLINE' : 'OFFLINE'}
+            </span>
+          </div>
+
+          {/* Two-column data grid */}
+          {data && (
+            <div className="px-4 py-2" style={{ borderBottom: '2px solid rgb(var(--foreground))' }}>
+              {gridRows.map(([label1, value1, label2, value2], i) => (
+                <div
+                  key={i}
+                  className="grid py-1.5"
+                  style={{
+                    gridTemplateColumns: '1fr 1fr',
+                    borderBottom: i < gridRows.length - 1 ? '1px solid rgb(var(--border))' : 'none',
+                  }}
+                >
+                  <div className="flex justify-between pr-3" style={{ borderRight: '1px solid rgb(var(--border))' }}>
+                    <span style={{ color: 'rgb(var(--muted-foreground))' }}>{label1}</span>
+                    <span className="font-bold" style={{ color: 'rgb(var(--foreground))' }}>{value1}</span>
+                  </div>
+                  <div className="flex justify-between pl-3">
+                    <span style={{ color: 'rgb(var(--muted-foreground))' }}>{label2}</span>
+                    <span className="font-bold" style={{ color: 'rgb(var(--foreground))' }}>{value2}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-between">
-              <span style={{ color: mutedColor }}>UNIX:</span>
-              <span style={{ color: textColor }}>{time.unix}</span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: mutedColor }}>ZONE:</span>
-              <span style={{ color: textColor }}>{time.zone}</span>
+          )}
+
+          {/* Capability pills */}
+          <div className="px-4 py-3" style={{ borderBottom: '4px solid rgb(var(--foreground))' }}>
+            <div className="flex flex-wrap gap-2">
+              {capabilities.map(({ label, active }) => (
+                <span
+                  key={label}
+                  className="px-2 py-1 text-[10px] font-bold tracking-wider"
+                  style={active ? {
+                    backgroundColor: 'rgb(var(--foreground))',
+                    color: 'rgb(var(--background))',
+                  } : {
+                    backgroundColor: 'rgb(var(--card))',
+                    color: 'rgb(var(--foreground))',
+                    border: '1px solid rgb(var(--foreground))',
+                  }}
+                >
+                  {label}
+                </span>
+              ))}
             </div>
           </div>
+
+          {/* Time section */}
+          {time && (
+            <div className="px-4 py-3">
+              <div className="flex items-baseline justify-between">
+                <span
+                  className="font-bold"
+                  style={{
+                    fontSize: '28px',
+                    color: 'rgb(var(--foreground))',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {time.local}
+                </span>
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: 'rgb(var(--muted-foreground))' }}
+                >
+                  {time.zone}
+                </span>
+              </div>
+              <div
+                className="flex items-baseline justify-between mt-1"
+                style={{ color: 'rgb(var(--muted-foreground))' }}
+              >
+                <span>UTC {time.utc}</span>
+                <span className="tabular-nums">{time.unix}</span>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+
+      {/* Animation keyframes */}
+      <style>{`
+        @keyframes diagnostics-in {
+          from {
+            opacity: 0;
+            transform: scale(0.96);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+    </>
   )
 
-  // If showButton is false, just return the content
-  if (!showButton) {
-    return diagnosticsContent
-  }
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="rounded-lg p-3 text-xs font-mono shadow-lg transition-all duration-300"
-        style={{
-          backgroundColor: 'rgb(var(--card))',
-          borderColor: 'transparent',
-          borderWidth: '1px',
-          borderStyle: 'solid',
-          transform: 'scale(1)',
-        }}
-        onMouseEnter={(e) => {
-          const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()
-          e.currentTarget.style.borderColor = `rgba(${primaryColor}, 0.3)`
-          e.currentTarget.style.transform = 'scale(1.05)'
-          e.currentTarget.style.boxShadow = `0 20px 25px -5px rgba(${primaryColor}, 0.2), 0 10px 10px -5px rgba(${primaryColor}, 0.1)`
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'transparent'
-          e.currentTarget.style.transform = 'scale(1)'
-          e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'
-        }}
-      >
-        <div style={{ color: textColor }}>
-          LOCATION: {data.location}
-        </div>
-        <div className="mt-1" style={{ color: mutedColor }}>
-          {data.stat} • {data.platform}
-        </div>
-      </button>
-
-      {isOpen && (
-        <div
-          className="absolute bottom-full right-0 mb-2"
-        >
-          {diagnosticsContent}
-        </div>
-      )}
-    </div>
-  )
+  return createPortal(overlay, document.body)
 }
-
