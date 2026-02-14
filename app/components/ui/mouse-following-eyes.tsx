@@ -1,53 +1,120 @@
 "use client"
 
 import * as React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Diagnostics } from "@/app/components/diagnostics"
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface EyeProps {
+  isMobile: boolean
+  side: "left" | "right"
+  isBlinking: boolean
+  isClose: boolean
+  isLonely: boolean
+  eyeRef: React.RefObject<HTMLDivElement>
+  pupilRef: React.RefObject<HTMLDivElement>
+}
+
+// ─── Main Component ──────────────────────────────────────────────────────────
+
 const MouseFollowingEyes: React.FC = () => {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isVisible, setIsVisible] = useState(false)
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [isBlinking, setIsBlinking] = useState(false)
+  // Threshold states — only update when crossing boundaries, not every frame
+  const [isClose, setIsClose] = useState(false)
+  const [isLonely, setIsLonely] = useState(true)
+
   const eye1Ref = useRef<HTMLDivElement>(null)
   const eye2Ref = useRef<HTMLDivElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const pupil1Ref = useRef<HTMLDivElement>(null)
+  const pupil2Ref = useRef<HTMLDivElement>(null)
+  const innerRef = useRef<HTMLDivElement>(null)
 
+  // Cached eye rects — updated on resize/scroll only
+  const eye1Rect = useRef<DOMRect | null>(null)
+  const eye2Rect = useRef<DOMRect | null>(null)
+
+  const updateRects = useCallback(() => {
+    if (eye1Ref.current) eye1Rect.current = eye1Ref.current.getBoundingClientRect()
+    if (eye2Ref.current) eye2Rect.current = eye2Ref.current.getBoundingClientRect()
+  }, [])
+
+  // Detect mobile
   useEffect(() => {
-    // Fade in on mount
-    const timer = setTimeout(() => {
-      setIsVisible(true)
-    }, 300)
+    const touch = "ontouchstart" in window || navigator.maxTouchPoints > 0
+    setIsMobile(touch)
+  }, [])
 
-    // Track mouse position globally, throttled to one update per animation frame
+  // Core mousemove loop — all hot-path work via refs + direct DOM, zero React re-renders
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), 300)
+
     let rafId: number | null = null
     let latestX = 0
     let latestY = 0
+    // Track previous threshold states to avoid unnecessary setState calls
+    let prevIsClose = false
+    let prevIsLonely = true
+
+    // Initial rect cache
+    updateRects()
 
     const handleMouseMove = (e: MouseEvent) => {
       latestX = e.clientX
       latestY = e.clientY
       if (rafId === null) {
         rafId = requestAnimationFrame(() => {
-          setMousePos({ x: latestX, y: latestY })
           rafId = null
+
+          // ── Magnet: write directly to inner container ──
+          if (innerRef.current) {
+            const el = innerRef.current
+            const rect = el.getBoundingClientRect()
+            const cx = rect.left + rect.width / 2
+            const cy = rect.top + rect.height / 2
+            const dx = latestX - cx
+            const dy = latestY - cy
+            const dist = Math.sqrt(dx * dx + dy * dy)
+
+            // Threshold transitions — only set state when crossing
+            const nowClose = dist < 200
+            const nowLonely = dist > 400
+            if (nowClose !== prevIsClose) { prevIsClose = nowClose; setIsClose(nowClose) }
+            if (nowLonely !== prevIsLonely) { prevIsLonely = nowLonely; setIsLonely(nowLonely) }
+
+            if (dist < 250) {
+              const pull = (1 - dist / 250) ** 2
+              const dirX = dx / (dist || 1)
+              const dirY = dy / (dist || 1)
+              el.style.transform = `translate(${dirX * pull * 20}px, ${dirY * pull * 20}px)`
+            } else {
+              el.style.transform = "translate(0px, 0px)"
+            }
+          }
+
+          // ── Pupils: write directly to DOM ──
+          movePupil(pupil1Ref.current, eye1Rect.current, latestX, latestY)
+          movePupil(pupil2Ref.current, eye2Rect.current, latestX, latestY)
         })
       }
     }
 
+    const handleResizeOrScroll = () => updateRects()
     window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("resize", handleResizeOrScroll)
+    window.addEventListener("scroll", handleResizeOrScroll, { passive: true })
 
-    // Show tooltip if user hasn't seen it before
+    // Tooltip logic
     let showTimer: NodeJS.Timeout | undefined
     let hideTimer: NodeJS.Timeout | undefined
-
-    const hasSeenEyesTooltip = localStorage.getItem("eyes-tooltip-seen")
-    if (!hasSeenEyesTooltip) {
-      showTimer = setTimeout(() => {
-        setShowTooltip(true)
-      }, 1500)
-
+    const hasSeenTooltip = localStorage.getItem("eyes-tooltip-seen")
+    if (!hasSeenTooltip) {
+      showTimer = setTimeout(() => setShowTooltip(true), 1500)
       hideTimer = setTimeout(() => {
         setShowTooltip(false)
         localStorage.setItem("eyes-tooltip-seen", "true")
@@ -60,25 +127,50 @@ const MouseFollowingEyes: React.FC = () => {
       if (hideTimer) clearTimeout(hideTimer)
       if (rafId !== null) cancelAnimationFrame(rafId)
       window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("resize", handleResizeOrScroll)
+      window.removeEventListener("scroll", handleResizeOrScroll)
     }
+  }, [updateRects])
+
+  // Synchronized blinking
+  useEffect(() => {
+    let cancelled = false
+    const scheduleBlink = () => {
+      const delay = 3000 + Math.random() * 5000
+      return setTimeout(() => {
+        if (cancelled) return
+        setIsBlinking(true)
+        setTimeout(() => {
+          if (!cancelled) setIsBlinking(false)
+        }, 150 + Math.random() * 100)
+        if (Math.random() < 0.2) {
+          setTimeout(() => {
+            if (cancelled) return
+            setIsBlinking(true)
+            setTimeout(() => {
+              if (!cancelled) setIsBlinking(false)
+            }, 120)
+          }, 300)
+        }
+        timerId = scheduleBlink()
+      }, delay)
+    }
+    let timerId = scheduleBlink()
+    return () => { cancelled = true; clearTimeout(timerId) }
   }, [])
 
-  const handleEyesClick = () => {
-    setIsDiagnosticsOpen(!isDiagnosticsOpen)
-    if (showTooltip) {
-      setShowTooltip(false)
-      localStorage.setItem("eyes-tooltip-seen", "true")
-    }
-  }
+  const handleEyesClick = useCallback(() => {
+    setIsDiagnosticsOpen(prev => !prev)
+    setShowTooltip(prev => {
+      if (prev) localStorage.setItem("eyes-tooltip-seen", "true")
+      return false
+    })
+  }, [])
 
-  // Calculate the width of both eyes plus the gap between them
-  // Eyes: h-20 (80px) on mobile, h-24 (96px) on sm, h-28 (112px) on md
-  // Gap: gap-4 (16px) on mobile, gap-6 (24px) on sm, gap-8 (32px) on md
-  // Total width: 2 * eye_width + gap
+  const handleDiagnosticsClose = useCallback(() => setIsDiagnosticsOpen(false), [])
 
   return (
     <div
-      ref={containerRef}
       className="relative w-full -mt-4 sm:-mt-6 md:-mt-8"
       style={{
         opacity: isVisible ? 1 : 0,
@@ -86,29 +178,36 @@ const MouseFollowingEyes: React.FC = () => {
       }}
     >
       <div className="w-full h-[200px] sm:h-[250px] md:h-[300px] flex justify-center items-center overflow-visible">
-        <div className="relative flex items-center gap-4 sm:gap-6 md:gap-8">
-          <Eye
-            mouseX={mousePos.x}
-            mouseY={mousePos.y}
-            selfRef={eye1Ref as React.RefObject<HTMLDivElement>}
-            otherRef={eye2Ref as React.RefObject<HTMLDivElement>}
-          />
-
-          {/* Clickable area between eyes */}
+        <div
+          ref={innerRef}
+          style={{ transition: "transform 180ms cubic-bezier(0.25, 0.46, 0.45, 0.94)" }}
+        >
           <button
             onClick={handleEyesClick}
-            className="absolute left-1/2 -translate-x-1/2 w-16 sm:w-20 md:w-24 h-20 sm:h-24 md:h-28 z-10 cursor-pointer"
-            aria-label="Open diagnostics"
-          />
+            className="relative flex items-center gap-4 sm:gap-6 md:gap-8 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 rounded-full"
+            aria-label="Tap to see what I see"
+          >
+            <Eye
+              eyeRef={eye1Ref}
+              pupilRef={pupil1Ref}
+              isMobile={isMobile}
+              side="left"
+              isBlinking={isBlinking}
+              isClose={isClose}
+              isLonely={isLonely}
+            />
+            <Eye
+              eyeRef={eye2Ref}
+              pupilRef={pupil2Ref}
+              isMobile={isMobile}
+              side="right"
+              isBlinking={isBlinking}
+              isClose={isClose}
+              isLonely={isLonely}
+            />
+          </button>
 
-          <Eye
-            mouseX={mousePos.x}
-            mouseY={mousePos.y}
-            selfRef={eye2Ref as React.RefObject<HTMLDivElement>}
-            otherRef={eye1Ref as React.RefObject<HTMLDivElement>}
-          />
-
-          {/* Tooltip - positioned below eyes */}
+          {/* Tooltip */}
           <AnimatePresence>
             {showTooltip && !isDiagnosticsOpen && (
               <motion.div
@@ -123,7 +222,7 @@ const MouseFollowingEyes: React.FC = () => {
                 }}
               >
                 <p className="text-sm font-medium" style={{ color: "rgb(var(--foreground))" }}>
-                  Click between to see what I see
+                  Tap to see what I see
                 </p>
                 <div
                   className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2"
@@ -138,116 +237,190 @@ const MouseFollowingEyes: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Diagnostics Panel - positioned above eyes */}
-          <AnimatePresence>
-            {isDiagnosticsOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="absolute bottom-full left-1/2 -translate-x-1/2 mb-4 z-[100] w-[176px] sm:w-[216px] md:w-[256px]"
-              >
-                <Diagnostics
-                  isOpen={true}
-                  onClose={() => setIsDiagnosticsOpen(false)}
-                  showButton={false}
-                  invertColors={true}
-                  className="!max-w-none w-full shadow-2xl"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <Diagnostics isOpen={isDiagnosticsOpen} onClose={handleDiagnosticsClose} />
         </div>
       </div>
+
+      <EyeKeyframes />
     </div>
   )
 }
 
-interface EyeProps {
-  mouseX: number
-  mouseY: number
-  selfRef: React.RefObject<HTMLDivElement>
-  otherRef: React.RefObject<HTMLDivElement>
+// ─── Pupil math — pure function, no React ────────────────────────────────────
+
+const MAX_MOVE = 14
+const OFFSET_Y = -3
+
+function movePupil(
+  pupilEl: HTMLDivElement | null,
+  eyeRect: DOMRect | null,
+  mouseX: number,
+  mouseY: number,
+) {
+  if (!pupilEl || !eyeRect) return
+  const cx = eyeRect.left + eyeRect.width / 2
+  const cy = eyeRect.top + eyeRect.height / 2
+  const dx = mouseX - cx
+  const dy = mouseY - cy
+  const angle = Math.atan2(dy, dx)
+  const dist = Math.sqrt(dx * dx + dy * dy)
+  const radius = eyeRect.width / 2
+  const move = dist < radius ? (dist / radius) * MAX_MOVE : MAX_MOVE
+  pupilEl.style.transform = `translate(${Math.cos(angle) * move}px, ${Math.sin(angle) * move + OFFSET_Y}px)`
 }
 
-const Eye: React.FC<EyeProps> = ({ mouseX, mouseY, selfRef, otherRef }) => {
-  const pupilRef = useRef<HTMLDivElement>(null)
-  const [center, setCenter] = useState({ x: 0, y: 0 })
+// ─── Eye Component (memoized) ────────────────────────────────────────────────
 
-  const updateCenter = () => {
-    if (!selfRef.current) return
-    const rect = selfRef.current.getBoundingClientRect()
-    setCenter({
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-    })
-  }
-
+const Eye = memo<EyeProps>(({ isMobile, side, isBlinking, isClose, isLonely, eyeRef, pupilRef }) => {
+  // Mobile idle: natural human-like gaze behavior
   useEffect(() => {
-    updateCenter()
-    window.addEventListener("resize", updateCenter)
-    window.addEventListener("scroll", updateCenter)
-    return () => {
-      window.removeEventListener("resize", updateCenter)
-      window.removeEventListener("scroll", updateCenter)
+    if (!isMobile || !pupilRef.current) return
+    let cancelled = false
+
+    const gazePoints = [
+      { x: 0, y: -3 },
+      { x: -8, y: -5 },
+      { x: 10, y: -2 },
+      { x: -4, y: 2 },
+      { x: 6, y: -6 },
+      { x: -12, y: 0 },
+      { x: 12, y: -1 },
+      { x: 2, y: -8 },
+      { x: -2, y: 4 },
+      { x: 0, y: -3 },
+    ]
+    let lastIdx = 0
+
+    const scheduleGaze = () => {
+      if (cancelled) return
+      let nextIdx: number
+      if (Math.random() < 0.3) {
+        nextIdx = 0
+      } else {
+        do { nextIdx = Math.floor(Math.random() * gazePoints.length) } while (nextIdx === lastIdx)
+      }
+      const t = gazePoints[nextIdx]
+      const jx = t.x + (Math.random() - 0.5) * 3
+      const jy = t.y + (Math.random() - 0.5) * 2
+      const dur = 80 + Math.random() * 70
+      if (pupilRef.current) {
+        pupilRef.current.style.transition = `transform ${dur}ms cubic-bezier(0.2, 0, 0.1, 1)`
+        pupilRef.current.style.transform = `translate(${jx}px, ${jy}px)`
+      }
+      lastIdx = nextIdx
+      const hold = nextIdx === 0 ? 2000 + Math.random() * 2500 : 800 + Math.random() * 2200
+      timerId = setTimeout(scheduleGaze, hold)
     }
-  }, [])
+    let timerId = setTimeout(scheduleGaze, 1200)
+    return () => { cancelled = true; clearTimeout(timerId) }
+  }, [isMobile, pupilRef])
 
-  useEffect(() => {
-    updateCenter()
+  const morphRotation = side === "left" ? -2 : 3
 
-    const isInside = (ref: React.RefObject<HTMLDivElement>) => {
-      const rect = ref.current?.getBoundingClientRect()
-      if (!rect) return false
-      return (
-        mouseX >= rect.left &&
-        mouseX <= rect.right &&
-        mouseY >= rect.top &&
-        mouseY <= rect.bottom
-      )
-    }
-
-    if (isInside(selfRef) || isInside(otherRef)) return
-
-    const dx = mouseX - center.x
-    const dy = mouseY - center.y
-    const angle = Math.atan2(dy, dx)
-
-    const maxMove = 16
-    const pupilX = Math.cos(angle) * maxMove
-    const pupilY = Math.sin(angle) * maxMove
-
-    if (pupilRef.current) {
-      pupilRef.current.style.transform = `translate(${pupilX}px, ${pupilY}px)`
-    }
-  }, [mouseX, mouseY, center.x, center.y, selfRef, otherRef])
+  // Dog eyes: lonely drift via transform (GPU-composited, no layout)
+  const lonelySide = side === "left" ? 3 : -3
+  const pupilTranslateExtra = !isMobile && isLonely ? `translate(${lonelySide}px, 2px)` : ""
 
   return (
-    <div
-      ref={selfRef}
-      className="relative rounded-full h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 flex items-center justify-center border-4"
-      style={{
-        backgroundColor: "#ffffff",
-        borderColor: "rgb(var(--foreground))",
-      }}
-    >
+    <div className="relative">
       <div
-        ref={pupilRef}
-        className="absolute rounded-full h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 transition-transform duration-[5ms]"
+        ref={eyeRef}
+        className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 flex items-center justify-center overflow-hidden"
         style={{
-          backgroundColor: "#0f172a",
+          borderRadius: isMobile
+            ? "50%"
+            : isClose
+              ? side === "left" ? "46% 52% 50% 50%" : "52% 46% 50% 50%"
+              : "48% 52% 50% 50%",
+          background: "radial-gradient(circle at center, #ffffff 60%, rgb(var(--primary) / 0.08) 100%)",
+          boxShadow: `
+            inset 0 -8px 16px rgb(var(--foreground) / 0.08),
+            0 4px 20px rgb(var(--foreground) / 0.1),
+            0 0 0 2px rgb(var(--foreground) / 0.15)
+          `,
+          animation: isMobile ? "eye-breathe 3s ease-in-out infinite, eye-morph 8s ease-in-out infinite" : undefined,
+          transform: `rotate(${morphRotation}deg)`,
+          transition: "border-radius 300ms ease",
         }}
       >
+        {/* Bottom inner shadow for droopy lower lids */}
         <div
-          className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full absolute bottom-1 right-1"
+          className="absolute inset-0 rounded-[inherit] pointer-events-none"
+          style={{ boxShadow: "inset 0 -6px 12px rgb(var(--foreground) / 0.06)" }}
+        />
+
+        {/* Pupil — dark brown */}
+        <div
+          ref={pupilRef}
+          className="absolute flex items-center justify-center"
           style={{
-            backgroundColor: "#ffffff",
+            width: "40%",
+            height: "40%",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, #3b1f0a 50%, #5c3317 75%, #8b5e3c 100%)",
+            transform: `translate(0px, -3px) scale(${isClose && !isMobile ? 1.1 : 1}) ${pupilTranslateExtra}`,
+            transition: "scale 400ms ease",
+          }}
+        >
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: "35%", height: "35%", top: "15%", left: "15%",
+              background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%)",
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: "15%", height: "15%", bottom: "25%", right: "20%",
+              backgroundColor: "rgba(255,255,255,0.7)",
+            }}
+          />
+        </div>
+
+        {/* Upper eyelid */}
+        <div
+          className="absolute top-0 left-0 right-0 pointer-events-none z-10"
+          style={{
+            height: isBlinking ? "55%" : "0%",
+            background: "linear-gradient(to bottom, rgb(var(--background)) 70%, rgb(var(--background) / 0.85) 100%)",
+            borderRadius: "0 0 40% 40%",
+            transition: "height 80ms cubic-bezier(0.4, 0, 1, 1)",
+            boxShadow: isBlinking ? "0 2px 6px rgb(var(--foreground) / 0.1)" : "none",
+          }}
+        />
+        {/* Lower eyelid */}
+        <div
+          className="absolute bottom-0 left-0 right-0 pointer-events-none z-10"
+          style={{
+            height: isBlinking ? "45%" : "0%",
+            background: "linear-gradient(to top, rgb(var(--background)) 70%, rgb(var(--background) / 0.85) 100%)",
+            borderRadius: "40% 40% 0 0",
+            transition: "height 80ms cubic-bezier(0.4, 0, 1, 1)",
           }}
         />
       </div>
     </div>
   )
-}
+})
+Eye.displayName = "Eye"
+
+// ─── Keyframes (static, never re-renders) ────────────────────────────────────
+
+const EyeKeyframes = memo(() => (
+  <style>{`
+    @keyframes eye-breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes eye-morph {
+      0%, 100% { border-radius: 48% 52% 50% 50%; }
+      25% { border-radius: 50% 48% 52% 50%; }
+      50% { border-radius: 52% 50% 48% 52%; }
+      75% { border-radius: 50% 52% 50% 48%; }
+    }
+  `}</style>
+))
+EyeKeyframes.displayName = "EyeKeyframes"
 
 export { MouseFollowingEyes }
