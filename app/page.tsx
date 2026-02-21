@@ -162,7 +162,7 @@ function DepthCard({ children, className = '', depth = 1 }: {
     3: '0 12px 40px rgb(var(--foreground) / 0.08), 0 4px 12px rgb(var(--foreground) / 0.04)',
   }
   return (
-    <div className={`rounded-xl border transition-all duration-300 ${className}`} style={{
+    <div className={`rounded-xl border transition-[background-color,border-color,box-shadow] duration-300 ${className}`} style={{
       backgroundColor: 'rgb(var(--card))',
       borderColor: 'rgb(var(--border))',
       boxShadow: shadows[depth],

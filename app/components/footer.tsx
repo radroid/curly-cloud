@@ -88,7 +88,7 @@ export default function Footer() {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <div className="flex flex-row items-center gap-3">
+            <div className="flex flex-row items-center gap-1">
               {socialLinks.map(({ name, href, icon: Icon }) => (
                 <a
                   key={name}
@@ -96,7 +96,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={name}
-                  className="transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md cursor-pointer"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md cursor-pointer"
                   style={{ color: 'rgb(var(--muted-foreground))' }}
                 >
                   <Icon className="h-5 w-5" />

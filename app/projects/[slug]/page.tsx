@@ -46,7 +46,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             <div className="mb-6">
                 <Link
                     href="/"
-                    className="text-sm hover:opacity-70 transition-opacity"
+                    className="text-sm hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
                     style={{ color: 'rgb(var(--muted-foreground))' }}
                 >
                     ← Back to portfolio
@@ -142,7 +142,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
                         href={project.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity"
+                        className="inline-flex items-center gap-2 text-sm font-medium hover:opacity-70 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
                         style={{ color: 'rgb(var(--foreground))' }}
                     >
                         Visit project →

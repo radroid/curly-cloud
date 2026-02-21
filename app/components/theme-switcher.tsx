@@ -141,12 +141,13 @@ export function ThemeSwitcher() {
       {/* Tooltip */}
       <AnimatePresence>
         {showTooltip && (
-          <motion.div
+          <motion.button
+            type="button"
             initial={{ opacity: 0, x: -10, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: -10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute bottom-0 left-14 whitespace-nowrap px-3 py-2 rounded-lg shadow-lg cursor-pointer"
+            className="absolute bottom-0 left-14 whitespace-nowrap px-3 py-2 rounded-lg shadow-lg cursor-pointer text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             style={{
               backgroundColor: 'rgb(var(--card))',
               border: '1px solid rgb(var(--border))',
@@ -160,7 +161,7 @@ export function ThemeSwitcher() {
               className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2"
               style={{ backgroundColor: 'rgb(var(--card))', border: '1px solid rgb(var(--border))', borderTop: 'none', borderRight: 'none' }}
             />
-          </motion.div>
+          </motion.button>
         )}
       </AnimatePresence>
 

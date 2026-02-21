@@ -51,7 +51,7 @@ function BoldEntry({ entry, index }: { entry: (typeof timelineData)[number]; ind
           <div
             className="text-3xl font-bold tabular-nums transition-colors duration-200"
             style={{
-              fontFamily: "'Sora', sans-serif",
+              fontFamily: "var(--font-sora), sans-serif",
               color: hovered ? 'rgb(var(--primary))' : 'rgb(var(--foreground))',
               letterSpacing: '-0.04em',
               lineHeight: 1,
@@ -98,7 +98,7 @@ function BoldEntry({ entry, index }: { entry: (typeof timelineData)[number]; ind
             </span>
             <h3
               className="text-xl font-semibold tracking-tight"
-              style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}
+              style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}
             >
               <span className="relative">
                 {entry.title}
@@ -136,11 +136,11 @@ function BoldEntry({ entry, index }: { entry: (typeof timelineData)[number]; ind
       <div className="md:hidden pb-14">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'rgb(var(--foreground))' }} />
-          <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em' }}>{entry.year}</span>
+          <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.04em' }}>{entry.year}</span>
           <span className="text-[10px] font-medium" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{entry.location}</span>
         </div>
         <div className="pl-5 ml-[3px]" style={{ borderLeft: '3px solid rgb(var(--border))' }}>
-          <h3 className="text-base font-semibold mb-1 tracking-tight" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.02em' }}>
+          <h3 className="text-base font-semibold mb-1 tracking-tight" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.02em' }}>
             <span className="text-[10px] font-bold mr-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{num}</span>
             {entry.title}
           </h3>
@@ -168,14 +168,6 @@ export default function HistoryPage() {
   const [bannerVisible, setBannerVisible] = useState(false)
   const [inlineRevealed, setInlineRevealed] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const link = document.createElement('link')
-    link.href = 'https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap'
-    link.rel = 'stylesheet'
-    document.head.appendChild(link)
-    return () => { document.head.removeChild(link) }
-  }, [])
 
   useEffect(() => {
     const el = heroRef.current
@@ -220,12 +212,12 @@ export default function HistoryPage() {
         style={{
           opacity: heroVisible ? 1 : 0,
           transform: heroVisible ? 'translateY(0)' : 'translateY(24px)',
-          transition: 'all 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
         <h1
           className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold tracking-tighter mb-6"
-          style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.06em', lineHeight: 0.9 }}
+          style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.06em', lineHeight: 0.9 }}
         >
           HISTORY
         </h1>
@@ -238,7 +230,7 @@ export default function HistoryPage() {
         <div className="flex gap-8 mt-4 mb-10">
           {[{ v: '03', l: 'COUNTRIES' }, { v: '10+', l: 'PRODUCTS' }, { v: '05+', l: 'YEARS' }].map(s => (
             <div key={s.l} className="text-center">
-              <div className="text-2xl font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.03em' }}>{s.v}</div>
+              <div className="text-2xl font-bold tabular-nums" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.03em' }}>{s.v}</div>
               <div className="text-[8px] tracking-[0.2em] font-medium mt-1" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{s.l}</div>
             </div>
           ))}
@@ -275,7 +267,7 @@ export default function HistoryPage() {
             <div className="pt-5 text-right pr-4">
               <div
                 className="text-3xl font-bold tabular-nums"
-                style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
+                style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
               >
                 {current2026.year}
               </div>
@@ -295,7 +287,7 @@ export default function HistoryPage() {
                 <span className="text-[11px] font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>
                   {String(timelineData.length + 1).padStart(2, '0')}
                 </span>
-                <h3 className="text-xl font-semibold tracking-tight" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
+                <h3 className="text-xl font-semibold tracking-tight" style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
                   <span className="relative">
                     {current2026.title}
                     <span className="absolute bottom-[-2px] left-0 h-[2px]" style={{ width: '100%', background: 'rgb(var(--primary))' }} />
@@ -316,11 +308,11 @@ export default function HistoryPage() {
           <div className="md:hidden pb-14">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: 'rgb(var(--primary))' }} />
-              <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>{current2026.year}</span>
+              <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>{current2026.year}</span>
               <span className="text-[10px] font-medium" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>{current2026.location}</span>
             </div>
             <div className="pl-5 ml-[3px]" style={{ borderLeft: '3px solid rgb(var(--border))' }}>
-              <h3 className="text-base font-semibold mb-1 tracking-tight" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.02em' }}>
+              <h3 className="text-base font-semibold mb-1 tracking-tight" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.02em' }}>
                 <span className="text-[10px] font-bold mr-2" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>{String(timelineData.length + 1).padStart(2, '0')}</span>
                 {current2026.title}
               </h3>
@@ -372,7 +364,7 @@ export default function HistoryPage() {
               <div className="text-right pr-4">
                 <div
                   className="text-2xl font-bold tabular-nums"
-                  style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
+                  style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--primary))', letterSpacing: '-0.04em', lineHeight: 1 }}
                 >
                   2026
                 </div>
@@ -392,7 +384,7 @@ export default function HistoryPage() {
                   <span className="text-[11px] font-bold tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--primary))' }}>
                     {String(timelineData.length + 1).padStart(2, '0')}
                   </span>
-                  <span className="text-base font-semibold tracking-tight" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
+                  <span className="text-base font-semibold tracking-tight" style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--foreground))', letterSpacing: '-0.02em' }}>
                     {current2026.title}
                   </span>
                 </div>
@@ -413,8 +405,8 @@ export default function HistoryPage() {
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ background: 'rgb(var(--primary))', animation: 'bannerPulse 2s ease-in-out infinite' }}
                 />
-                <span className="text-lg font-bold tabular-nums" style={{ fontFamily: "'Sora', sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>2026</span>
-                <span className="text-sm font-semibold" style={{ fontFamily: "'Sora', sans-serif", color: 'rgb(var(--foreground))' }}>{current2026.title}</span>
+                <span className="text-lg font-bold tabular-nums" style={{ fontFamily: "var(--font-sora), sans-serif", letterSpacing: '-0.04em', color: 'rgb(var(--primary))' }}>2026</span>
+                <span className="text-sm font-semibold" style={{ fontFamily: "var(--font-sora), sans-serif", color: 'rgb(var(--foreground))' }}>{current2026.title}</span>
               </div>
               <p className="pl-5 ml-[3px] text-[10px] leading-[1.6]" style={{ fontFamily: "'JetBrains Mono', monospace", color: 'rgb(var(--muted-foreground))' }}>
                 {current2026.line1}<br />{current2026.line2}
