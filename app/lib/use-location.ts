@@ -64,7 +64,7 @@ function fetchLocation(): Promise<LocationData> {
 }
 
 export function useLocation() {
-  const [location, setLocation] = useState<LocationData>({ city: 'Loading...', full: 'Loading...', estimated: false })
+  const [location, setLocation] = useState<LocationData>({ city: '', full: '', estimated: false })
 
   useEffect(() => {
     fetchLocation().then(setLocation)

@@ -32,6 +32,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title,
     description,
+    alternates: {
+      canonical: `${baseUrl}/blog/${post.slug}`,
+    },
     openGraph: {
       title,
       description,
@@ -41,6 +44,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: [
         {
           url: ogImage,
+          width: 1200,
+          height: 630,
         },
       ],
     },

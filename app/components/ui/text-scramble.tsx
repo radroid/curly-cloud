@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react"
 import { cn } from "@/app/lib/utils"
+import { useReducedMotion } from "@/app/lib/use-reduced-motion"
 
 const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*"
 
@@ -12,6 +13,7 @@ interface TextScrambleProps {
 }
 
 export function TextScramble({ text, className = "", textSize = "text-lg" }: TextScrambleProps) {
+  const prefersReduced = useReducedMotion()
   const [displayText, setDisplayText] = useState(text)
   const [isHovering, setIsHovering] = useState(false)
   const [isScrambling, setIsScrambling] = useState(false)
@@ -52,10 +54,19 @@ export function TextScramble({ text, className = "", textSize = "text-lg" }: Tex
 
   const handleMouseEnter = () => {
     setIsHovering(true)
-    scramble()
+    if (!prefersReduced) scramble()
   }
 
   const handleMouseLeave = () => {
+    setIsHovering(false)
+  }
+
+  const handleFocus = () => {
+    setIsHovering(true)
+    if (!prefersReduced) scramble()
+  }
+
+  const handleBlur = () => {
     setIsHovering(false)
   }
 
@@ -70,12 +81,15 @@ export function TextScramble({ text, className = "", textSize = "text-lg" }: Tex
       className={`group relative inline-flex flex-col cursor-pointer select-none ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onFocus={handleFocus}
+      onBlur={handleBlur}
+      tabIndex={0}
     >
       <span className={cn("relative font-mono tracking-widest uppercase", textSize)}>
         {displayText.split("").map((char, i) => (
           <span
             key={i}
-            className={`inline-block transition-all duration-150 ${
+            className={`inline-block transition-[color,transform] duration-150 ${
               isScrambling && char !== text[i] ? "text-primary scale-110" : "text-foreground"
             }`}
             style={{

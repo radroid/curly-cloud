@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { useReducedMotion } from '@/app/lib/use-reduced-motion'
 import { portfolioProjects } from '@/app/lib/projects'
 import { PortfolioCarousel } from './components/portfolio-carousel'
 import {
@@ -32,6 +33,10 @@ function Reveal({ children, className = '', delay = 0 }: {
   children: React.ReactNode; className?: string; delay?: number
 }) {
   const { ref, isVisible } = useScrollReveal()
+  const prefersReduced = useReducedMotion()
+  if (prefersReduced) {
+    return <div className={className}>{children}</div>
+  }
   return (
     <div ref={ref} className={className} style={{
       opacity: isVisible ? 1 : 0,
@@ -74,6 +79,7 @@ function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: str
 // ─── Boot Sequence ──────────────────────────────────────────
 
 function BootSequence({ onComplete }: { onComplete: () => void }) {
+  const prefersReduced = useReducedMotion()
   const [lines, setLines] = useState<{ text: string; status: 'loading' | 'done' }[]>([])
   const [fadeOut, setFadeOut] = useState(false)
 
@@ -88,6 +94,11 @@ function BootSequence({ onComplete }: { onComplete: () => void }) {
   ]
 
   useEffect(() => {
+    if (prefersReduced) {
+      setLines(steps.map(s => ({ text: s.text, status: 'done' as const })))
+      onComplete()
+      return
+    }
     let timeout: NodeJS.Timeout
     let current = 0
     const process = () => {
@@ -109,7 +120,7 @@ function BootSequence({ onComplete }: { onComplete: () => void }) {
   }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-6" style={{
+    <div className="fixed inset-0 z-[80] flex items-center justify-center px-6" style={{
       backgroundColor: 'rgb(var(--background))',
       opacity: fadeOut ? 0 : 1,
       pointerEvents: fadeOut ? 'none' : 'auto',
@@ -166,15 +177,17 @@ function DepthCard({ children, className = '', depth = 1 }: {
 function TiltCard({ children, className = '' }: {
   children: React.ReactNode; className?: string
 }) {
+  const prefersReduced = useReducedMotion()
   const cardRef = useRef<HTMLDivElement>(null)
   const handleMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (prefersReduced) return
     const card = cardRef.current
     if (!card) return
     const rect = card.getBoundingClientRect()
     const x = (e.clientX - rect.left) / rect.width - 0.5
     const y = (e.clientY - rect.top) / rect.height - 0.5
     card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${-y * 8}deg) scale(1.02)`
-  }, [])
+  }, [prefersReduced])
   const handleLeave = useCallback(() => {
     if (cardRef.current) {
       cardRef.current.style.transform = 'perspective(800px) rotateY(0deg) rotateX(0deg) scale(1)'
@@ -397,7 +410,7 @@ export default function Page() {
                       Available for hire
                     </span>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.06] mb-6 tracking-tight">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.06] mb-6 tracking-tight" style={{ textWrap: 'balance' }}>
                     I build
                     <span className="relative ml-2 sm:ml-3 inline-block">
                       <span className="relative z-10">experiences</span>
@@ -609,7 +622,7 @@ export default function Page() {
                   Zero Risk Offer
                 </div>
 
-                <h2 className="text-2xl sm:text-3xl font-bold mb-3 drop-shadow-sm">Want proof before you hire?</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold mb-3 drop-shadow-sm" style={{ textWrap: 'balance' }}>Want proof before you hire?</h2>
                 <p className="text-sm sm:text-base mb-8 max-w-2xl leading-relaxed text-white/80">
                   I offer a 1-week pilot project for any company I&apos;m seriously interested in joining. 30-min call, I build it in one week, you evaluate. No risk, just results.
                 </p>
@@ -624,7 +637,7 @@ export default function Page() {
                         const cal = await getCalApi({ namespace: 'problem-ranter' })
                         cal('modal', { calLink: 'createclub/problem-ranter', config: { layout: 'month_view' } })
                       }}
-                      className="group/btn relative text-sm font-bold px-7 py-3.5 rounded-xl cursor-pointer transition-all duration-300 hover:-translate-y-0.5 overflow-hidden bg-white text-slate-900"
+                      className="group/btn relative text-sm font-bold px-7 py-3.5 rounded-xl cursor-pointer transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 overflow-hidden bg-white text-slate-900 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                       style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.2)' }}>
                       <div className="absolute inset-0 -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-black/[0.06] to-transparent pointer-events-none" />
                       <span className="relative z-10 flex items-center gap-2">
@@ -638,7 +651,7 @@ export default function Page() {
 
                   {/* ── Email button with envelope→paper plane morph ── */}
                   <a href="mailto:raj9dholakia@gmail.com"
-                    className="group/email relative text-sm font-bold px-7 py-3.5 rounded-xl border-2 border-white/30 transition-all duration-300 hover:-translate-y-0.5 hover:border-white/50 overflow-hidden">
+                    className="group/email relative text-sm font-bold px-7 py-3.5 rounded-xl border-2 border-white/30 transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-white/50 overflow-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                     <div className="absolute inset-0 rounded-[10px] bg-white/0 group-hover/email:bg-white/15 transition-all duration-300" />
                     <span className="relative z-10 flex items-center gap-2 text-white/85 group-hover/email:text-white transition-colors duration-300">
                       <span className="relative w-4 h-4">

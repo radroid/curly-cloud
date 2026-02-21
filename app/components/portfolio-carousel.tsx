@@ -47,7 +47,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
     return () => cancelAnimationFrame(animFrameRef.current)
   }, [cursorVisible, updateCursorPosition])
 
-  const handleVideoMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const handleVideoMouseMove = useCallback((e: React.MouseEvent<HTMLElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     cursorPos.current = {
       x: e.clientX - rect.left,
@@ -265,10 +265,14 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                   />
                 ) : null}
                 {/* Clickable zone — inset from edges to avoid overlapping arrow buttons */}
-                <div
-                  className="absolute inset-y-0 left-56 right-56 z-[5]"
+                <a
+                  href={`/projects/${project.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${project.title} project`}
+                  className="absolute inset-y-0 left-56 right-56 z-[5] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   style={{ cursor: 'none' }}
-                  onClick={() => window.open(`/projects/${project.id}`, '_blank')}
+                  onClick={(e) => { e.preventDefault(); window.open(`/projects/${project.id}`, '_blank') }}
                   onMouseMove={handleVideoMouseMove}
                   onMouseEnter={handleVideoMouseEnter}
                   onMouseLeave={handleVideoMouseLeave}
@@ -285,7 +289,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
             setIsPaused(true)
             setTimeout(() => setIsPaused(false), 6000)
           }}
-          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-all duration-200"
+          className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           style={{
             width: '44px',
             height: '44px',
@@ -315,7 +319,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
             setIsPaused(true)
             setTimeout(() => setIsPaused(false), 6000)
           }}
-          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-all duration-200"
+          className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center rounded-full transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           style={{
             width: '44px',
             height: '44px',
@@ -342,7 +346,7 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
         {/* Custom Cursor Badge */}
         <div
           ref={cursorRef}
-          className="absolute top-0 left-0 z-50 pointer-events-none"
+          className="absolute top-0 left-0 z-[10] pointer-events-none"
           style={{
             opacity: cursorVisible ? 1 : 0,
             transition: 'opacity 0.2s ease, scale 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
@@ -391,27 +395,26 @@ export function PortfolioCarousel({ projects }: PortfolioCarouselProps) {
                 setIsPaused(true)
                 setTimeout(() => setIsPaused(false), 3000)
               }}
-              className="rounded-full transition-all duration-300 cursor-pointer"
+              className="relative flex items-center justify-center cursor-pointer min-w-[44px] min-h-[44px] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded-md"
               style={{
-                width: isActive ? '1.75rem' : '0.5rem',
-                height: '0.5rem',
-                backgroundColor: isActive
-                  ? 'rgb(var(--primary))'
-                  : 'rgb(var(--muted-foreground))',
-                opacity: isActive ? 1 : 0.25,
-                /* Pad touch target without changing visual size */
-                padding: 0,
                 border: 'none',
-                margin: '0.375rem 0',
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.opacity = '0.5'
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.opacity = '0.25'
+                background: 'transparent',
               }}
               aria-label={`Go to project ${index + 1}`}
-            />
+            >
+              <span
+                className="rounded-full transition-all duration-300"
+                style={{
+                  width: isActive ? '1.75rem' : '0.5rem',
+                  height: '0.5rem',
+                  backgroundColor: isActive
+                    ? 'rgb(var(--primary))'
+                    : 'rgb(var(--muted-foreground))',
+                  opacity: isActive ? 1 : 0.25,
+                  display: 'block',
+                }}
+              />
+            </button>
           )
         })}
       </div>

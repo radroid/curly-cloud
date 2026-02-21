@@ -7,10 +7,11 @@ export default function AnimatedDownloadButton() {
   const [isHovered, setIsHovered] = React.useState(false)
 
   return (
-    <a 
-      href="#Your Download Link" 
+    <a
+      href="#Your Download Link"
       download
-      className="absolute center "
+      aria-label="Download resume"
+      className="absolute center focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none rounded-full"
     >
       <motion.div
         initial={{ width: 64, height: 64 }}

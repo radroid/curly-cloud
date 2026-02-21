@@ -18,7 +18,7 @@ export function BlogPosts() {
         .map((post) => (
           <Link
             key={post.slug}
-            className="flex flex-col space-y-1 mb-4 transition-colors duration-300"
+            className="flex flex-col space-y-1 mb-4 transition-colors duration-300 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             href={`/blog/${post.slug}`}
             style={{ color: 'inherit' }}
           >

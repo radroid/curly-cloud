@@ -4,8 +4,10 @@ import { getCalApi } from "@calcom/embed-react"
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { MessageCircle } from "lucide-react"
+import { useReducedMotion } from "@/app/lib/use-reduced-motion"
 
 export function CalFloatingButton() {
+  const prefersReduced = useReducedMotion()
   const [isHovered, setIsHovered] = useState(false)
   const [colors, setColors] = useState({
     foreground: "15, 23, 42",
@@ -89,15 +91,16 @@ export function CalFloatingButton() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className="fixed right-4 z-[30]" style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
       <motion.button
         onClick={handleClick}
+        aria-label="Schedule a call"
         initial={{ width: 48, height: 48 }}
-        whileHover={{ width: 140 }}
+        whileHover={prefersReduced ? undefined : { width: 140 }}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        transition={{ duration: 0.3 }}
-        className="flex items-center justify-center overflow-hidden relative shadow-lg cursor-pointer"
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.3 }}
+        className="flex items-center justify-center overflow-hidden relative shadow-lg cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         style={{
           borderRadius: 24,
           backgroundColor: `rgb(${colors.foreground})`,

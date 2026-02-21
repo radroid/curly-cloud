@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { TextScramble } from '@/app/components/ui/text-scramble'
+import { useReducedMotion } from '@/app/lib/use-reduced-motion'
 
 const navItems = {
   '/': {
@@ -19,6 +20,7 @@ const navItems = {
 }
 
 export function Navbar() {
+  const prefersReduced = useReducedMotion()
   const [scrolled, setScrolled] = useState(false)
   const rafRef = useRef(0)
   const pathname = usePathname()
@@ -41,7 +43,7 @@ export function Navbar() {
 
   return (
     <nav
-      className="fixed left-0 right-0 z-50 transition-all duration-500 ease-out"
+      className="fixed left-0 right-0 z-[40] transition-[top,padding] duration-500 ease-out"
       style={{
         top: scrolled ? '0px' : '16px',
         padding: scrolled ? '0' : '0 16px',
@@ -49,7 +51,7 @@ export function Navbar() {
       id="nav"
     >
       <div
-        className="transition-all duration-500 ease-out"
+        className="transition-[background-color,border-radius,max-width,border,box-shadow] duration-500 ease-out"
         style={{
           backgroundColor: scrolled
             ? 'rgb(var(--background) / 0.85)'
@@ -73,14 +75,14 @@ export function Navbar() {
               <Link
                 key={path}
                 href={path}
-                className="relative py-2 px-4 rounded-lg"
+                className="relative py-2 px-4 rounded-lg min-h-[44px] flex items-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {isActive && (
                   <motion.span
                     layoutId="nav-active"
                     className="absolute inset-0 rounded-lg"
                     style={{ backgroundColor: 'rgb(var(--primary) / 0.1)' }}
-                    transition={{ type: 'spring', stiffness: 250, damping: 50 }}
+                    transition={prefersReduced ? { duration: 0 } : { type: 'spring', stiffness: 250, damping: 50 }}
                   />
                 )}
                 <span className="relative z-10">

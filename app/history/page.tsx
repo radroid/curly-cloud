@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 
 const timelineData = [
   { year: '2014', title: 'International Baccalaureate', description: 'Foundation years. Rigorous academics and the beginning of a global perspective that would eventually take me from Mumbai to Manchester to Toronto.', location: 'Mumbai, IN', coords: '19.08\u00b0N, 72.88\u00b0E', photo: '/history/mumbai-ib.jpg' },
@@ -124,7 +125,7 @@ function BoldEntry({ entry, index }: { entry: (typeof timelineData)[number]; ind
               background: 'rgb(var(--muted))',
             }}
           >
-            <img src={entry.photo} alt={entry.title} className="w-full h-full object-cover" style={{ filter: 'grayscale(20%)' }} />
+            <Image src={entry.photo} alt={entry.title} width={260} height={170} className="w-full h-full object-cover" style={{ filter: 'grayscale(20%)' }} loading="lazy" />
             {/* Primary accent edge */}
             <div className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: 'rgb(var(--primary))' }} />
           </div>
@@ -254,6 +255,7 @@ export default function HistoryPage() {
       <div className="h-[3px] w-full mb-10" style={{ background: 'rgb(var(--foreground))' }} />
 
       {/* Timeline */}
+      <h2 className="sr-only">Timeline</h2>
       <div className="max-w-6xl pb-8">
         {timelineData.map((entry, index) => (
           <BoldEntry key={index} entry={entry} index={index} />
@@ -349,7 +351,7 @@ export default function HistoryPage() {
 
       {/* Frozen bottom banner — visible after scrolling past hero, hidden when 2026 is inline */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 pointer-events-none"
+        className="fixed bottom-0 left-0 right-0 z-[30] pointer-events-none"
         style={{
           opacity: bannerVisible ? 1 : 0,
           transform: bannerVisible ? 'translateY(0)' : 'translateY(100%)',

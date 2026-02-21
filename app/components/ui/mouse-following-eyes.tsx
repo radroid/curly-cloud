@@ -4,6 +4,7 @@ import * as React from "react"
 import { useState, useRef, useEffect, useCallback, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Diagnostics } from "@/app/components/diagnostics"
+import { useReducedMotion } from "@/app/lib/use-reduced-motion"
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -20,6 +21,7 @@ interface EyeProps {
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const MouseFollowingEyes: React.FC = () => {
+  const prefersReduced = useReducedMotion()
   const [isVisible, setIsVisible] = useState(false)
   const [isDiagnosticsOpen, setIsDiagnosticsOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
@@ -53,6 +55,11 @@ const MouseFollowingEyes: React.FC = () => {
   // Core mousemove loop — all hot-path work via refs + direct DOM, zero React re-renders
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 300)
+
+    // When reduced motion, skip the mousemove listener entirely — center pupils, no magnet
+    if (prefersReduced) {
+      return () => clearTimeout(timer)
+    }
 
     let rafId: number | null = null
     let latestX = 0
@@ -130,10 +137,11 @@ const MouseFollowingEyes: React.FC = () => {
       window.removeEventListener("resize", handleResizeOrScroll)
       window.removeEventListener("scroll", handleResizeOrScroll)
     }
-  }, [updateRects])
+  }, [updateRects, prefersReduced])
 
-  // Synchronized blinking
+  // Synchronized blinking — disabled when reduced motion
   useEffect(() => {
+    if (prefersReduced) return
     let cancelled = false
     const scheduleBlink = () => {
       const delay = 3000 + Math.random() * 5000

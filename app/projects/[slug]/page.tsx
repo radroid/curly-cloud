@@ -21,6 +21,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
         title: project.title,
         description: project.shortDescription,
+        alternates: {
+            canonical: `${baseUrl}/projects/${project.id}`,
+        },
         openGraph: {
             title: project.title,
             description: project.shortDescription,
@@ -51,7 +54,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="mb-8">
-                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tighter mb-2">
+                <h1 className="text-2xl sm:text-3xl font-semibold tracking-tighter mb-2" style={{ textWrap: 'balance' }}>
                     {project.title}
                 </h1>
                 <p className="text-sm mb-4" style={{ color: 'rgb(var(--muted-foreground))' }}>

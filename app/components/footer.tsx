@@ -74,7 +74,8 @@ export default function Footer() {
                     href="https://maps.app.goo.gl/eWDPAqVgfkHyWv4T9"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="transition-all hover:opacity-70 outline-none cursor-pointer"
+                    aria-label="Raj - Personal link"
+                    className="transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full cursor-pointer"
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src="/raj-avatar.webp" alt="Raj" />
@@ -94,7 +95,8 @@ export default function Footer() {
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="transition-all hover:opacity-70 outline-none cursor-pointer"
+                  aria-label={name}
+                  className="transition-opacity hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md cursor-pointer"
                   style={{ color: 'rgb(var(--muted-foreground))' }}
                 >
                   <Icon className="h-5 w-5" />

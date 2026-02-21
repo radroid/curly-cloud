@@ -18,6 +18,26 @@
   --font-sans: var(--font-antic), ui-sans-serif, sans-serif, system-ui;
   --font-serif: 'Signifier', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+
+  /* Z-index scale */
+  --z-base: 0;
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-fixed: 30;
+  --z-nav: 40;
+  --z-overlay: 50;
+  --z-modal: 60;
+  --z-toast: 70;
+  --z-boot: 80;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Morning Theme (6 AM - 12 PM) - Fresh, warm sunrise tones */

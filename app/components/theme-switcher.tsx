@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Sunrise, Moon, Stars } from 'lucide-react'
+import { useReducedMotion } from '@/app/lib/use-reduced-motion'
 
 type Theme = 'morning' | 'afternoon' | 'night' | 'starry'
 
@@ -46,6 +47,7 @@ function applyTheme(theme: Theme) {
 }
 
 export function ThemeSwitcher() {
+  const prefersReduced = useReducedMotion()
   const [currentTheme, setCurrentTheme] = useState<Theme>('morning')
   const [isManual, setIsManual] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
@@ -135,7 +137,7 @@ export function ThemeSwitcher() {
   const IconComponent = config.icon
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed left-4 z-[30]" style={{ bottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
       {/* Tooltip */}
       <AnimatePresence>
         {showTooltip && (
@@ -165,21 +167,21 @@ export function ThemeSwitcher() {
       <motion.button
         onClick={cycleTheme}
         onDoubleClick={resetToAuto}
-        className="relative w-12 h-12 rounded-full flex items-center justify-center overflow-hidden shadow-lg"
+        className="relative w-12 h-12 rounded-full flex items-center justify-center overflow-hidden shadow-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         style={{
           backgroundColor: 'rgb(var(--card))',
         }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        title={`${config.label} theme — Click to change, double-click for auto`}
+        whileHover={prefersReduced ? undefined : { scale: 1.1 }}
+        whileTap={prefersReduced ? undefined : { scale: 0.95 }}
+        aria-label={`${config.label} theme — Click to change, double-click for auto`}
       >
         <AnimatePresence mode="wait">
           <motion.div
             key={currentTheme}
-            initial={{ rotate: -180, opacity: 0, scale: 0.5 }}
+            initial={prefersReduced ? undefined : { rotate: -180, opacity: 0, scale: 0.5 }}
             animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: 180, opacity: 0, scale: 0.5 }}
-            transition={{
+            exit={prefersReduced ? undefined : { rotate: 180, opacity: 0, scale: 0.5 }}
+            transition={prefersReduced ? { duration: 0 } : {
               duration: 0.4,
               ease: [0.4, 0, 0.2, 1]
             }}

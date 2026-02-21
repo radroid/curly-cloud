@@ -1,15 +1,18 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
+import { useReducedMotion } from "@/app/lib/use-reduced-motion"
 
 export function OrbitalClock() {
+  const prefersReduced = useReducedMotion()
   const [mounted, setMounted] = useState(false)
   const [time, setTime] = useState(new Date())
   const [isHovered, setIsHovered] = useState(false)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isMobile, setIsMobile] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const cachedRect = useRef<DOMRect | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -32,13 +35,21 @@ export function OrbitalClock() {
     }
   }, [])
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
+  const handleMouseEnterClock = useCallback(() => {
+    setIsHovered(true)
+    if (containerRef.current) {
+      cachedRect.current = containerRef.current.getBoundingClientRect()
+    }
+  }, [])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (prefersReduced) return
+    const rect = cachedRect.current
+    if (!rect) return
     const x = (e.clientX - rect.left - rect.width / 2) / (rect.width / 2)
     const y = (e.clientY - rect.top - rect.height / 2) / (rect.height / 2)
     setMousePos({ x: x * 8, y: y * 8 })
-  }
+  }, [prefersReduced])
 
   const seconds = time.getSeconds() + time.getMilliseconds() / 1000
   const minutes = time.getMinutes() + seconds / 60
@@ -97,7 +108,7 @@ export function OrbitalClock() {
         relative flex items-center justify-center cursor-pointer select-none
         text-slate-900 dark:text-slate-100
       `}
-      onMouseEnter={() => setIsHovered(true)}
+      onMouseEnter={handleMouseEnterClock}
       onMouseLeave={() => {
         setIsHovered(false)
         setMousePos({ x: 0, y: 0 })
@@ -116,12 +127,12 @@ export function OrbitalClock() {
       >
         {/* Outer glow ring */}
         <div
-          className="absolute inset-0 rounded-full transition-all duration-500"
+          className="absolute inset-0 rounded-full transition-[background,transform] duration-500"
           style={{
-            background: isHovered
+            background: isHovered && !prefersReduced
               ? `radial-gradient(circle, color-mix(in srgb, rgb(var(--orb-primary)) 40%, transparent) 0%, transparent 70%)`
               : "transparent",
-            transform: isHovered ? "scale(1.3)" : "scale(1)",
+            transform: isHovered && !prefersReduced ? "scale(1.3)" : "scale(1)",
           }}
         />
 
@@ -137,7 +148,7 @@ export function OrbitalClock() {
         >
           {/* Inner subtle ring */}
           <div
-            className={`absolute inset-3 rounded-full border transition-all duration-500 ${
+            className={`absolute inset-3 rounded-full border transition-[border-color,opacity] duration-500 ${
               isHovered
                 ? `border-[rgb(var(--orb-primary))]/40`
                 : "border-black/5 dark:border-white/5"
@@ -238,7 +249,7 @@ export function OrbitalClock() {
 
       {/* Date and timezone reveal on hover - left on mobile, below on desktop */}
       <div
-        className="absolute flex flex-col items-end justify-center right-full mr-1 sm:right-auto sm:left-1/2 sm:mr-0 sm:-bottom-12 sm:items-center font-mono text-xs tracking-[0.3em] uppercase transition-all duration-500 whitespace-nowrap"
+        className="absolute flex flex-col items-end justify-center right-full mr-1 sm:right-auto sm:left-1/2 sm:mr-0 sm:-bottom-12 sm:items-center font-mono text-xs tracking-[0.3em] uppercase transition-[border-color,opacity] duration-500 whitespace-nowrap"
         style={{
           // Mobile: slide in from right (positive translateX when hidden, comes from left side)
           // Desktop: slide up from bottom (negative translateY when hidden)
@@ -249,8 +260,8 @@ export function OrbitalClock() {
           color: isHovered ? `rgb(var(--orb-primary))` : `rgba(var(--orb-date), 0.9)`,
         }}
       >
-        <div>{formatDate()}</div>
-        <div className="text-[0.65rem] tracking-[0.2em] mt-1 opacity-80">
+        <div suppressHydrationWarning>{formatDate()}</div>
+        <div className="text-[0.65rem] tracking-[0.2em] mt-1 opacity-80" suppressHydrationWarning>
           {getTimezone()}
         </div>
       </div>
