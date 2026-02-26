@@ -3,6 +3,15 @@ import { BlogPosts } from 'app/components/posts'
 export const metadata = {
   title: 'Thinking',
   description: 'Insights on generalism, product thinking, and building for humans.',
+  alternates: {
+    canonical: 'https://curlycloud.dev/blog',
+  },
+  openGraph: {
+    title: 'Thinking',
+    description: 'Insights on generalism, product thinking, and building for humans.',
+    url: 'https://curlycloud.dev/blog',
+    type: 'website',
+  },
 }
 
 export default function Page() {
