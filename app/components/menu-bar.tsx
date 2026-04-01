@@ -45,8 +45,9 @@ export function MenuBar({
     background: '#fff',
     border: '2px solid #000',
     boxShadow: '2px 2px 0px #000',
-    minWidth: 160,
+    minWidth: 120,
     zIndex: 60,
+    maxWidth: 'calc(100vw - 24px)',
     fontFamily: 'var(--font-chicago)',
     fontSize,
   }

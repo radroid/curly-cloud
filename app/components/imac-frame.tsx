@@ -15,7 +15,7 @@ export function IMacG3Frame({
           background:
             'linear-gradient(165deg, #7EE8DB 0%, #3FC8BC 25%, #2AADA3 50%, #1E9B91 75%, #178E85 100%)',
           borderRadius: isLarge ? '28px 28px 12px 12px' : '24px 24px 10px 10px',
-          padding: isLarge ? '20px 20px 0' : '16px 16px 0',
+          padding: isLarge ? '20px 20px 0' : '10px 10px 0',
           boxShadow:
             '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
           border: '1px solid rgba(0,0,0,0.12)',
@@ -26,7 +26,7 @@ export function IMacG3Frame({
           style={{
             background: 'linear-gradient(180deg, #2d2d2d, #1a1a1a)',
             borderRadius: isLarge ? '12px 12px 8px 8px' : '10px 10px 6px 6px',
-            padding: isLarge ? '12px 12px 10px' : '10px 10px 8px',
+            padding: isLarge ? '12px 12px 10px' : '6px 6px 5px',
           }}
         >
           {children}

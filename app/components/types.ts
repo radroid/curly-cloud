@@ -2,7 +2,7 @@ export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome'
 
 export const SIZING = {
   mobile: {
-    maxWidth: 320,
+    maxWidth: 480,
     screenMinHeight: 0,
     menuBarHeight: 18,
     menuBarFont: 9,
