@@ -28,11 +28,13 @@ export function MenuBar({
     setOpenMenu((prev) => (prev === name ? null : name))
   }
 
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null)
+
   const menuItemStyle = (name: string) => ({
     cursor: 'default' as const,
     padding: '0 6px',
-    background: openMenu === name ? '#000' : 'transparent',
-    color: openMenu === name ? '#fff' : '#000',
+    background: openMenu === name || (interactive && hoveredMenu === name) ? '#000' : 'transparent',
+    color: openMenu === name || (interactive && hoveredMenu === name) ? '#fff' : '#000',
     fontWeight: 'bold' as const,
   })
 
@@ -72,7 +74,12 @@ export function MenuBar({
 
       {/* File menu */}
       <div style={{ position: 'relative' }}>
-        <span onClick={() => toggleMenu('file')} style={menuItemStyle('file')}>
+        <span
+          onClick={() => toggleMenu('file')}
+          onMouseEnter={() => setHoveredMenu('file')}
+          onMouseLeave={() => setHoveredMenu(null)}
+          style={menuItemStyle('file')}
+        >
           File
         </span>
         {interactive && openMenu === 'file' && (
@@ -105,7 +112,12 @@ export function MenuBar({
 
       {/* Edit menu */}
       <div style={{ position: 'relative' }}>
-        <span onClick={() => toggleMenu('edit')} style={menuItemStyle('edit')}>
+        <span
+          onClick={() => toggleMenu('edit')}
+          onMouseEnter={() => setHoveredMenu('edit')}
+          onMouseLeave={() => setHoveredMenu(null)}
+          style={menuItemStyle('edit')}
+        >
           Edit
         </span>
         {interactive && openMenu === 'edit' && (
@@ -119,7 +131,12 @@ export function MenuBar({
 
       {/* View menu */}
       <div style={{ position: 'relative' }}>
-        <span onClick={() => toggleMenu('view')} style={menuItemStyle('view')}>
+        <span
+          onClick={() => toggleMenu('view')}
+          onMouseEnter={() => setHoveredMenu('view')}
+          onMouseLeave={() => setHoveredMenu(null)}
+          style={menuItemStyle('view')}
+        >
           View
         </span>
         {interactive && openMenu === 'view' && (
@@ -133,7 +150,12 @@ export function MenuBar({
 
       {/* Special menu */}
       <div style={{ position: 'relative' }}>
-        <span onClick={() => toggleMenu('special')} style={menuItemStyle('special')}>
+        <span
+          onClick={() => toggleMenu('special')}
+          onMouseEnter={() => setHoveredMenu('special')}
+          onMouseLeave={() => setHoveredMenu(null)}
+          style={menuItemStyle('special')}
+        >
           Special
         </span>
         {interactive && openMenu === 'special' && (

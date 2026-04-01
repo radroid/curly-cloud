@@ -46,7 +46,7 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
               gap: s.dialogGap,
             }}
           >
-            <div style={{ flexShrink: 0, marginTop: isDesktop ? -4 : 0 }}>
+            <div style={{ flexShrink: 0, marginTop: isDesktop ? -15 : -8, marginLeft: isDesktop ? -25 : -10 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/top-corner-mac-logo.svg"
@@ -60,9 +60,9 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
                 flex: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
+                alignItems: 'flex-end',
                 justifyContent: 'center',
-                gap: isDesktop ? 12 : 6,
+                gap: isDesktop ? 4 : 2,
                 minHeight: s.macLogoHeight,
               }}
             >
@@ -74,6 +74,7 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
                   margin: 0,
                   lineHeight: 1.2,
                   letterSpacing: isDesktop ? 0.5 : 0.3,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Welcome to <s>Macintosh</s>.
@@ -82,7 +83,7 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
               <img
                 src="/mac-os-curly.svg"
                 alt="Mac OS Curly"
-                style={{ height: s.curlyLogoHeight, width: 'auto' }}
+                style={{ height: s.curlyLogoHeight, width: 'auto', alignSelf: 'flex-end' }}
               />
             </div>
           </div>
