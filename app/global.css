@@ -33,6 +33,7 @@
 
 html {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -82,6 +83,17 @@ body {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes crtTurnOn {
+  0%   { opacity: 1; }
+  15%  { opacity: 0.85; }
+  25%  { opacity: 0.4; }
+  35%  { opacity: 0.9; }
+  50%  { opacity: 0.2; }
+  65%  { opacity: 0.6; }
+  80%  { opacity: 0.05; }
+  100% { opacity: 0; }
 }
 
 /* ── Mac Window Chrome ───────────────────────────────────── */
