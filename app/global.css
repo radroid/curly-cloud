@@ -1,38 +1,59 @@
 @import 'tailwindcss';
 
-::selection {
-  background-color: #47a3f3;
-  color: #fefefe;
+/* ── Chicago Bitmap Font ─────────────────────────────────── */
+
+@font-face {
+  font-family: 'Chicago';
+  src: url('/fonts/ChicagoFLF.woff') format('woff');
+  font-display: swap;
 }
 
-:root {
-  --sh-class: #2d5e9d;
-  --sh-identifier: #354150;
-  --sh-sign: #8996a3;
-  --sh-string: #007f7a;
-  --sh-keyword: #e02518;
-  --sh-comment: #a19595;
-  --sh-jsxliterals: #6266d1;
-  --sh-property: #e25a1c;
-  --sh-entity: #e25a1c;
-  --font-sans: var(--font-antic), ui-sans-serif, sans-serif, system-ui;
-  --font-serif: 'Signifier', Georgia, serif;
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+/* ── Mac OS System 1 (1984) Theme ────────────────────────── */
 
-  /* Z-index scale */
-  --z-base: 0;
-  --z-dropdown: 10;
-  --z-sticky: 20;
-  --z-fixed: 30;
-  --z-nav: 40;
-  --z-overlay: 50;
-  --z-modal: 60;
-  --z-toast: 70;
+:root {
+  --mac-white: #ffffff;
+  --mac-black: #000000;
+  --mac-gray: #a8a8a8;
+  --mac-gray-light: #c0c0c0;
+  --mac-gray-dark: #808080;
+
+  --font-chicago: 'Chicago', 'VT323', system-ui, monospace;
+  --font-mono: var(--font-jetbrains), 'Monaco', 'Courier New', monospace;
+
   --z-boot: 80;
 }
 
+/* Inverted selection — classic Mac */
+::selection {
+  background-color: var(--mac-black);
+  color: var(--mac-white);
+}
+
+/* ── Crosshatch Dithered Desktop Pattern ─────────────────── */
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  margin: 0;
+  background-color: var(--mac-gray);
+  background-image: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3C/svg%3E");
+  background-size: 2px 2px;
+  image-rendering: pixelated;
+  font-family: var(--font-chicago);
+  color: var(--mac-black);
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+/* ── Reduced Motion ──────────────────────────────────────── */
+
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -40,331 +61,62 @@
   }
 }
 
-/* Morning Theme (6 AM - 12 PM) - Fresh, warm sunrise tones */
-html[data-theme='morning'] {
-  --background: 224 242 254;
-  --foreground: 15 23 42;
-  --card: 255 255 255;
-  --card-foreground: 15 23 42;
-  --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
-  --primary: 245 158 11;
-  --primary-foreground: 255 255 255;
-  --secondary: 254 243 199;
-  --secondary-foreground: 146 64 14;
-  --muted: 249 250 251;
-  --muted-foreground: 107 114 128;
-  --accent: 251 191 36;
-  --accent-foreground: 146 64 14;
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
-  --border: 229 231 235;
-  --input: 229 231 235;
-  --ring: 245 158 11;
-  --chart-1: 245 158 11;
-  --chart-2: 251 191 36;
-  --chart-3: 254 240 138;
-  --chart-4: 255 237 213;
-  --chart-5: 255 251 235;
-  /* Tooltip shadow */
-  --tooltip-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  /* Clock colors */
-  --orb-primary: 245 158 11;
-  --orb-marker-strong: 30 58 138;
-  --orb-marker-weak: 59 130 246;
-  --orb-center: 30 58 138;
-  --orb-date: 107 114 128;
-  --orb-clock-bg: 255 255 255;
-}
+/* ── Boot Sequence Animations ────────────────────────────── */
 
-/* Afternoon Theme (12 PM - 6 PM) - Vibrant, energetic daylight */
-html[data-theme='afternoon'] {
-  --background: 255 255 255;
-  --foreground: 15 23 42;
-  --card: 255 255 255;
-  --card-foreground: 15 23 42;
-  --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
-  --primary: 13 148 136;
-  --primary-foreground: 255 255 255;
-  --secondary: 204 251 241;
-  --secondary-foreground: 17 94 89;
-  --muted: 249 250 251;
-  --muted-foreground: 107 114 128;
-  --accent: 20 184 166;
-  --accent-foreground: 5 68 63;
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
-  --border: 229 231 235;
-  --input: 229 231 235;
-  --ring: 13 148 136;
-  --chart-1: 13 148 136;
-  --chart-2: 20 184 166;
-  --chart-3: 94 234 212;
-  --chart-4: 153 246 228;
-  --chart-5: 204 251 241;
-  /* Tooltip shadow */
-  --tooltip-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  /* Clock colors */
-  --orb-primary: 13 148 136;
-  --orb-marker-strong: 15 23 42;
-  --orb-marker-weak: 15 23 42;
-  --orb-center: 15 23 42;
-  --orb-date: 107 114 128;
-  --orb-clock-bg: 255 255 255;
-}
-
-/* Night Theme (6 PM - 12 AM) - Warm evening, dusk tones */
-html[data-theme='night'] {
-  --background: 15 23 42;
-  --foreground: 248 250 252;
-  --card: 30 41 59;
-  --card-foreground: 248 250 252;
-  --popover: 30 41 59;
-  --popover-foreground: 248 250 252;
-  --primary: 251 146 60;
-  --primary-foreground: 15 23 42;
-  --secondary: 71 85 105;
-  --secondary-foreground: 248 250 252;
-  --muted: 51 65 85;
-  --muted-foreground: 148 163 184;
-  --accent: 251 191 36;
-  --accent-foreground: 15 23 42;
-  --destructive: 239 68 68;
-  --destructive-foreground: 248 250 252;
-  --border: 51 65 85;
-  --input: 51 65 85;
-  --ring: 251 146 60;
-  --chart-1: 251 146 60;
-  --chart-2: 251 191 36;
-  --chart-3: 252 211 77;
-  --chart-4: 254 240 138;
-  --chart-5: 255 251 235;
-  /* Tooltip shadow */
-  --tooltip-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(248, 250, 252, 0.1);
-  /* Clock colors */
-  --orb-primary: 251 146 60;
-  --orb-marker-strong: 248 250 252;
-  --orb-marker-weak: 248 250 252;
-  --orb-center: 248 250 252;
-  --orb-date: 148 163 184;
-  --orb-clock-bg: 15 23 42;
-}
-
-/* Starry Theme (12 AM - 6 AM) - Deep night sky with star accents */
-html[data-theme='starry'] {
-  --background: 2 6 23;
-  --foreground: 248 250 252;
-  --card: 15 23 42;
-  --card-foreground: 248 250 252;
-  --popover: 15 23 42;
-  --popover-foreground: 248 250 252;
-  --primary: 139 92 246;
-  --primary-foreground: 255 255 255;
-  --secondary: 51 65 85;
-  --secondary-foreground: 226 232 240;
-  --muted: 30 41 59;
-  --muted-foreground: 148 163 184;
-  --accent: 167 139 250;
-  --accent-foreground: 15 23 42;
-  --destructive: 239 68 68;
-  --destructive-foreground: 248 250 252;
-  --border: 30 41 59;
-  --input: 30 41 59;
-  --ring: 139 92 246;
-  --chart-1: 139 92 246;
-  --chart-2: 167 139 250;
-  --chart-3: 196 181 253;
-  --chart-4: 221 214 254;
-  --chart-5: 237 233 254;
-  /* Tooltip shadow */
-  --tooltip-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(248, 250, 252, 0.1);
-  /* Clock colors */
-  --orb-primary: 167 139 250;
-  --orb-marker-strong: 248 250 252;
-  --orb-marker-weak: 248 250 252;
-  --orb-center: 248 250 252;
-  --orb-date: 148 163 184;
-  --orb-clock-bg: 2 6 23;
-}
-
-/* Default to morning theme if no theme is set */
-html:not([data-theme]) {
-  --background: 255 255 255;
-  --foreground: 15 23 42;
-  --card: 255 255 255;
-  --card-foreground: 15 23 42;
-  --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
-  --primary: 245 158 11;
-  --primary-foreground: 255 255 255;
-  --secondary: 254 243 199;
-  --secondary-foreground: 146 64 14;
-  --muted: 249 250 251;
-  --muted-foreground: 107 114 128;
-  --accent: 251 191 36;
-  --accent-foreground: 146 64 14;
-  --destructive: 239 68 68;
-  --destructive-foreground: 255 255 255;
-  --border: 229 231 235;
-  --input: 229 231 235;
-  --ring: 245 158 11;
-  --chart-1: 245 158 11;
-  --chart-2: 251 191 36;
-  --chart-3: 254 240 138;
-  --chart-4: 255 237 213;
-  --chart-5: 255 251 235;
-  /* Tooltip shadow */
-  --tooltip-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  /* Clock colors */
-  --orb-primary: 245 158 11;
-  --orb-marker-strong: 30 58 138;
-  --orb-marker-weak: 59 130 246;
-  --orb-center: 30 58 138;
-  --orb-date: 107 114 128;
-  --orb-clock-bg: 255 255 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --sh-class: #4c97f8;
-    --sh-identifier: white;
-    --sh-keyword: #f47067;
-    --sh-string: #0fa295;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-html {
-  min-width: 360px;
-  background-color: rgb(var(--background));
-  color: rgb(var(--foreground));
-  transition: background-color 0.3s ease, color 0.3s ease;
-  font-family: var(--font-sans);
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
 }
 
-.prose .anchor {
-  @apply absolute invisible no-underline;
-
-  margin-left: -1em;
-  padding-right: 0.5em;
-  width: 80%;
-  max-width: 700px;
-  cursor: pointer;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.anchor:hover {
-  @apply visible;
+/* ── Mac Window Chrome ───────────────────────────────────── */
+
+.mac-dialog {
+  border: 3px solid var(--mac-black);
+  border-radius: 8px;
+  background: var(--mac-white);
+  box-shadow: 3px 3px 0px var(--mac-black);
+  padding: 32px 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
 }
 
-.prose a {
-  @apply underline transition-all underline-offset-2 decoration-[0.1em];
-  text-decoration-color: rgb(var(--muted-foreground) / 0.5);
+/* ── Mac Menu Bar ────────────────────────────────────────── */
+
+.mac-menu-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: var(--mac-white);
+  border-bottom: 2px solid var(--mac-black);
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-family: var(--font-chicago);
+  font-size: 12px;
+  z-index: 50;
+  gap: 16px;
 }
 
-.prose a:hover {
-  text-decoration-color: rgb(var(--foreground));
-}
-
-.prose .anchor:after {
-  content: '#';
-  color: rgb(var(--muted-foreground) / 0.4);
-}
-
-.prose *:hover > .anchor {
-  @apply visible;
-}
-
-.prose pre {
-  @apply rounded-lg overflow-x-auto border py-2 px-3 sm:px-4 text-xs sm:text-sm;
-  background-color: rgb(var(--muted));
-  border-color: rgb(var(--border));
-}
-
-.prose code {
-  @apply px-1 py-0.5 rounded-lg;
-  background-color: rgb(var(--muted));
-  color: rgb(var(--foreground));
-}
-
-.prose pre code {
-  @apply p-0;
-  border: initial;
-  line-height: 1.5;
-  background-color: transparent;
-}
-
-.prose code span {
-  @apply font-medium;
-}
-
-.prose img {
-  /* Don't apply styles to next/image */
-  @apply m-0 max-w-full h-auto;
-}
-
-.prose p {
-  @apply my-4;
-  color: rgb(var(--foreground));
-}
-
-.prose h1 {
-  @apply text-2xl sm:text-3xl md:text-4xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h2 {
-  @apply text-lg sm:text-xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h3 {
-  @apply text-lg sm:text-xl font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose h4 {
-  @apply text-base sm:text-lg font-medium tracking-tight mt-6 mb-2;
-}
-
-.prose strong {
-  @apply font-medium;
-}
-
-.prose ul {
-  @apply list-disc pl-5 sm:pl-6;
-}
-
-.prose ol {
-  @apply list-decimal pl-5 sm:pl-6;
-}
-
-.prose > :first-child {
-  /* Override removing top margin, causing layout shift */
-  margin-top: 1.25em !important;
-  margin-bottom: 1.25em !important;
-}
-
-pre::-webkit-scrollbar {
-  display: none;
-}
-
-pre {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-/* Remove Safari input shadow on mobile */
-input[type='text'],
-input[type='email'] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-}
-
-table {
-  display: block;
-  max-width: fit-content;
-  overflow-x: auto;
-  white-space: nowrap;
-}
-
-.title {
-  text-wrap: balance;
+.mac-menu-bar span {
+  cursor: default;
+  user-select: none;
 }

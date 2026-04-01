@@ -1,19 +1,31 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+  images: {
+    formats: ['image/avif', 'image/webp'],
   },
-  webpack: (config, { isServer }) => {
-    // Allow importing .mdx files as raw text using ?raw query
-    config.module.rules.push({
-      test: /\.mdx$/,
-      resourceQuery: /raw/,
-      type: 'asset/source',
-    })
-    return config
+  async headers() {
+    return [
+      {
+        source: '/:all*(svg|jpg|jpeg|png|webp|avif|ico|woff|woff2)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
   },
 }
 
 export default nextConfig
-
