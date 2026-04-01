@@ -8,17 +8,37 @@ import { useReducedMotion } from '@/app/lib/use-reduced-motion'
 function LoadingScreen({ onComplete }: { onComplete: () => void }) {
   const prefersReduced = useReducedMotion()
   const [fadeOut, setFadeOut] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     if (prefersReduced) {
       onComplete()
       return
     }
+
+    // Play startup chime 1s after icon appears
+    const audio = new Audio('/StartupMacI.wav')
+    audioRef.current = audio
+    const chimeTimer = setTimeout(() => {
+      audio.play().catch(() => {})
+      // Haptic feedback on supported devices (Android)
+      if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200])
+      }
+    }, 1000)
+
     const timer = setTimeout(() => {
       setFadeOut(true)
       setTimeout(onComplete, 600)
     }, 4500)
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(chimeTimer)
+      clearTimeout(timer)
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -36,8 +56,8 @@ function LoadingScreen({ onComplete }: { onComplete: () => void }) {
       <img
         src="/mac-icon.svg"
         alt="Happy Macintosh"
-        width={48}
-        height={48}
+        width={100}
+        height={100}
         style={{
           filter: 'brightness(1.8) contrast(1.5)',
         }}
@@ -195,7 +215,7 @@ function WelcomeScreen() {
               {/* Mac icon + "Mac OS Curly" branding */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/mac-os-curly.svg" alt="Mac OS Curly" height={28} style={{ height: 28, width: 'auto' }} />
+                <img src="/mac-os-curly.svg" alt="Mac OS Curly" height={12} style={{ height: 28, width: 'auto' }} />
               </div>
             </div>
           </div>
@@ -210,21 +230,10 @@ function WelcomeScreen() {
 export default function Page() {
   const [loaded, setLoaded] = useState(false)
 
-  useEffect(() => {
-    if (sessionStorage.getItem('bootDone') === 'true') {
-      setLoaded(true)
-    }
-  }, [])
-
   return (
     <>
       {!loaded && (
-        <LoadingScreen
-          onComplete={() => {
-            setLoaded(true)
-            sessionStorage.setItem('bootDone', 'true')
-          }}
-        />
+        <LoadingScreen onComplete={() => setLoaded(true)} />
       )}
       {loaded && <WelcomeScreen />}
     </>
