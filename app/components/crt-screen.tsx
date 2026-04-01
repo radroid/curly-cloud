@@ -19,7 +19,7 @@ export function CRTScreen({
         borderRadius: 3,
         overflow: 'hidden',
         position: 'relative',
-        minHeight,
+        aspectRatio: '4 / 3',
         display: 'flex',
         flexDirection: 'column',
         background: '#a8a8a8',

@@ -8,7 +8,7 @@ export function IMacG3Frame({
   const isLarge = maxWidth > 400
 
   return (
-    <div style={{ width: '88%', maxWidth }}>
+    <div style={{ width: isLarge ? '88%' : '100%', maxWidth }}>
       {/* Main body */}
       <div
         style={{

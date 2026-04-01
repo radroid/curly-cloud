@@ -3,7 +3,7 @@ export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome'
 export const SIZING = {
   mobile: {
     maxWidth: 320,
-    screenMinHeight: 340,
+    screenMinHeight: 0,
     menuBarHeight: 18,
     menuBarFont: 9,
     titleFont: 10,
@@ -16,8 +16,8 @@ export const SIZING = {
     dialogGap: 8,
   },
   desktop: {
-    maxWidth: 560,
-    screenMinHeight: 420,
+    maxWidth: 640,
+    screenMinHeight: 0,
     menuBarHeight: 22,
     menuBarFont: 12,
     titleFont: 18,

@@ -16,7 +16,7 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
       <MenuBar
         fontSize={s.menuBarFont}
         height={s.menuBarHeight}
-        interactive={isDesktop}
+        interactive
       />
 
       {/* Welcome dialog */}
@@ -32,7 +32,7 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
         <div
           style={{
             border: isDesktop ? '3px solid #000' : '2px solid #000',
-            borderRadius: isDesktop ? 10 : 6,
+            borderRadius: 0,
             background: '#fff',
             boxShadow: isDesktop ? '4px 4px 0 #000' : '2px 2px 0 #000',
             padding: `${s.dialogPaddingY}px ${s.dialogPaddingX}px`,
