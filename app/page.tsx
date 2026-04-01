@@ -53,7 +53,11 @@ export default function Page() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        flexDirection: 'column',
+        gap: 16,
         background: '#1a1a1a',
+        padding: isDesktop ? 0 : '0 0 40px',
+        position: 'relative' as const,
       }}
     >
       <IMacG3Frame maxWidth={s.maxWidth}>
@@ -68,6 +72,32 @@ export default function Page() {
           {phase === 'welcome' && <WelcomeScreen isDesktop={isDesktop} />}
         </CRTScreen>
       </IMacG3Frame>
+
+      {phase === 'welcome' && (
+        <div
+          style={{
+            fontFamily: 'var(--font-chicago)',
+            color: '#666',
+            fontSize: isDesktop ? 14 : 11,
+            textAlign: 'center',
+            letterSpacing: 1,
+            animation: 'fadeIn 0.8s ease',
+          }}
+        >
+          UNDER CONSTRUCTION...
+          <span
+            style={{
+              display: 'inline-block',
+              width: isDesktop ? 8 : 6,
+              height: isDesktop ? 16 : 12,
+              background: '#666',
+              marginLeft: 2,
+              verticalAlign: 'middle',
+              animation: 'blink 1s step-end infinite',
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
