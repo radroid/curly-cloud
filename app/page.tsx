@@ -100,26 +100,30 @@ export default function Page() {
       {phase === 'welcome' && (
         <div
           style={{
+            position: 'absolute',
+            top: isDesktop ? 20 : 12,
+            right: isDesktop ? 24 : 14,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
             fontFamily: 'var(--font-chicago)',
             color: '#666',
-            fontSize: isDesktop ? 14 : 11,
-            textAlign: 'center',
+            fontSize: isDesktop ? 13 : 10,
             letterSpacing: 1,
             animation: 'fadeIn 0.8s ease',
           }}
         >
-          UNDER CONSTRUCTION...
           <span
             style={{
               display: 'inline-block',
               width: isDesktop ? 8 : 6,
-              height: isDesktop ? 16 : 12,
-              background: '#666',
-              marginLeft: 2,
-              verticalAlign: 'middle',
-              animation: 'blink 1s step-end infinite',
+              height: isDesktop ? 8 : 6,
+              borderRadius: '50%',
+              background: '#d4a017',
+              animation: 'blink 1.2s ease-in-out infinite',
             }}
           />
+          UNDER CONSTRUCTION
         </div>
       )}
     </div>
