@@ -5,11 +5,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-pnpm dev          # Start development server
-pnpm build        # Build for production (Next.js)
-pnpm cloud-build  # Build for Cloudflare (OpenNext)
-pnpm preview      # Build and preview Cloudflare deployment locally
-pnpm deploy       # Build and deploy to Cloudflare Pages
+bun run dev          # Start development server
+bun run build        # Build for production (Next.js)
+bun run cloud-build  # Build for Cloudflare (OpenNext)
+bun run preview      # Build and preview Cloudflare deployment locally
+bun run deploy       # Build and deploy to Cloudflare Pages
 ```
 
 ## Architecture

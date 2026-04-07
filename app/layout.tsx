@@ -54,6 +54,12 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <noscript>
+          <div style={{ fontFamily: "'Chicago', monospace", textAlign: 'center', padding: '40px 20px' }}>
+            <p style={{ fontSize: 16, fontWeight: 'bold' }}>Welcome to curlycloud.dev</p>
+            <p style={{ fontSize: 13, color: '#555', marginTop: 8 }}>Coming soon. Enable JavaScript for the full experience.</p>
+          </div>
+        </noscript>
         <main id="main-content">
           {children}
         </main>

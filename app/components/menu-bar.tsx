@@ -28,6 +28,16 @@ export function MenuBar({
     setOpenMenu((prev) => (prev === name ? null : name))
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent, name: string) => {
+    if (!interactive) return
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      toggleMenu(name)
+    } else if (e.key === 'Escape') {
+      setOpenMenu(null)
+    }
+  }
+
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null)
 
   const menuItemStyle = (name: string) => ({
@@ -55,6 +65,7 @@ export function MenuBar({
   return (
     <div
       ref={menuRef}
+      role="menubar"
       style={{
         height,
         background: '#fff',
@@ -69,14 +80,19 @@ export function MenuBar({
         flexShrink: 0,
       }}
     >
-      <span style={{ fontSize: fontSize + 2, fontWeight: 'bold', cursor: 'default' }}>
+      <span style={{ fontSize: fontSize + 2, fontWeight: 'bold', cursor: 'default' }} aria-hidden="true">
 
       </span>
 
       {/* File menu */}
       <div style={{ position: 'relative' }}>
         <span
+          role="menuitem"
+          tabIndex={interactive ? 0 : -1}
+          aria-haspopup="true"
+          aria-expanded={openMenu === 'file'}
           onClick={() => toggleMenu('file')}
+          onKeyDown={(e) => handleKeyDown(e, 'file')}
           onMouseEnter={() => setHoveredMenu('file')}
           onMouseLeave={() => setHoveredMenu(null)}
           style={menuItemStyle('file')}
@@ -84,8 +100,9 @@ export function MenuBar({
           File
         </span>
         {interactive && openMenu === 'file' && (
-          <div style={dropdownStyle}>
+          <div role="menu" style={dropdownStyle}>
             <a
+              role="menuitem"
               href="https://x.com/curlycloud__"
               target="_blank"
               rel="noopener noreferrer"
@@ -114,7 +131,12 @@ export function MenuBar({
       {/* Edit menu */}
       <div style={{ position: 'relative' }}>
         <span
+          role="menuitem"
+          tabIndex={interactive ? 0 : -1}
+          aria-haspopup="true"
+          aria-expanded={openMenu === 'edit'}
           onClick={() => toggleMenu('edit')}
+          onKeyDown={(e) => handleKeyDown(e, 'edit')}
           onMouseEnter={() => setHoveredMenu('edit')}
           onMouseLeave={() => setHoveredMenu(null)}
           style={menuItemStyle('edit')}
@@ -122,8 +144,8 @@ export function MenuBar({
           Edit
         </span>
         {interactive && openMenu === 'edit' && (
-          <div style={dropdownStyle}>
-            <div style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
+          <div role="menu" style={dropdownStyle}>
+            <div role="menuitem" style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
               Coming soon
             </div>
           </div>
@@ -133,7 +155,12 @@ export function MenuBar({
       {/* View menu */}
       <div style={{ position: 'relative' }}>
         <span
+          role="menuitem"
+          tabIndex={interactive ? 0 : -1}
+          aria-haspopup="true"
+          aria-expanded={openMenu === 'view'}
           onClick={() => toggleMenu('view')}
+          onKeyDown={(e) => handleKeyDown(e, 'view')}
           onMouseEnter={() => setHoveredMenu('view')}
           onMouseLeave={() => setHoveredMenu(null)}
           style={menuItemStyle('view')}
@@ -141,8 +168,8 @@ export function MenuBar({
           View
         </span>
         {interactive && openMenu === 'view' && (
-          <div style={dropdownStyle}>
-            <div style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
+          <div role="menu" style={dropdownStyle}>
+            <div role="menuitem" style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
               Coming soon
             </div>
           </div>
@@ -152,7 +179,12 @@ export function MenuBar({
       {/* Special menu */}
       <div style={{ position: 'relative' }}>
         <span
+          role="menuitem"
+          tabIndex={interactive ? 0 : -1}
+          aria-haspopup="true"
+          aria-expanded={openMenu === 'special'}
           onClick={() => toggleMenu('special')}
+          onKeyDown={(e) => handleKeyDown(e, 'special')}
           onMouseEnter={() => setHoveredMenu('special')}
           onMouseLeave={() => setHoveredMenu(null)}
           style={menuItemStyle('special')}
@@ -160,8 +192,8 @@ export function MenuBar({
           Special
         </span>
         {interactive && openMenu === 'special' && (
-          <div style={dropdownStyle}>
-            <div style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
+          <div role="menu" style={dropdownStyle}>
+            <div role="menuitem" style={{ padding: '4px 16px', color: '#999', cursor: 'default' }}>
               Coming soon
             </div>
           </div>

@@ -11,7 +11,9 @@ import type { ScreenPhase } from '@/app/components/types'
 
 export default function Page() {
   const prefersReduced = useReducedMotion()
-  const [phase, setPhase] = useState<ScreenPhase>('off')
+  const hasBooted = typeof window !== 'undefined' && sessionStorage.getItem('hasBooted') === '1'
+  const skipBoot = prefersReduced || hasBooted
+  const [phase, setPhase] = useState<ScreenPhase>(skipBoot ? 'welcome' : 'off')
   const [bootFadeOut, setBootFadeOut] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
 
@@ -26,7 +28,7 @@ export default function Page() {
 
   // Phase state machine
   useEffect(() => {
-    if (prefersReduced) {
+    if (skipBoot) {
       setPhase('welcome')
       return
     }
@@ -38,11 +40,12 @@ export default function Page() {
       setTimeout(() => {
         setPhase('welcome')
         setBootFadeOut(false)
+        sessionStorage.setItem('hasBooted', '1')
       }, 5700),
     ]
 
     return () => timers.forEach(clearTimeout)
-  }, [prefersReduced])
+  }, [skipBoot])
 
   const s = isDesktop ? SIZING.desktop : SIZING.mobile
 
