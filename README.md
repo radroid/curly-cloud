@@ -34,23 +34,23 @@ I build experiences—both digital and physical—for people who want more from 
 Install dependencies:
 
 ```bash
-pnpm install
+bun install
 ```
 
 Run the development server:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 Build for production:
 
 ```bash
-pnpm build
+bun run build
 ```
 
 Deploy to Cloudflare:
 
 ```bash
-pnpm deploy
+bun run deploy
 ```
