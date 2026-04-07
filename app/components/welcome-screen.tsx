@@ -3,6 +3,7 @@ import { SIZING } from './types'
 
 export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
   const s = isDesktop ? SIZING.desktop : SIZING.mobile
+  const topLogoWidth = s.topCornerLogoWidth
 
   return (
     <div
@@ -36,56 +37,74 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
             background: '#fff',
             boxShadow: isDesktop ? '4px 4px 0 #000' : '2px 2px 0 #000',
             padding: `${s.dialogPaddingY}px ${s.dialogPaddingX}px`,
-            width: '90%',
+            width: isDesktop ? '84%' : '92%',
+            minHeight: isDesktop ? 148 : 88,
           }}
         >
           <div
             style={{
+              position: 'relative',
               display: 'flex',
-              alignItems: 'flex-start',
-              gap: s.dialogGap,
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              minHeight: isDesktop ? 88 : 52,
+              gap: isDesktop ? 6 : 4,
             }}
           >
-            <div style={{ flexShrink: 0, marginTop: isDesktop ? -15 : -8, marginLeft: isDesktop ? -25 : -10 }}>
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                top: isDesktop ? 2 : 0,
+              }}
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/top-corner-mac-logo.svg"
                 alt="Macintosh"
-                width={s.macLogoWidth}
-                height={s.macLogoHeight}
+                style={{
+                  width: topLogoWidth,
+                  height: 'auto',
+                }}
               />
             </div>
-            <div
+            <h1
               style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                gap: isDesktop ? 4 : 2,
-                minHeight: s.macLogoHeight,
+                fontFamily: 'var(--font-chicago)',
+                fontSize: s.titleFont,
+                fontWeight: 'bold',
+                margin: 0,
+                lineHeight: 1.2,
+                letterSpacing: isDesktop ? 0.3 : 0.2,
+                whiteSpace: 'nowrap',
               }}
             >
-              <h1
+              Welcome to{' '}
+              <span
                 style={{
-                  fontFamily: 'var(--font-chicago)',
-                  fontSize: s.titleFont,
-                  fontWeight: 'bold',
-                  margin: 0,
-                  lineHeight: 1.2,
-                  letterSpacing: isDesktop ? 0.5 : 0.3,
-                  whiteSpace: 'nowrap',
+                  position: 'relative',
+                  display: 'inline-block',
+                  paddingBottom: isDesktop ? s.curlyLogoHeight + 4 : s.curlyLogoHeight + 2,
                 }}
               >
-                Welcome to <s>Macintosh</s>.
-              </h1>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/mac-os-curly.svg"
-                alt="Mac OS Curly"
-                style={{ height: s.curlyLogoHeight, width: 'auto', alignSelf: 'flex-end' }}
-              />
-            </div>
+                <span style={{ textDecoration: 'line-through' }}>Macintosh</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/mac-os-curly.svg"
+                  alt="Mac OS Curly"
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: isDesktop ? 22 : 14,
+                    transform: 'translateX(-50%)',
+                    height: s.curlyLogoHeight,
+                    width: 'auto',
+                  }}
+                />
+              </span>
+              .
+            </h1>
           </div>
         </div>
       </div>
