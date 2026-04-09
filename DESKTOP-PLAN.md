@@ -35,7 +35,7 @@ Transform the "coming soon" welcome screen into a fully interactive Mac OS 1984 
 | 1 | Mobile experience | Keep current welcome screen on mobile. iPhone-style experience is a separate future project. | Desktop OS is desktop-only. |
 | 2 | Draggable windows | Yes — drag via title bar, mouse only | No touch drag (desktop-only). No resize. |
 | 3 | Window behavior | Click-to-focus, cascaded open positions, close box top-left | Mac OS 1 style. Responsive size per app. |
-| 4 | Maximize mode | Both: button on iMac chin + menu option | CRTScreen stays mounted; iMac frame (body/chin/stand) hides. Screen area fills viewport. |
+| 4 | Maximize mode | Button on iMac chin only (no menu bar option) | `isMaximized` state lives in `page.tsx`, passed as props. CRTScreen stays mounted; iMac frame (body/chin/stand) hides. Screen area fills viewport. |
 | 5 | Maximize nudge | Subtle Mac-style dialog after first app open | "Tip: Use Full Screen for more space" |
 | 6 | Menu bar | Dynamic — updates based on active/focused app | Apple icon menu (About) always left. Default = Finder menus (File/Edit/View/Special). Apps override via registry. |
 | 7 | Blog posts | Scrapbook app (period-accurate Mac OS app) | 3 posts from CONTENT-ARCHIVE.md |
@@ -63,7 +63,7 @@ Transform the "coming soon" welcome screen into a fully interactive Mac OS 1984 
 ```typescript
 type WindowState = {
   appId: string
-  position: { x: number; y: number }
+  position: { x: number; y: number }  // percentage of container (0–1), e.g. { x: 0.15, y: 0.20 }
   zIndex: number
   isOpen: boolean
 }
@@ -72,13 +72,11 @@ type WindowManagerContextType = {
   windows: Record<string, WindowState>
   activeWindowId: string | null
   selectedIconId: string | null    // currently highlighted desktop icon (derived, not duplicated in WindowState)
-  isMaximized: boolean
   openApp: (appId: string) => void   // opens at cascaded position, assigns z-index
   closeApp: (appId: string) => void   // unmounts the app component
   focusApp: (appId: string) => void   // brings to front (highest z-index)
   selectIcon: (appId: string | null) => void  // single-click highlight
-  moveWindow: (appId: string, pos: { x: number; y: number }) => void
-  toggleMaximize: () => void
+  moveWindow: (appId: string, pos: { x: number; y: number }) => void  // pos in percentage (0–1)
 }
 ```
 
@@ -87,7 +85,7 @@ type WindowManagerContextType = {
 ### Window Component (Generic, Reusable)
 The `Window` component is the frame that wraps every app. It provides:
 - **Title bar**: app name, close box (top-left square), horizontal lines pattern
-- **Drag**: mousedown on title bar → mousemove updates position → mouseup ends
+- **Drag**: mousedown on title bar → mousemove/mouseup listeners on `document` (so fast drags don't lose the cursor) → convert px deltas to percentage of container → update position
 - **Focus**: clicking anywhere in window brings to front (highest z-index)
 - **Content slot**: `children` prop — each app renders inside this
 - **Configurable props**:
@@ -98,13 +96,20 @@ The `Window` component is the frame that wraps every app. It provides:
   - `showScrollbar?: boolean` — vertical scrollbar (Mac OS 1 style)
   - `statusBar?: ReactNode` — optional bottom status bar (e.g., Finder's "X items")
 
-### Window Sizing Strategy
-The CRT screen element is a CSS `container-type: size` container. Window sizes use `cqw`/`cqh` (container query units) with `clamp()` for min/max bounds. This means windows automatically scale when toggling maximize mode — no extra JS logic needed.
+### Window Sizing & Position Strategy
+The CRT screen element is a CSS `container-type: size` container. Window **sizes** use `cqw`/`cqh` (container query units) with `clamp()` for min/max bounds. Window **positions** are stored as percentages (0–1) of the container dimensions. Both scale automatically when toggling maximize mode — no recalculation needed.
 
-Example:
+Size example:
 ```css
 width: clamp(200px, 75cqw, 500px);   /* 75% of screen width, bounded */
 height: clamp(200px, 70cqh, 400px);  /* 70% of screen height, bounded */
+```
+
+Position example:
+```tsx
+// Stored: { x: 0.15, y: 0.20 }
+// Rendered: style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}
+// On drag: convert px delta to % via containerRef.clientWidth/clientHeight
 ```
 
 ### App Registry
@@ -142,30 +147,36 @@ type AppDefinition = {
 
 ### Rendering Hierarchy
 ```
-page.tsx
- └── IMacG3Frame (body/chin/stand hidden when maximized; CRTScreen always mounted)
-      └── CRTScreen (container-type: size — CSS container for window sizing)
+page.tsx (owns isMaximized, isDesktop, phase)
+ └── IMacG3Frame (receives isMaximized — hides body/chin/stand when true; CRTScreen always mounted)
+      └── CRTScreen (container-type: size — CSS container for window sizing + positioning)
            └── phase === 'welcome' → WelcomeScreen (no menu bar, brief display)
            └── phase === 'desktop' →
-                └── Desktop
-                     ├── MenuBar (top, always visible)
-                     ├── Icon Grid (desktop background layer)
-                     └── Open Windows (positioned absolutely, z-ordered above icons)
-                          └── Window (frame) → App Component (content)
+                └── WindowManagerProvider
+                     └── Desktop
+                          ├── MenuBar (top, always visible)
+                          ├── Icon Grid (desktop background layer)
+                          └── Open Windows (positioned absolutely via %, z-ordered above icons)
+                               └── Window (frame) → App Component (content)
 
 When maximized:
  └── IMacG3Frame body/chin/stand hidden via CSS
-      └── CRTScreen (expands to fill viewport — container size changes, windows scale via cqw/cqh)
+      └── CRTScreen (expands to fill viewport — container size changes, windows scale via cqw/cqh + %)
            └── Desktop (same component tree, just bigger container)
+
+Mobile:
+ └── isDesktop === false → welcome phase never advances to desktop
+ └── WelcomeScreen stays permanently (current behavior preserved)
 ```
 
 ### Maximize Mode
+- `isMaximized` state lives in `page.tsx`, passed as props to `IMacG3Frame` and `Desktop`
 - CRTScreen stays mounted at all times
 - Hides: iMac body, chin, stand (CSS toggle)
 - CRTScreen expands to fill browser viewport
-- Windows auto-scale via container query units (no JS resize logic)
+- Windows auto-scale: sizes via container query units, positions via percentage — no JS resize logic
 - Menu bar spans full width
-- Triggered by: chin button OR menu option
+- Triggered by: chin button only (single toggle location)
 - Transition: smooth scale/fade (respects `prefers-reduced-motion`)
 
 ---
@@ -277,14 +288,13 @@ main
 |------|-------------|
 | 1.1 | Add `'desktop'` to `ScreenPhase` type: `'off' \| 'flicker' \| 'boot' \| 'welcome' \| 'desktop'` |
 | 1.2 | Update `welcome-screen.tsx`: remove menu bar from welcome screen |
-| 1.3 | Add welcome → desktop transition in `page.tsx` (welcome shows briefly, then auto-advances to desktop phase) |
-| 1.4 | Add `isMaximized` state directly in WindowManager context (co-developed with Phase 2+3 in the same PR) |
+| 1.3 | Add welcome → desktop transition in `page.tsx` (welcome shows briefly, then auto-advances to desktop phase). Only when `isDesktop` — mobile stays on welcome permanently. |
+| 1.4 | Add `isMaximized` state in `page.tsx` (lifted to page level, passed as props to IMacG3Frame and Desktop) |
 | 1.5 | Add `container-type: size` to CRT screen element in `crt-screen.tsx` (need both axes for `cqw` and `cqh`) |
 | 1.6 | Add expand/collapse button to iMac chin in `imac-frame.tsx` |
 | 1.7 | When maximized: hide iMac body/chin/stand via CSS; CRTScreen stays mounted and expands to fill viewport |
 | 1.8 | Smooth transition animation (respect `prefers-reduced-motion`) |
-| 1.9 | Add "Enter/Exit Full Screen" to menu bar (View or Special menu) in `menu-bar.tsx` |
-| 1.10 | Test: phase transitions work, maximize toggle works, animation smooth, menu option synced with button |
+| 1.9 | Test: phase transitions work, maximize toggle works, animation smooth, mobile stays on welcome |
 
 ### Phase 2 + 3: Window System + Desktop Shell (co-developed)
 **PR**: Part of `feat/pre-app-foundation`
@@ -295,7 +305,7 @@ main
 
 | Step | Description |
 |------|-------------|
-| 2.1 | Create `WindowManagerProvider` context with full state (open/close/focus/drag/selectIcon) |
+| 2.1 | Create `WindowManagerProvider` context with full state (open/close/focus/drag/selectIcon). No maximize state — that lives in `page.tsx`. |
 | 2.2 | Create `app-registry.ts` with all 8 `AppDefinition` entries using "Coming Soon" placeholder component. Use `clamp()` + `cqw`/`cqh` for sizes. |
 | 2.3 | Build generic `Window` component — title bar with close box (top-left), app name, horizontal lines pattern. Window sizes use container query units from registry. |
 | 2.4 | Wire Window to context: drag (mousedown/move/up on title bar), click-to-focus, close box |
@@ -304,7 +314,7 @@ main
 | 2.7 | Create `Desktop` component (crosshatch bg, icon grid, open windows layer) — rendered when `phase === 'desktop'` |
 | 2.8 | Create `DesktopIcon` component (icon + label, single-click to select/highlight, double-click to open) |
 | 2.9 | Use placeholder icons for all 8 apps (user will provide final 1-bit pixel art SVGs later) |
-| 2.10 | Update `page.tsx`: phase `'desktop'` renders `Desktop`; mobile keeps `WelcomeScreen`. `isMaximized` already in context from Phase 1.4. |
+| 2.10 | Update `page.tsx`: phase `'desktop'` renders `Desktop`; mobile never advances past `'welcome'`. `isMaximized` already in page state from Phase 1.4, passed as prop. |
 | 2.11 | Refactor `MenuBar`: Apple icon menu (About) always left. Default = Finder menus (File/Edit/View/Special). Read active app's `menuItems` overrides from registry via context. |
 | 2.12 | Add maximize nudge dialog (shown after first app open) |
 | 2.13 | Test: full flow — boot → welcome (no menu bar) → desktop → open placeholder window → drag → close → focus → icon select → menu updates |
@@ -391,15 +401,14 @@ Update the existing placeholder entry in `app/components/desktop/app-registry.ts
 - [ ] Welcome screen updated (no menu bar)
 - [ ] Welcome → desktop auto-transition in page.tsx
 - [ ] `container-type: size` on CRT screen
-- [ ] `isMaximized` state in WindowManager context
-- [ ] Chin expand/collapse button on iMac frame
+- [ ] `isMaximized` state in `page.tsx` (passed as props)
+- [ ] Chin expand/collapse button on iMac frame (single toggle location)
 - [ ] Maximize: hide iMac body/chin/stand, CRTScreen expands to viewport
 - [ ] Transition animation (+ reduced motion)
-- [ ] Menu bar "Enter/Exit Full Screen" option
-- [ ] Testing
+- [ ] Testing (including: mobile stays on welcome)
 
 ### Phase 2+3: Window System + Desktop Shell
-- [ ] WindowManagerProvider context (open/close/focus/drag/selectIcon/maximize)
+- [ ] WindowManagerProvider context (open/close/focus/drag/selectIcon — no maximize)
 - [ ] `app-registry.ts` with all 8 entries (Coming Soon placeholders, cqw/cqh sizes)
 - [ ] Generic Window component (title bar, close box, drag, container query sizing)
 - [ ] Drag wired to context, constrained to CRT screen bounds
