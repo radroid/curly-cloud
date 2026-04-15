@@ -1,0 +1,598 @@
+# Mac OS 1984 Desktop — Implementation Plan
+
+> Persistent plan document for the full desktop experience rebuild.
+> Both human and Claude should reference this when planning or implementing.
+> Mobile experience planned separately in `MOBILE-PLAN.md`.
+
+---
+
+## Table of Contents
+
+1. [Vision](#vision)
+2. [Design Decisions](#design-decisions)
+3. [Architecture](#architecture)
+4. [Applications](#applications)
+5. [Git & PR Strategy](#git--pr-strategy)
+6. [Implementation Phases](#implementation-phases)
+7. [Subagent Contracts](#subagent-contracts)
+8. [Inspiration & Anti-patterns from PostHog](#inspiration--anti-patterns-from-posthog)
+9. [Progress Tracker](#progress-tracker)
+10. [Readiness Checklist](#readiness-checklist)
+
+---
+
+## Vision
+
+Transform the "coming soon" welcome screen into a fully interactive Mac OS 1984 desktop. The iMac G3 frame contains a working operating system with draggable windows, functional applications, and a dynamic menu bar. Visitors explore the portfolio by using apps — not by scrolling a page.
+
+**Current flow:** Boot sequence → Welcome dialog ("Welcome to Macintosh / Curly")
+**Target flow:** Boot sequence → Welcome dialog ("Welcome to Macintosh / Curly") (without menu bar) → Desktop with app icons → Open/close/drag windows with real apps
+
+---
+
+## Design Decisions
+
+| # | Decision | Choice | Notes |
+|---|----------|--------|-------|
+| 1 | Mobile experience | Keep current welcome screen on mobile. iPhone-style experience is a separate future project. | Desktop OS is desktop-only. |
+| 2 | Draggable windows | Yes — drag via title bar, mouse only | No touch drag (desktop-only). No resize. |
+| 3 | Window behavior | Click-to-focus, cascaded open positions, close box top-left | Mac OS 1 style. Responsive size per app. |
+| 4 | Maximize mode | Button on iMac chin only (no menu bar option) | `isMaximized` state lives in `page.tsx`, passed as props. CRTScreen stays mounted; iMac frame (body/chin/stand) hides. Screen area fills viewport. |
+| 5 | Maximize nudge | Subtle Mac-style dialog after first app open | "Tip: Use Full Screen for more space" |
+| 6 | Menu bar | Dynamic — updates based on active/focused app | Apple icon menu (About) always left. Default = Finder menus (File/Edit/View/Special). Apps override via registry. |
+| 7 | Blog posts | Scrapbook app (period-accurate Mac OS app) | 3 posts from CONTENT-ARCHIVE.md |
+| 8 | World map style | Risk-style dithered map with pattern fills | Reference image is style guide only; travel data TBD — subagent asks user. |
+| 9 | Extra apps | Music/interests-based (details TBD) | Build shell with mock data; subagent asks user for real content. |
+| 10 | Icon art | User-provided 1-bit pixel art SVGs | User creates icons and adds to a folder. No external icon library. Match Mac OS 1 aesthetic. |
+| 11 | Trash icon | Clickable — opens a placeholder window (bottom-right corner, outside the main icon grid) | Registered as a real app in the registry. Not functional beyond opening for now. |
+| 12 | Window sizing | Container query units (`cqw`/`cqh`) with `clamp()` bounds | CRT screen is the CSS container. Windows scale proportionally on maximize. |
+| 13 | Desktop icons | Single click selects (highlight), double-click opens | Mac OS style selection model. |
+| 14 | Screen phases | `off → flicker → boot → welcome → desktop` | Welcome screen (no menu bar) shows briefly after boot, then transitions to desktop. |
+| 15 | App registry | "Coming Soon" placeholder for unbuilt apps | Apps register real components when built. Registry also defines per-app menu bar actions. |
+
+---
+
+## Architecture
+
+### Desktop Shell
+- Replaces `WelcomeScreen` on desktop viewports after boot
+- Crosshatch/dithered gray background (Mac OS 1984 pattern, already in `global.css`)
+- Grid of app icons (classic Finder-style)
+- Decorative Trash icon bottom-right
+- Menu bar at top — dynamic per focused app
+
+### Window Manager (React Context)
+```typescript
+type Rect = { x: number; y: number; width: number; height: number } // px relative to CRT screen (the drag container)
+
+type WindowState = {
+  appId: string
+  position: { x: number; y: number }  // percentage of container (0–1), e.g. { x: 0.15, y: 0.20 }
+  zIndex: number                      // contiguous 0..n across open windows (not a counter)
+  isOpen: boolean
+  fromOrigin?: Rect                   // clicked-icon rect (CRT-relative px) for zoom-from-origin animation; cleared after open animation completes
+}
+
+type WindowManagerContextType = {
+  windows: Record<string, WindowState>
+  selectedIconId: string | null    // currently highlighted desktop icon (single-click selection)
+  openApp: (appId: string, fromOrigin?: Rect) => void // cascaded position; fromOrigin enables zoom-in animation
+  closeApp: (appId: string) => void   // unmounts the app; re-normalizes zIndex to keep remaining windows contiguous
+  focusApp: (appId: string) => void   // reshuffles zIndex so target becomes top of stack (see below)
+  selectIcon: (appId: string | null) => void  // single-click highlight
+  moveWindow: (appId: string, pos: { x: number; y: number }) => void  // pos in percentage (0–1)
+}
+```
+
+**Derived focused window** — there is no stored `activeWindowId`. The focused window is always the one with the highest `zIndex`, derived via `useMemo`. This is how PostHog does it and it eliminates sync bugs where a separate focus field drifts from the stack order.
+
+```tsx
+const activeWindowId = useMemo(() => {
+  return Object.values(windows).reduce<WindowState | null>(
+    (top, cur) => (cur.zIndex > (top?.zIndex ?? -1) ? cur : top),
+    null,
+  )?.appId ?? null
+}, [windows])
+```
+
+**Contiguous zIndex reshuffle** — `focusApp` does NOT increment a counter. It rewrites every window's `zIndex` so the target becomes `count - 1` and everything above it shifts down. This keeps values in `[0, n)` forever, no drift, no overflow.
+
+```tsx
+const focusApp = (appId: string) => {
+  setWindows((prev) => {
+    const count = Object.values(prev).filter((w) => w.isOpen).length
+    const target = prev[appId]
+    if (!target) return prev
+    const next = { ...prev }
+    for (const id of Object.keys(next)) {
+      const w = next[id]
+      if (!w.isOpen) continue
+      next[id] = {
+        ...w,
+        zIndex:
+          id === appId ? count - 1
+          : w.zIndex < target.zIndex ? w.zIndex
+          : w.zIndex - 1,
+      }
+    }
+    return next
+  })
+}
+```
+
+**Cascade-on-open**: first window opens at base `{ x: 0.12, y: 0.14 }`. Each subsequent open offsets `+0.03` on both axes from the current topmost window's position. If the offset would put the top-left past `{ x: 0.6, y: 0.55 }`, wrap back to the base. Keeps things readable without running offscreen.
+
+**Close normalizes zIndex**: `closeApp` removes the entry *and* decrements every remaining window's `zIndex` that was above the closed one, so the remaining set stays contiguous `[0, n-1)`. Without this, closing a middle window leaves a gap that breaks the derived focus logic.
+
+**Mount/unmount behavior**: App components mount when opened, unmount when closed. Apps that need persistence (e.g., Notepad) use `localStorage`. This keeps things simple and avoids hidden mounted components.
+
+**Re-render cost**: dragging updates `position` in the windows record, which re-renders every consumer of the context. For 8 windows this is fine; if it ever feels janky, wrap each `Window` in `React.memo` (compare by `appId`) and read its own slice via a selector hook rather than consuming the whole record.
+
+**Keep the provider focused**: PostHog's `App.tsx` grew to 2588 lines by bundling windows + settings + notifications + user + chat into one context. Our `WindowManagerProvider` should own windows only. Theme, settings, and any future cross-cutting concerns go in separate providers.
+
+### Window Component (Generic, Reusable)
+The `Window` component is the frame that wraps every app. It provides:
+- **Title bar**: app name, close box (top-left square), horizontal lines pattern
+- **Drag**: mousedown on title bar → mousemove/mouseup listeners on `document` (so fast drags don't lose the cursor) → convert px deltas to percentage of container → update position. Use a **5px click-vs-drag threshold** — movement under 5px is treated as a focus click, not a drag, so a quick click on the title bar doesn't jitter the window.
+- **Focus**: clicking anywhere in window brings to front (highest z-index)
+- **Content slot**: `children` prop — each app renders inside this
+- **Lazy content mount**: app content only renders once the entry animation completes. Prevents layout thrash during the pop-in. PostHog gates this on an `animating` flag; we can do the same or just delay-mount via `setTimeout(..., transitionDuration)`.
+- **Open animation from origin**: when `fromOrigin` is set on the window state, the window scales in from the clicked icon's rect (Mac OS "zoom rect" effect). Close animates back to the same origin if still known.
+- **Configurable props**:
+  - `title: string` — window title
+  - `appId: string` — used for window manager state
+  - `size: { width, height }` — responsive dimensions using `clamp()` with container query units (see below)
+  - `menuItems: MenuConfig[]` — app-specific menu bar items (passed up to menu bar via context)
+  - `showScrollbar?: boolean` — vertical scrollbar (Mac OS 1 style)
+  - `statusBar?: ReactNode` — optional bottom status bar (e.g., Finder's "X items")
+
+### Window Sizing & Position Strategy
+The CRT screen element is a CSS `container-type: size` container. Window **sizes** use `cqw`/`cqh` (container query units) with `clamp()` for min/max bounds. Window **positions** are stored as percentages (0–1) of the container dimensions. Both scale automatically when toggling maximize mode — no recalculation needed.
+
+Size example:
+```css
+width: clamp(200px, 75cqw, 500px);   /* 75% of screen width, bounded */
+height: clamp(200px, 70cqh, 400px);  /* 70% of screen height, bounded */
+```
+
+Position example:
+```tsx
+// Stored: { x: 0.15, y: 0.20 }
+// Rendered: style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}
+// On drag: convert px delta to % via containerRef.clientWidth/clientHeight
+```
+
+### App Registry
+Defined in `app/components/desktop/app-registry.ts` (created in Phase 3).
+```typescript
+type MenuConfig = {
+  label: string                              // e.g., "File", "Edit", "Bookmarks"
+  items: {
+    label: string                            // e.g., "New Tab", "Save", "---" for divider
+    action?: () => void                      // callback on click
+    disabled?: boolean
+    shortcut?: string                        // display only, e.g., "⌘S"
+  }[]
+}
+
+type AppDefinition = {
+  id: string
+  name: string
+  icon: React.FC                             // user-provided 1-bit pixel art SVG
+  defaultSize: {
+    width: string                            // clamp() with cqw, e.g. "clamp(200px, 75cqw, 500px)"
+    height: string                           // clamp() with cqh, e.g. "clamp(200px, 70cqh, 400px)"
+  }
+  menuItems: MenuConfig[]                    // app-specific menu bar overrides (merged with defaults)
+  component: React.FC                        // "Coming Soon" placeholder until app is built
+}
+```
+
+### Menu Bar (Dynamic)
+- **Apple icon menu** (always, leftmost): About This Macintosh, app list
+- **Default menus** (Finder-style, shown when no app is focused or as base): File, Edit, View, Special
+- **App-specific overrides**: each app defines `menuItems` in the registry that replace the defaults when that app is focused
+- Menu bar reads the derived `activeWindowId` from the window manager context and looks up that app's `menuItems` in the registry; falls back to Finder defaults when no window is focused
+- **Z-ordering**: menu bar sits at a higher z-index than all windows so dropdown menus cover windows (and windows cannot be dragged over the menu bar). Reserve a range — windows live in `[0, n)`, menu bar at e.g. `z-[9999]`.
+- Default menu bar (with Apple icon + Finder menus) is part of the foundation PR
+
+### Rendering Hierarchy
+```
+page.tsx (owns isMaximized, isDesktop, phase)
+ └── IMacG3Frame (receives isMaximized — hides body/chin/stand when true; CRTScreen always mounted)
+      └── CRTScreen (container-type: size — CSS container for window sizing + positioning)
+           └── phase === 'welcome' → WelcomeScreen (no menu bar, brief display)
+           └── phase === 'desktop' →
+                └── WindowManagerProvider
+                     └── Desktop
+                          ├── MenuBar (top, always visible)
+                          ├── Icon Grid (desktop background layer)
+                          └── Open Windows (positioned absolutely via %, z-ordered above icons)
+                               └── Window (frame) → App Component (content)
+
+When maximized:
+ └── IMacG3Frame body/chin/stand hidden via CSS
+      └── CRTScreen (expands to fill viewport — container size changes, windows scale via cqw/cqh + %)
+           └── Desktop (same component tree, just bigger container)
+
+Mobile:
+ └── isDesktop === false → welcome phase never advances to desktop
+ └── WelcomeScreen stays permanently (current behavior preserved)
+```
+
+### Maximize Mode
+- `isMaximized` state lives in `page.tsx`, passed as props to `IMacG3Frame` and `Desktop`
+- CRTScreen stays mounted at all times
+- Hides: iMac body, chin, stand (CSS toggle)
+- CRTScreen expands to fill browser viewport
+- Windows auto-scale: sizes via container query units, positions via percentage — no JS resize logic
+- Menu bar spans full width
+- Triggered by: chin button only (single toggle location)
+- Transition: smooth (respects `prefers-reduced-motion`, see below)
+
+**Container sizing note**: CRTScreen currently uses `aspectRatio: '4 / 3'` and flex layout. Adding `container-type: size` requires the element to have a determinate size — flex + aspectRatio gives us that, but we need to verify the parent (`IMacG3Frame`) still gives CRTScreen concrete width/height. In maximize mode, CRTScreen fills `100vw × 100vh` — also concrete. Test both.
+
+**Reduced motion**: `prefers-reduced-motion` disables ALL of these — maximize transition, zoom-from-origin open animation, and close animation. Windows appear/disappear instantly in reduced-motion mode. Use the existing `app/lib/use-reduced-motion.ts` hook.
+
+---
+
+## Applications
+
+### App 1: Web Browser — "Curly Browser"
+- **Purpose**: Portfolio showcase (main app)
+- **Design**: User has separate mockups — will provide when building this app
+- **Content**: 5 projects from CONTENT-ARCHIVE.md (Penguin Mail, ARK Experience, Bridger, Stella 56, Playground)
+- **Features**: Bookmarks toolbar, project detail views, link to live sites
+- **Size**: `clamp(300px, 78cqw, 600px)` × `clamp(250px, 75cqh, 450px)` (large)
+- **⚠ Note**: Subagent should ask user for mockups before building. Use mock project cards as placeholder.
+
+### App 2: Note Pad
+- **Purpose**: Fun interactive element
+- **Design**: Mac OS 1 Note Pad (simple lined text area, torn-paper top edge)
+- **Features**: Single pad, localStorage save, pre-populated welcome message
+- **Menu**: File > Clear Note
+- **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+### App 3: System — "Control Panel"
+- **Purpose**: Visitor diagnostics + Raj's info
+- **Design**: Control Panel style (dark panels, icons) from reference image 2
+- **Features**: Browser, OS, screen res, timezone, connection, language; Raj's name, role, links
+- **Size**: `clamp(250px, 55cqw, 420px)` × `clamp(200px, 55cqh, 350px)` (medium)
+
+### App 4: Calculator
+- **Purpose**: Functional easter egg
+- **Design**: Exact Mac OS 1 calculator (reference image 2)
+- **Features**: C, E, =, *, 0-9, +, -, /, . — basic arithmetic
+- **Size**: `clamp(120px, 25cqw, 200px)` × `clamp(180px, 45cqh, 280px)` (small)
+
+### App 5: Finder — "Documents"
+- **Purpose**: Resume & cover letter downloads
+- **Design**: Classic Finder window with file icons
+- **Features**: Resume.pdf, Cover_Letter.pdf — click to select, double-click to download
+- **Status bar**: "X items, XXK in disk, XXK available"
+- **Size**: `clamp(220px, 48cqw, 380px)` × `clamp(180px, 50cqh, 320px)` (medium)
+
+### App 6: Scrapbook — "Journal"
+- **Purpose**: Blog posts
+- **Design**: Mac OS Scrapbook — page-by-page with arrows
+- **Content**: 3 blog posts from CONTENT-ARCHIVE.md
+- **Size**: `clamp(250px, 55cqw, 420px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+### App 7: World Map
+- **Purpose**: Travel showcase
+- **Design**: Risk-style SVG map with dithered pattern fills
+- **Features**: Visited regions patterned, unvisited plain, legend
+- **Size**: `clamp(280px, 70cqw, 540px)` × `clamp(220px, 60cqh, 380px)` (large)
+- **⚠ Note**: Travel data TBD. Subagent should use mock data and ask user for real travel data.
+
+### App 8: Music / Interests (TBD)
+- **Purpose**: Personal touch
+- **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
+- **⚠ Note**: Scope undefined. Subagent should build a shell with mock content and ask user for details.
+
+---
+
+## Git & PR Strategy
+
+### Branch Structure
+```
+main
+ └── feat/mac-os-1984-desktop  (current branch — final merge target for everything)
+      ├── feat/pre-app-foundation  (PR #1 → feat/mac-os-1984-desktop)
+      ├── feat/app-calculator      (PR → feat/mac-os-1984-desktop, after PR #1 merged)
+      ├── feat/app-notepad         (PR → feat/mac-os-1984-desktop)
+      ├── feat/app-finder          (PR → feat/mac-os-1984-desktop)
+      ├── feat/app-browser         (PR → feat/mac-os-1984-desktop)
+      ├── feat/app-system          (PR → feat/mac-os-1984-desktop)
+      ├── feat/app-scrapbook       (PR → feat/mac-os-1984-desktop)
+      ├── feat/app-world-map       (PR → feat/mac-os-1984-desktop)
+      └── feat/app-music           (PR → feat/mac-os-1984-desktop)
+```
+
+### PR Workflow
+1. **PR #1** — `feat/pre-app-foundation` → `feat/mac-os-1984-desktop`
+   - Maximize mode, window component, desktop shell, window manager, dynamic menu bar, default Finder menus
+   - Must be reviewed & merged before app PRs begin
+   
+2. **App PRs** (parallel, one per app) — `feat/app-*` → `feat/mac-os-1984-desktop`
+   - Branch from `feat/mac-os-1984-desktop` (after PR #1 is merged)
+   - Each built by a subagent in its own worktree
+   - Can be developed simultaneously
+   - Each PR is small and reviewable (~200-500 lines)
+   - Merged one by one into `feat/mac-os-1984-desktop`
+
+3. **Final merge** — `feat/mac-os-1984-desktop` → `main`
+   - After all apps merged and tested together
+   - Final integration testing before merging to main
+
+### Why This Strategy
+- **Small PRs**: No 10k-line monster PRs. Each is focused and reviewable.
+- **Parallel work**: Subagents build apps simultaneously in isolated worktrees.
+- **Safe merges**: Foundation is stable before apps branch from it. Apps don't conflict with each other.
+- **Multi-session friendly**: Can pause after any PR and resume later.
+
+---
+
+## Implementation Phases
+
+### Phase 1: Maximize Mode + Screen Phases
+**PR**: Part of `feat/pre-app-foundation`
+**Files to modify**: `imac-frame.tsx`, `page.tsx`, `types.ts`, `menu-bar.tsx`, `crt-screen.tsx`, `welcome-screen.tsx`
+
+| Step | Description |
+|------|-------------|
+| 1.1 | Add `'desktop'` to `ScreenPhase` type: `'off' \| 'flicker' \| 'boot' \| 'welcome' \| 'desktop'` |
+| 1.2 | Update `welcome-screen.tsx`: remove menu bar from welcome screen |
+| 1.3 | Add welcome → desktop transition in `page.tsx` (welcome shows briefly, then auto-advances to desktop phase). Only when `isDesktop` — mobile stays on welcome permanently. |
+| 1.4 | Add `isMaximized` state in `page.tsx` (lifted to page level, passed as props to IMacG3Frame and Desktop) |
+| 1.5 | Add `container-type: size` to CRT screen element in `crt-screen.tsx` (need both axes for `cqw` and `cqh`) |
+| 1.6 | Add expand/collapse button to iMac chin in `imac-frame.tsx` |
+| 1.7 | When maximized: hide iMac body/chin/stand via CSS; CRTScreen stays mounted and expands to fill viewport |
+| 1.8 | Smooth transition animation (respect `prefers-reduced-motion`) |
+| 1.9 | Test: phase transitions work, maximize toggle works, animation smooth, mobile stays on welcome |
+
+### Phase 2 + 3: Window System + Desktop Shell (co-developed)
+**PR**: Part of `feat/pre-app-foundation`
+**Files to create**: `app/components/desktop/window.tsx`, `app/components/desktop/window-manager.tsx`, `app/components/desktop/desktop.tsx`, `app/components/desktop/desktop-icon.tsx`, `app/components/desktop/app-registry.ts`
+**Files to modify**: `app/components/menu-bar.tsx`, `app/page.tsx`, `app/components/types.ts`
+
+> Window component and window manager are co-developed since the Window component depends on the context for drag/focus/close. They're part of the same PR.
+
+| Step | Description |
+|------|-------------|
+| 2.1 | Create `WindowManagerProvider` context: `windows` record, `selectedIconId`, `openApp(fromOrigin?)`, `closeApp`, `focusApp` (contiguous zIndex reshuffle), `selectIcon`, `moveWindow`. **No stored `activeWindowId`** — derive it via `useMemo` from highest zIndex. No maximize state — that lives in `page.tsx`. |
+| 2.2 | Create `app-registry.ts` with all 8 `AppDefinition` entries using "Coming Soon" placeholder component. Use `clamp()` + `cqw`/`cqh` for sizes. |
+| 2.3 | Build generic `Window` component — title bar with close box (top-left), app name, horizontal lines pattern. Window sizes use container query units from registry. |
+| 2.4 | Wire Window to context: drag (mousedown/move/up on title bar) with 5px click-vs-drag threshold, click-to-focus, close box |
+| 2.5 | Constrain drag to CRT screen bounds (works for both normal and maximized since CRTScreen is always the container) |
+| 2.6 | Content slot via `children` (lazy-mounted after entry animation), optional scrollbar, optional status bar |
+| 2.6a | Zoom-from-origin open animation: DesktopIcon passes its bounding rect to `openApp(id, rect)`; Window scales in from that rect. Close reverses it. |
+| 2.7 | Create `Desktop` component (crosshatch bg, icon grid, open windows layer) — rendered when `phase === 'desktop'` |
+| 2.8 | Create `DesktopIcon` component (icon + label, single-click to select/highlight, double-click to open) |
+| 2.9 | Use placeholder icons for all 8 apps (user will provide final 1-bit pixel art SVGs later) |
+| 2.10 | Update `page.tsx`: phase `'desktop'` renders `Desktop`; mobile never advances past `'welcome'`. `isMaximized` already in page state from Phase 1.4, passed as prop. |
+| 2.11 | Refactor `MenuBar`: Apple icon menu (About) always left. Default = Finder menus (File/Edit/View/Special). Read active app's `menuItems` overrides from registry via context. |
+| 2.12 | Add maximize nudge dialog (shown after first app open) |
+| 2.13 | Test: full flow — boot → welcome (no menu bar) → desktop → open placeholder window → drag → close → focus → icon select → menu updates |
+
+### Phase 4: Application Development (Parallel Subagents)
+**PRs**: One per app, branching from `feat/mac-os-1984-desktop` (after PR #1 is merged)
+**Method**: Each app built by a subagent in an isolated worktree
+
+Each subagent receives a **contract** (see [Subagent Contracts](#subagent-contracts)) defining:
+- What the app does
+- What component interface to implement
+- What the window config looks like
+- Where to put the file
+- How to register in the app registry
+
+Apps can be built in parallel since they don't depend on each other — only on the foundation.
+
+**App build order priority** (for sequential work if needed):
+1. Calculator (simplest — validates the window system)
+2. Note Pad (localStorage integration)
+3. Finder (static files + download)
+4. Scrapbook (blog content rendering)
+5. System/Control Panel (diagnostics)
+6. Browser (most complex — user mockups needed)
+7. World Map (SVG + patterns — travel data needed)
+8. Music (TBD scope)
+
+### Phase 5: Integration & Polish
+**After all app PRs merged into `feat/mac-os-1984-desktop`**
+
+| Step | Description |
+|------|-------------|
+| 5.1 | All app branches merged into `feat/mac-os-1984-desktop` |
+| 5.2 | Integration testing — all apps open/close/focus correctly together |
+| 5.3 | Menu bar shows correct menus per app (defaults + overrides) |
+| 5.4 | Z-ordering works across all windows |
+| 5.5 | Maximize mode works with all apps (container query sizing scales correctly) |
+| 5.6 | Performance check — 8 potential windows shouldn't lag |
+| 5.7 | User provides final 1-bit SVG icons → replace placeholders |
+| 5.8 | Final review, merge to `main` |
+
+---
+
+## Subagent Contracts
+
+Each app subagent gets a standardized brief. Template:
+
+```
+## Contract: [App Name]
+
+**File to create**: `app/components/apps/[app-name].tsx`
+**Branch**: `feat/app-[app-name]` (from `feat/mac-os-1984-desktop`, after PR #1 merged)
+
+### Interface
+Export a single default component:
+  export function [AppName]App() { ... }
+
+The component renders ONLY the app content (no window frame).
+The Window component wraps it externally.
+
+### App Registry Update
+Update the existing placeholder entry in `app/components/desktop/app-registry.ts`:
+  - Replace "Coming Soon" placeholder with the real component
+  - Update `menuItems` with app-specific menu overrides (these replace the Finder defaults when the app is focused)
+  - Icon: leave as-is (user provides final SVG icons separately)
+
+### Requirements
+[App-specific requirements from the Applications section]
+⚠ For Browser/World Map/Music: ask user for missing content/mockups/data before building.
+
+### Styling Rules
+- Use inline styles and Tailwind classes (collocated, no separate CSS)
+- Use `fontFamily: 'var(--font-chicago)'` for all text
+- 1-bit aesthetic: black and white, no gradients, 1-2px borders
+- Match Mac OS System 1 visual language
+```
+
+---
+
+## Inspiration & Anti-patterns from PostHog
+
+Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we're deliberately not.
+
+### Patterns we're adopting
+1. **Derived focused window** — top of z-stack IS the focused window; no separate `activeWindowId` field. Eliminates sync bugs.
+2. **Contiguous zIndex reshuffle** on `focusApp` — values stay in `[0, n)`, no counter drift.
+3. **5px click-vs-drag threshold** on draggable title bar (and desktop icons if we ever make them draggable). A quick click shouldn't jitter the window.
+4. **Lazy content mount** — app contents render only after the window's entry animation completes. Prevents layout thrash on pop-in.
+5. **Zoom-from-origin open animation** — window scales in from the clicked icon's bounding rect (`fromOrigin`). This is the authentic Mac OS "zoom rects" effect and the easiest big-wow polish item.
+6. **DragConstraints via ref** — pass a ref to the CRT screen element to constrain drag. Works unchanged in maximized mode because CRTScreen is always the container.
+7. **Provider discipline** — the window manager owns windows only. Site settings, theme, and notifications (if any) live elsewhere. PostHog's `App.tsx` is 2588 lines because they merged everything.
+
+### Patterns we're deliberately NOT using
+1. **Per-window history / URL-backed windows** — PostHog ties windows to Gatsby routes so each window has a path. We're a single-page Next.js app; apps are React components, not routes. Keep it simple.
+2. **Share-layout-via-URL** — neat but out of scope for v1. Revisit as a future enhancement.
+3. **Framer Motion for drag** — PostHog uses `useDragControls`. We're using native pointer events to keep the dep surface small and the behavior trivially predictable. If drag feels janky, reconsider.
+4. **Window resize** — PostHog has 5 resize handles. We explicitly chose no-resize in Design Decisions (#2). Mac OS 1 windows didn't resize anyway.
+5. **Snap-to-side** — PostHog has half-screen left-snap. We have a single maximize mode and no snap. Period-accurate.
+6. **Tabs inside windows** — PostHog's `WindowTabs` is literally `<div>TABS</div>`. Don't bother.
+7. **Radix Menubar** — our menu bar is 1-bit and purely visual; Radix's ARIA-heavy menubar is overkill. Roll our own.
+8. **Lottie for animations** — PostHog's inline Lottie file is 1669 lines of JSON. We use CSS + reduced-motion hooks.
+9. **Giant `safelist.txt`** — we're not runtime-generating Tailwind classes from data attributes; no safelist needed.
+
+### Future enhancements (inspired, not blocking v1)
+- **Screensaver**: inactivity-triggered overlay — a bouncing Happy Mac or "After Dark flying toasters" riff. PostHog has this (`Screensaver/index.tsx`) and it's charming.
+- **Active windows panel**: a side panel or Apple-menu submenu listing open windows with close buttons. In Mac OS 1 this was the Application menu in the top-right. Nice quality-of-life, not critical for v1.
+- **Shareable layout URL**: encode open windows + positions as a query param so you can send someone a link to "this exact desktop state."
+- **Right-click context menu** on desktop: "Reset Icons", "About", etc. PostHog has this on desktop empty space.
+
+---
+
+## Progress Tracker
+
+### Phase 1: Maximize Mode + Screen Phases
+- [ ] `'desktop'` added to ScreenPhase type
+- [ ] Welcome screen updated (no menu bar)
+- [ ] Welcome → desktop auto-transition in page.tsx
+- [ ] `container-type: size` on CRT screen
+- [ ] `isMaximized` state in `page.tsx` (passed as props)
+- [ ] Chin expand/collapse button on iMac frame (single toggle location)
+- [ ] Maximize: hide iMac body/chin/stand, CRTScreen expands to viewport
+- [ ] Transition animation (+ reduced motion)
+- [ ] Testing (including: mobile stays on welcome)
+
+### Phase 2+3: Window System + Desktop Shell
+- [ ] WindowManagerProvider context (open/close/focus/drag/selectIcon — no maximize, no stored activeWindowId — derive from zIndex)
+- [ ] `focusApp` uses contiguous zIndex reshuffle (no counter)
+- [ ] `app-registry.ts` with all 8 entries (Coming Soon placeholders, cqw/cqh sizes)
+- [ ] Generic Window component (title bar, close box, drag, container query sizing)
+- [ ] Drag wired to context, constrained to CRT screen bounds, 5px click-vs-drag threshold
+- [ ] Lazy content mount — children render after entry animation completes
+- [ ] Zoom-from-origin open/close animation using clicked-icon rect
+- [ ] Scrollbar + status bar options on Window
+- [ ] Desktop component (crosshatch bg, icon grid, windows layer) — phase === 'desktop'
+- [ ] DesktopIcon component (single-click select, double-click open)
+- [ ] Placeholder icons for all 8 apps (user provides final SVGs later)
+- [ ] page.tsx updated (Desktop on desktop phase, WelcomeScreen on mobile)
+- [ ] MenuBar refactored: Apple icon menu + Finder defaults + per-app overrides from registry
+- [ ] Maximize nudge dialog
+- [ ] Integration test: boot → welcome (no menu bar) → desktop → open → drag → close → focus → select icon → menus
+
+### PR #1 Review
+- [ ] PR opened: `feat/pre-app-foundation` → `feat/mac-os-1984-desktop`
+- [ ] Reviewed & approved
+- [ ] Ready for app branches
+
+### Phase 4: Apps (parallel)
+- [ ] Calculator
+- [ ] Note Pad
+- [ ] Finder
+- [ ] Scrapbook
+- [ ] System / Control Panel
+- [ ] Browser (needs mockups)
+- [ ] World Map (needs travel data)
+- [ ] Music (needs scope)
+
+### Phase 5: Integration
+- [ ] All app PRs merged into `feat/mac-os-1984-desktop`
+- [ ] Integration testing passed
+- [ ] User provides final 1-bit SVG icons → replace placeholders
+- [ ] Merged to `main`
+
+---
+
+## Readiness Checklist
+
+Snapshot of what's ready to build, what's gated, and what's still TBD. Update as blockers clear.
+
+### ✅ Ready to implement (PR #1 — `feat/pre-app-foundation`)
+Everything in **Phase 1** (maximize mode, screen phases) and **Phase 2+3** (window system, desktop shell, menu bar, placeholder apps) is fully specified:
+- Types for `WindowState`, `WindowManagerContextType`, `AppDefinition`, `MenuConfig`
+- Derived focus + contiguous zIndex algorithms with code
+- Cascade open position, close normalization, drag math
+- 5px click-vs-drag threshold
+- Lazy content mount + zoom-from-origin animation
+- Menu bar z-ordering above windows
+- Container-query sizing with `cqw`/`cqh` + `clamp()`
+- `isMaximized` lifted to `page.tsx`, passed as props
+- Reduced-motion coverage
+- Rendering hierarchy diagram
+- Placeholder icons for all 8 apps
+
+**Status: PR #1 can begin immediately.**
+
+### 🟡 Ready to build, content gated (Phase 4 — app PRs)
+These apps have the technical spec locked; only content/assets are outstanding:
+
+| App | Blocker | Who resolves | When |
+|-----|---------|--------------|------|
+| Calculator | none | — | ready |
+| Note Pad | none | — | ready |
+| Finder (Documents) | Resume.pdf + Cover_Letter.pdf assets | user to drop in `public/` | before build |
+| Scrapbook (Journal) | none — uses `CONTENT-ARCHIVE.md` | — | ready |
+| System (Control Panel) | none | — | ready |
+| Browser (Curly) | design mockups | user to provide | before build |
+| World Map | travel data (visited regions) | user to provide | before build |
+| Music / Interests | scope undefined | user to define | before scope lock |
+
+All 4 "ready" apps can go in parallel as soon as PR #1 merges. Browser/World Map/Music/Finder unblock as their inputs arrive — independent of foundation work.
+
+### 🔴 Blocked only on the foundation
+- Final 1-bit SVG icons for all 8 apps — user creates after the app frames are live (easier to iterate against a running desktop). Placeholder icons ship in PR #1.
+
+### ❓ Open questions before implementation starts
+None currently. Design Decisions table covers all settled choices. If anything surfaces during Phase 1, add it to the Design Decisions table and this section rather than improvising in code.
+
+---
+
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| `CONTENT-ARCHIVE.md` | Projects, blog posts, skills, timeline — source content for apps |
+| `MOBILE-PLAN.md` | Separate plan for mobile iPhone OS 1 experience |
+| `POSTHOG-RESEARCH.md` | Reference research on PostHog.com's desktop-OS architecture — patterns borrowed and deliberately avoided |
+| `app/page.tsx` | Entry point — boot sequence + screen rendering |
+| `app/components/imac-frame.tsx` | iMac G3 frame — modify for maximize mode |
+| `app/components/welcome-screen.tsx` | Current welcome screen — replaced by Desktop on desktop viewports |
+| `app/components/menu-bar.tsx` | Menu bar — update for dynamic per-app menus |
+| `app/components/crt-screen.tsx` | CRT screen wrapper — stays as-is |
+| `app/components/boot-screen.tsx` | Boot animation — stays as-is |
+| `app/components/types.ts` | Shared types — extend for window/app types |
+| `app/components/desktop/app-registry.ts` | App definitions — created in Phase 2+3 |
+| `app/global.css` | Theme CSS — crosshatch pattern, Chicago font, Mac OS styles |
+| `app/lib/use-reduced-motion.ts` | Accessibility hook — use for animations |

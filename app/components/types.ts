@@ -1,4 +1,4 @@
-export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome'
+export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome' | 'desktop'
 
 export const SIZING = {
   mobile: {
@@ -11,7 +11,7 @@ export const SIZING = {
     topCornerLogoWidth: 34,
     macLogoHeight: 34,
     curlyLogoHeight: 22,
-    macIconSize: 60,
+    macIconSize: 42,
     dialogPaddingX: 14,
     dialogPaddingY: 12,
     dialogGap: 8,
@@ -26,7 +26,7 @@ export const SIZING = {
     topCornerLogoWidth: 41,
     macLogoHeight: 67,
     curlyLogoHeight: 40,
-    macIconSize: 100,
+    macIconSize: 70,
     dialogPaddingX: 40,
     dialogPaddingY: 28,
     dialogGap: 16,
