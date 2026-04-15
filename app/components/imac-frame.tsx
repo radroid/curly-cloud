@@ -79,49 +79,40 @@ export function IMacG3Frame({
             transition: chinTransition,
           }}
         >
-          {/* CD slot */}
-          <div
+          {/* CD slot doubles as the maximize toggle. Always rendered so the
+             chin height doesn't shift between boot → welcome → desktop. */}
+          <button
+            type="button"
+            onClick={onToggleMaximize}
+            disabled={!onToggleMaximize}
+            aria-label={isMaximized ? 'Restore screen' : 'Maximize screen'}
+            aria-hidden={!onToggleMaximize}
+            tabIndex={onToggleMaximize ? 0 : -1}
             style={{
+              appearance: 'none',
+              border: 'none',
+              padding: 0,
               width: '45%',
-              height: 3,
-              background: 'rgba(0,0,0,0.2)',
-              borderRadius: 2,
+              height: isLarge ? 5 : 4,
+              background: 'rgba(0,0,0,0.22)',
+              borderRadius: 3,
               boxShadow:
-                'inset 0 1px 1px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.1)',
+                'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)',
+              cursor: onToggleMaximize ? 'pointer' : 'default',
+              opacity: onToggleMaximize ? 1 : 0.55,
+              transition: 'opacity 150ms ease, height 150ms ease, box-shadow 150ms ease',
+            }}
+            onMouseEnter={(e) => {
+              if (!onToggleMaximize) return
+              e.currentTarget.style.boxShadow =
+                'inset 0 1px 1px rgba(0,0,0,0.5), 0 0 6px rgba(255,255,255,0.35)'
+            }}
+            onMouseLeave={(e) => {
+              if (!onToggleMaximize) return
+              e.currentTarget.style.boxShadow =
+                'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)'
             }}
           />
-          {onToggleMaximize && (
-            <button
-              type="button"
-              onClick={onToggleMaximize}
-              aria-label="Maximize screen"
-              style={{
-                appearance: 'none',
-                background: 'rgba(0,0,0,0.18)',
-                border: '1px solid rgba(0,0,0,0.28)',
-                borderRadius: 2,
-                width: isLarge ? 22 : 18,
-                height: isLarge ? 14 : 12,
-                padding: 0,
-                cursor: 'pointer',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25), 0 1px 0 rgba(0,0,0,0.2)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginTop: 2,
-              }}
-            >
-              <span
-                style={{
-                  display: 'block',
-                  width: isLarge ? 10 : 8,
-                  height: isLarge ? 6 : 5,
-                  border: '1px solid rgba(255,255,255,0.9)',
-                  borderRadius: 1,
-                }}
-              />
-            </button>
-          )}
         </div>
       </div>
 
