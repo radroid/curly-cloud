@@ -239,12 +239,16 @@ Mobile:
 ## Applications
 
 ### App 1: Web Browser — "Curly Browser"
-- **Purpose**: Portfolio showcase (main app)
-- **Design**: User has separate mockups — will provide when building this app
-- **Content**: 5 projects from CONTENT-ARCHIVE.md (Penguin Mail, ARK Experience, Bridger, Stella 56, Playground)
-- **Features**: Bookmarks toolbar, project detail views, link to live sites
+- **Purpose**: Bookmarks launcher disguised as a Mac OS 1 browser
+- **Design**: Mac OS 1 window chrome with **disabled** back/forward buttons, decorative read-only address bar, info banner, and a bookmarks "home page" as the only view. No internal navigation.
+- **Key behavior**: Clicking any bookmark calls `window.open(url, '_blank', 'noopener,noreferrer')` — opens in the user's real browser, new tab. Right-click uses the existing Shadcn ContextMenu for "Open in New Tab" and "Copy Link" (actually copies via `navigator.clipboard`).
+- **Info banner** (styled tan/yellow, top of content area): `"Curly Browser uses iframes, which most sites block for security. Links open in your real browser instead."` — this explains the quirk instead of hiding it.
+- **Bookmarks** (11 total, grouped visually into "Projects" and "Tools"):
+  - **Projects (8)**: Penguin Mail (penguinmail.app), ARK Experience (funwithark.ca), Bridger (bridger.atawalk.ca), Stella 56 Diamonds (stella56diamonds.com), Playground (playground.createplus.club), Couples Budget (couplesbudget.ca), 75 Creates (75.createplus.club), KayVee Gems (kayveegems.com)
+  - **Tools (3)**: Google, Claude (claude.ai), ChatGPT (chatgpt.com)
+- **Favicons**: fetched via `https://www.google.com/s2/favicons?domain=<host>&sz=128`, rendered with `imageRendering: pixelated` for lo-fi vibe.
 - **Size**: `clamp(300px, 78cqw, 600px)` × `clamp(250px, 75cqh, 450px)` (large)
-- **⚠ Note**: Subagent should ask user for mockups before building. Use mock project cards as placeholder.
+- **Does not iframe anything.** Don't try. The whole point is that it doesn't.
 
 ### App 2: Note Pad
 - **Purpose**: Fun interactive element
@@ -266,11 +270,32 @@ Mobile:
 - **Size**: `clamp(120px, 25cqw, 200px)` × `clamp(180px, 45cqh, 280px)` (small)
 
 ### App 5: Finder — "Documents"
-- **Purpose**: Resume & cover letter downloads
-- **Design**: Classic Finder window with file icons
-- **Features**: Resume.pdf, Cover_Letter.pdf — click to select, double-click to download
-- **Status bar**: "X items, XXK in disk, XXK available"
+- **Purpose**: File explorer that mirrors the real `public/` folder with Mac-styled folder names for flavor
+- **Design**: Classic Finder icon grid with breadcrumb path + Back button, scrollable content area, status bar footer
+- **Folder rename map** (display label ← actual path):
+  - "Macintosh HD" — root
+  - "Applications" ← `public/app-icons/`
+  - "Documents" ← `public/cv/` (contains Resume.pdf)
+  - "Fonts" ← `public/fonts/`
+  - "Developer" ← `public/tech-icons/`
+  - Loose files at root (Apple Logo.svg ← apple-icon.svg, Startup Sound.wav ← StartupMacI.wav, Avatar.webp ← raj-avatar.webp, etc.)
+- **Interactions**:
+  - Single-click: selects the item (text-inverted label highlight, matching desktop icons)
+  - Double-click folder: navigate into it (path stack)
+  - Double-click file: preview in an **absolute-positioned overlay** within the Finder window (not a new top-level window — overlay has its own close button, ESC dismisses)
+  - Right-click file (Shadcn ContextMenu): Open, Download, Get Info (disabled), Rename (disabled)
+  - Back button: pop path stack
+- **Preview overlay by file type**:
+  - `.svg` / `.png` / `.webp` / `.jpg` → `<img>` with object-fit contain
+  - `.wav` / `.mp3` → `<audio controls>`
+  - `.pdf` → `<iframe src={path}>` (browser native PDF viewer)
+  - `.woff` / `.woff2` / `.ttf` → message + sample text rendered in the font
+  - anything else → "Preview not available" + Download hint
+- **Download**: right-click → Download triggers `<a href={path} download>.click()`
+- **No cover letter** — ship with just the resume for now. Nothing to gate on.
+- **Status bar**: "N items, 72K in disk, 400K available" (fake-realistic)
 - **Size**: `clamp(220px, 48cqw, 380px)` × `clamp(180px, 50cqh, 320px)` (medium)
+- **Menu**: uses the existing `FINDER_DEFAULT_MENUS` export from `app-registry.tsx`
 
 ### App 6: Scrapbook — "Journal"
 - **Purpose**: Blog posts
@@ -279,16 +304,25 @@ Mobile:
 - **Size**: `clamp(250px, 55cqw, 420px)` × `clamp(220px, 60cqh, 380px)` (medium)
 
 ### App 7: World Map
-- **Purpose**: Travel showcase
-- **Design**: Risk-style SVG map with dithered pattern fills
-- **Features**: Visited regions patterned, unvisited plain, legend
+- **Purpose**: Travel showcase — 24 visited countries highlighted
+- **Design**: Public-domain world map, dithered SVG pattern fill on visited countries, plain white on unvisited, black stroke throughout. Aesthetic reference: `public/worldmap.png` (a Risk-style Mac OS screenshot — style only; **no** game chrome, Player1, Done/Fortify/Cards).
+- **Visited countries (24, ISO alpha-3)**:
+  `CAN, USA, GBR, FRA, DEU, AUT, ITA, CHE, HUN, CZE, NLD, BEL, LUX, EGY, SAU, ARE, IND, JPN, THA, MYS, SGP, LKA, MUS, NZL`
+  (Canada, United States, United Kingdom, France, Germany, Austria, Italy, Switzerland, Hungary, Czechia, Netherlands, Belgium, Luxembourg, Egypt, Saudi Arabia, UAE, India, Japan, Thailand, Malaysia, Singapore, Sri Lanka, Mauritius, New Zealand)
+- **Features**: Hover tooltip with country name; small legend at a corner (patterned box + plain box with labels); viewBox scales map to window; visited count shown subtly ("24 / ~195 countries").
+- **Map data**: `react-simple-maps` + `world-atlas` (TopoJSON, ~100KB) — installed as deps on `feat/mac-os-1984-desktop` before the app PR begins.
 - **Size**: `clamp(280px, 70cqw, 540px)` × `clamp(220px, 60cqh, 380px)` (large)
-- **⚠ Note**: Travel data TBD. Subagent should use mock data and ask user for real travel data.
 
-### App 8: Music / Interests (TBD)
-- **Purpose**: Personal touch
+### App 8: Music — live Spotify now-playing (vinyl parody of Apple Music)
+- **Purpose**: Show what Raj is currently listening to on Spotify, as a playful Mac-era vinyl record
+- **Design**: Spinning vinyl record (CSS rotate animation) with the current album art as the record label (circular mask), playlist list beside it showing recent tracks. Chicago font captions.
+- **Live data**: Spotify Web API `me/player/currently-playing` endpoint, polled every ~10s. Uses refresh-token OAuth flow so no user login is needed by visitors — it's always Raj's account.
+- **Backend route**: `app/api/spotify/now-playing/route.ts` (Next.js App Router). Reads `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REFRESH_TOKEN` from env; exchanges refresh token → access token; proxies the Spotify API; returns `{ track, artist, album, albumArt, isPlaying, progressMs, durationMs }`.
+- **Secrets**: `.env.local` locally (gitignored), Cloudflare Pages env vars in production.
+- **Fallback**: If nothing playing, show a featured/last-played track (or a static "Offline" vinyl).
+- **Reduced-motion**: freeze the vinyl rotation when `prefers-reduced-motion: reduce`.
+- **Setup prerequisite**: Raj creates a Spotify Developer app → captures refresh token via one-time OAuth helper script → secrets land in `.env.local`. This must be done **before** the Music subagent starts.
 - **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
-- **⚠ Note**: Scope undefined. Subagent should build a shell with mock content and ask user for details.
 
 ---
 
@@ -484,38 +518,40 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 
 ## Progress Tracker
 
-### Phase 1: Maximize Mode + Screen Phases
-- [ ] `'desktop'` added to ScreenPhase type
-- [ ] Welcome screen updated (no menu bar)
-- [ ] Welcome → desktop auto-transition in page.tsx
-- [ ] `container-type: size` on CRT screen
-- [ ] `isMaximized` state in `page.tsx` (passed as props)
-- [ ] Chin expand/collapse button on iMac frame (single toggle location)
-- [ ] Maximize: hide iMac body/chin/stand, CRTScreen expands to viewport
-- [ ] Transition animation (+ reduced motion)
-- [ ] Testing (including: mobile stays on welcome)
+### Phase 1: Maximize Mode + Screen Phases ✅
+- [x] `'desktop'` added to ScreenPhase type
+- [x] Welcome screen updated (no menu bar)
+- [x] Welcome → desktop auto-transition in page.tsx
+- [x] `container-type: size` on CRT screen
+- [x] `isMaximized` state in `page.tsx` (passed as props)
+- [x] Chin expand/collapse button on iMac frame (CD slot doubles as the toggle — no layout shift between phases)
+- [x] Maximize: hide iMac body/chin/stand, CRTScreen expands to viewport
+- [x] Transition animation (+ reduced motion)
+- [x] Testing (including: mobile stays on welcome)
 
-### Phase 2+3: Window System + Desktop Shell
-- [ ] WindowManagerProvider context (open/close/focus/drag/selectIcon — no maximize, no stored activeWindowId — derive from zIndex)
-- [ ] `focusApp` uses contiguous zIndex reshuffle (no counter)
-- [ ] `app-registry.ts` with all 8 entries (Coming Soon placeholders, cqw/cqh sizes)
-- [ ] Generic Window component (title bar, close box, drag, container query sizing)
-- [ ] Drag wired to context, constrained to CRT screen bounds, 5px click-vs-drag threshold
-- [ ] Lazy content mount — children render after entry animation completes
-- [ ] Zoom-from-origin open/close animation using clicked-icon rect
-- [ ] Scrollbar + status bar options on Window
-- [ ] Desktop component (crosshatch bg, icon grid, windows layer) — phase === 'desktop'
-- [ ] DesktopIcon component (single-click select, double-click open)
-- [ ] Placeholder icons for all 8 apps (user provides final SVGs later)
-- [ ] page.tsx updated (Desktop on desktop phase, WelcomeScreen on mobile)
-- [ ] MenuBar refactored: Apple icon menu + Finder defaults + per-app overrides from registry
-- [ ] Maximize nudge dialog
-- [ ] Integration test: boot → welcome (no menu bar) → desktop → open → drag → close → focus → select icon → menus
+### Phase 2+3: Window System + Desktop Shell ✅
+- [x] WindowManagerProvider context (open/close/focus/drag/selectIcon — no maximize, no stored activeWindowId — derive from zIndex)
+- [x] `focusApp` uses contiguous zIndex reshuffle (no counter)
+- [x] `app-registry.tsx` with all 9 entries — 8 apps + Trash (Coming Soon placeholders, cqw/cqh sizes)
+- [x] Generic Window component (title bar, close box, drag, container query sizing)
+- [x] Drag wired to context, constrained to CRT screen bounds, 5px click-vs-drag threshold, direct-DOM transform for smooth drag
+- [x] Lazy content mount — children render after entry animation completes
+- [x] Zoom-from-origin open/close animation using clicked-icon rect
+- [x] Scrollbar + status bar options on Window
+- [x] Desktop component (crosshatch bg, icon grid top-right, Trash bottom-right, windows layer) — phase === 'desktop'
+- [x] DesktopIcon component (single-click select, double-click open, text-only selection highlight)
+- [x] Placeholder icons for all 8 apps (user provided — final pass still pending)
+- [x] page.tsx updated (Desktop on desktop phase, WelcomeScreen on mobile)
+- [x] MenuBar refactored: Apple icon menu + Finder defaults + per-app overrides from registry
+- [x] Maximize nudge dialog
+- [x] Right-click context menus (shadcn/radix) on desktop + icons — *not in original plan, added during PR #2*
+- [x] Trash registered as a clickable app — *Design Decision #11 updated*
+- [x] Integration test: boot → welcome (no menu bar) → desktop → open → drag → close → focus → select icon → menus
 
-### PR #1 Review
-- [ ] PR opened: `feat/pre-app-foundation` → `feat/mac-os-1984-desktop`
-- [ ] Reviewed & approved
-- [ ] Ready for app branches
+### PR #1/#2 Review ✅
+- [x] PR #2 opened: `feat/pre-app-foundation` → `feat/mac-os-1984-desktop`
+- [x] Reviewed & approved
+- [x] Merged 2026-04-15 — ready for app branches
 
 ### Phase 4: Apps (parallel)
 - [ ] Calculator
@@ -555,27 +591,26 @@ Everything in **Phase 1** (maximize mode, screen phases) and **Phase 2+3** (wind
 
 **Status: PR #1 can begin immediately.**
 
-### 🟡 Ready to build, content gated (Phase 4 — app PRs)
-These apps have the technical spec locked; only content/assets are outstanding:
+### 🟢 All 8 apps unblocked as of 2026-04-15
+Content gates were resolved during the pre-app-foundation review. Every app has an actionable spec in the Applications section above. Summary of what unblocked each:
 
-| App | Blocker | Who resolves | When |
-|-----|---------|--------------|------|
-| Calculator | none | — | ready |
-| Note Pad | none | — | ready |
-| Finder (Documents) | Resume.pdf + Cover_Letter.pdf assets | user to drop in `public/` | before build |
-| Scrapbook (Journal) | none — uses `CONTENT-ARCHIVE.md` | — | ready |
-| System (Control Panel) | none | — | ready |
-| Browser (Curly) | design mockups | user to provide | before build |
-| World Map | travel data (visited regions) | user to provide | before build |
-| Music / Interests | scope undefined | user to define | before scope lock |
+| App | Resolution |
+|-----|------------|
+| Calculator | always was ready |
+| Note Pad | always was ready; welcome text inlined in spec |
+| Finder (Documents) | scoped to mirror `public/` with Mac-styled folder names; resume-only, no cover letter; preview overlay by file type |
+| Scrapbook (Journal) | pulls all posts from `CONTENT-ARCHIVE.md` |
+| Control Panel | Raj info from `CONTENT-ARCHIVE.md` + live diagnostics (clock, battery, timezone, browser/OS) |
+| Curly Browser | no iframes — bookmarks open in real browser. 11 bookmarks (8 projects + Google/Claude/ChatGPT). Info banner explains the quirk |
+| World Map | 24 visited countries by ISO-3 code; `react-simple-maps` + `world-atlas` for data; no game UI chrome |
+| Music | Spotify now-playing with vinyl presentation; OAuth refresh-token flow via `/api/spotify/now-playing` route |
 
-All 4 "ready" apps can go in parallel as soon as PR #1 merges. Browser/World Map/Music/Finder unblock as their inputs arrive — independent of foundation work.
-
-### 🔴 Blocked only on the foundation
-- Final 1-bit SVG icons for all 8 apps — user creates after the app frames are live (easier to iterate against a running desktop). Placeholder icons ship in PR #1.
+### 🔴 Still blocked
+- **Music** is gated on user providing Spotify Client ID + Secret, then running the one-time OAuth helper to capture the refresh token. All other apps can build in parallel while Spotify is being wired.
+- Final 1-bit SVG icons for all 8 apps — user iterates after app frames are live.
 
 ### ❓ Open questions before implementation starts
-None currently. Design Decisions table covers all settled choices. If anything surfaces during Phase 1, add it to the Design Decisions table and this section rather than improvising in code.
+None currently. Design Decisions table covers all settled choices. If anything surfaces, add it there rather than improvising in code.
 
 ---
 
