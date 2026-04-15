@@ -12,6 +12,9 @@ bun run preview      # Build and preview Cloudflare deployment locally
 bun run deploy       # Build and deploy to Cloudflare Pages
 ```
 
+### Dev server is always running
+Assume `bun run dev` is already running in another terminal. Do **not** start it yourself. If you need to verify changes, ask the user to check in the browser, or use `bunx tsc --noEmit` for a type-only check.
+
 ## Architecture
 
 This is a minimal "coming soon" portfolio site themed after **Mac OS System 1 (1984)**. It has a single page with two states:
