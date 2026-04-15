@@ -7,6 +7,14 @@ import { DesktopIcon } from './desktop-icon'
 import { Window } from './window'
 import { APP_MAP, APP_REGISTRY } from './app-registry'
 import { MaximizeNudge } from './maximize-nudge'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/app/components/ui/context-menu'
 
 type DesktopProps = {
   prefersReduced: boolean
@@ -41,19 +49,21 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
       <MenuBar />
 
       {/* Desktop surface */}
-      <div
-        ref={containerRef}
-        onMouseDown={(e) => {
-          // Click on bare desktop deselects the icon
-          if (e.target === e.currentTarget) selectIcon(null)
-        }}
-        style={{
-          flex: 1,
-          minHeight: 0,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            ref={containerRef}
+            onMouseDown={(e) => {
+              // Click on bare desktop deselects the icon
+              if (e.target === e.currentTarget) selectIcon(null)
+            }}
+            style={{
+              flex: 1,
+              minHeight: 0,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
         {/* Icon grid — top-right corner, 2-column grid so all 8 apps fit */}
         <div
           style={{
@@ -113,7 +123,21 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
           onToggleMaximize={onToggleMaximize}
           prefersReduced={prefersReduced}
         />
-      </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuLabel>Curly OS</ContextMenuLabel>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={onToggleMaximize}>
+            {isMaximized ? 'Restore Screen' : 'Go Full Screen'}
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled>Clean Up Desktop</ContextMenuItem>
+          <ContextMenuItem disabled>Change Wallpaper</ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled>About This Macintosh…</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     </div>
   )
 }

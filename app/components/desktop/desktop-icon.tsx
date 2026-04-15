@@ -1,8 +1,16 @@
 'use client'
 
-import { useRef, type RefObject } from 'react'
+import { forwardRef, useRef, type RefObject } from 'react'
 import { useWindowManager } from './window-manager'
 import type { AppDefinition } from './app-registry'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/app/components/ui/context-menu'
 
 type DesktopIconProps = {
   app: AppDefinition
@@ -15,7 +23,7 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
   const iconRef = useRef<HTMLButtonElement>(null)
   const selected = selectedIconId === app.id
 
-  const handleDoubleClick = () => {
+  const openFromIcon = () => {
     const icon = iconRef.current
     const container = containerRef.current
     if (!icon || !container) {
@@ -33,21 +41,60 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
   }
 
   return (
+    <ContextMenu>
+      <ContextMenuTrigger asChild onContextMenu={() => selectIcon(app.id)}>
+        <IconButton
+          ref={iconRef}
+          app={app}
+          large={large}
+          selected={selected}
+          onSelect={() => selectIcon(app.id)}
+          onOpen={openFromIcon}
+        />
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuLabel>{app.name}</ContextMenuLabel>
+        <ContextMenuSeparator />
+        <ContextMenuItem onSelect={openFromIcon}>Open</ContextMenuItem>
+        <ContextMenuItem disabled>Get Info</ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem disabled>Duplicate</ContextMenuItem>
+        <ContextMenuItem disabled>Move to Trash</ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  )
+}
+
+type IconButtonProps = {
+  app: AppDefinition
+  large: boolean
+  selected: boolean
+  onSelect: () => void
+  onOpen: () => void
+}
+
+const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { app, large, selected, onSelect, onOpen, ...rest },
+  ref,
+) {
+  return (
     <button
-      ref={iconRef}
+      ref={ref}
+      {...rest}
       type="button"
       onClick={(e) => {
         e.stopPropagation()
-        selectIcon(app.id)
+        onSelect()
       }}
       onDoubleClick={(e) => {
         e.stopPropagation()
-        handleDoubleClick()
+        onOpen()
       }}
       style={{
         appearance: 'none',
         background: 'transparent',
         border: 'none',
+        outline: 'none',
         padding: large ? '6px 4px' : '4px 2px',
         cursor: 'default',
         display: 'flex',
@@ -67,7 +114,6 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          filter: selected ? 'invert(1)' : undefined,
           imageRendering: 'pixelated',
         }}
       >
@@ -87,17 +133,19 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
       <span
         style={{
           fontSize: large ? 12 : 10,
-          lineHeight: 1.1,
+          lineHeight: 1.2,
           textAlign: 'center',
           padding: '1px 4px',
           background: selected ? '#000' : 'transparent',
           color: selected ? '#fff' : '#000',
           maxWidth: '100%',
-          whiteSpace: 'nowrap',
+          whiteSpace: 'normal',
+          wordSpacing: 'normal',
+          overflowWrap: 'normal',
         }}
       >
         {app.name}
       </span>
     </button>
   )
-}
+})

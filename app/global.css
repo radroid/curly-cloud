@@ -132,3 +132,16 @@ body {
   cursor: default;
   user-select: none;
 }
+
+/* ── Mac Context Menu (Radix data-attribute driven) ──────── */
+
+[data-mac-item][data-highlighted] {
+  background: var(--mac-black);
+  color: var(--mac-white);
+  outline: none;
+}
+
+[data-mac-item][data-disabled] {
+  color: var(--mac-gray-dark);
+  pointer-events: none;
+}
