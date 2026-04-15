@@ -6,6 +6,7 @@ import { IMacG3Frame } from '@/app/components/imac-frame'
 import { CRTScreen } from '@/app/components/crt-screen'
 import { BootScreen } from '@/app/components/boot-screen'
 import { WelcomeScreen } from '@/app/components/welcome-screen'
+import { Desktop } from '@/app/components/desktop/desktop'
 import { SIZING } from '@/app/components/types'
 import type { ScreenPhase } from '@/app/components/types'
 
@@ -130,57 +131,18 @@ export default function Page() {
                 />
               )}
               {phase === 'welcome' && <WelcomeScreen isDesktop={isDesktop} />}
-              {phase === 'desktop' && (
-                <div
-                  style={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontFamily: 'var(--font-chicago)',
-                    color: 'rgba(0,0,0,0.45)',
-                    fontSize: 14,
-                    letterSpacing: 0.5,
-                    animation: prefersReduced ? 'none' : 'fadeIn 0.5s ease',
-                  }}
-                >
-                  Desktop — Phase 2 coming soon
-                </div>
+              {phase === 'desktop' && toggleMaximize && (
+                <Desktop
+                  prefersReduced={prefersReduced}
+                  isMaximized={isMaximized}
+                  onToggleMaximize={toggleMaximize}
+                />
               )}
             </CRTScreen>
           </IMacG3Frame>
         </div>
       )}
 
-      {phase === 'welcome' && !isMaximized && (
-        <div
-          style={{
-            position: 'absolute',
-            top: isDesktop ? 20 : 12,
-            right: isDesktop ? 24 : 14,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-chicago)',
-            color: '#666',
-            fontSize: isDesktop ? 13 : 10,
-            letterSpacing: 1,
-            animation: 'fadeIn 0.8s ease',
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: isDesktop ? 8 : 6,
-              height: isDesktop ? 8 : 6,
-              borderRadius: '50%',
-              background: '#d4a017',
-              animation: 'blink 1.2s ease-in-out infinite',
-            }}
-          />
-          UNDER CONSTRUCTION
-        </div>
-      )}
     </div>
   )
 }
