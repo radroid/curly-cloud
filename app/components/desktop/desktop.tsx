@@ -5,7 +5,7 @@ import { MenuBar } from '../menu-bar'
 import { WindowManagerProvider, useWindowManager } from './window-manager'
 import { DesktopIcon } from './desktop-icon'
 import { Window } from './window'
-import { APP_REGISTRY } from './app-registry'
+import { APP_MAP, APP_REGISTRY } from './app-registry'
 import { MaximizeNudge } from './maximize-nudge'
 
 type DesktopProps = {
@@ -25,6 +25,7 @@ export function Desktop(props: DesktopProps) {
 function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: DesktopProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { windows, selectIcon } = useWindowManager()
+  const trashApp = APP_MAP['trash']
 
   return (
     <div
@@ -53,7 +54,7 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
           overflow: 'hidden',
         }}
       >
-        {/* Icon grid — top-right corner, 2-column grid so all 8 fit */}
+        {/* Icon grid — top-right corner, 2-column grid so all 8 apps fit */}
         <div
           style={{
             position: 'absolute',
@@ -65,7 +66,7 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
             zIndex: 0,
           }}
         >
-          {APP_REGISTRY.map((app) => (
+          {APP_REGISTRY.filter((a) => a.id !== 'trash').map((app) => (
             <DesktopIcon
               key={app.id}
               app={app}
@@ -75,44 +76,23 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
           ))}
         </div>
 
-        {/* Decorative Trash — bottom-right */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: isMaximized ? 14 : 8,
-            right: isMaximized ? 14 : 8,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: isMaximized ? 4 : 2,
-            fontFamily: 'var(--font-chicago)',
-            fontSize: isMaximized ? 12 : 10,
-            color: '#000',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/app-icons/trash.svg"
-            alt=""
-            draggable={false}
+        {/* Trash — bottom-right, interactive */}
+        {trashApp && (
+          <div
             style={{
-              width: isMaximized ? 44 : 30,
-              height: isMaximized ? 44 : 30,
-              imageRendering: 'pixelated',
-              objectFit: 'contain',
-            }}
-          />
-          <span
-            style={{
-              padding: '1px 4px',
-              background: 'transparent',
+              position: 'absolute',
+              bottom: isMaximized ? 14 : 8,
+              right: isMaximized ? 14 : 8,
+              zIndex: 0,
             }}
           >
-            Trash
-          </span>
-        </div>
+            <DesktopIcon
+              app={trashApp}
+              containerRef={containerRef}
+              large={isMaximized}
+            />
+          </div>
+        )}
 
         {/* Windows layer */}
         {Object.values(windows).map((w) => {

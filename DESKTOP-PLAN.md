@@ -44,7 +44,7 @@ Transform the "coming soon" welcome screen into a fully interactive Mac OS 1984 
 | 8 | World map style | Risk-style dithered map with pattern fills | Reference image is style guide only; travel data TBD — subagent asks user. |
 | 9 | Extra apps | Music/interests-based (details TBD) | Build shell with mock data; subagent asks user for real content. |
 | 10 | Icon art | User-provided 1-bit pixel art SVGs | User creates icons and adds to a folder. No external icon library. Match Mac OS 1 aesthetic. |
-| 11 | Trash icon | Decorative (bottom-right corner) | Not functional. |
+| 11 | Trash icon | Clickable — opens a placeholder window (bottom-right corner, outside the main icon grid) | Registered as a real app in the registry. Not functional beyond opening for now. |
 | 12 | Window sizing | Container query units (`cqw`/`cqh`) with `clamp()` bounds | CRT screen is the CSS container. Windows scale proportionally on maximize. |
 | 13 | Desktop icons | Single click selects (highlight), double-click opens | Mac OS style selection model. |
 | 14 | Screen phases | `off → flicker → boot → welcome → desktop` | Welcome screen (no menu bar) shows briefly after boot, then transitions to desktop. |

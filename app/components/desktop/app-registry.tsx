@@ -149,6 +149,18 @@ export const APP_REGISTRY: AppDefinition[] = [
     menuItems: defaultMenus,
     component: makePlaceholder('Music'),
   },
+  {
+    id: 'trash',
+    name: 'Trash',
+    iconSrc: '/app-icons/trash.svg',
+    defaultSize: {
+      width: 'clamp(200px, 45cqw, 340px)',
+      height: 'clamp(140px, 40cqh, 220px)',
+    },
+    menuItems: defaultMenus,
+    component: makePlaceholder('Trash'),
+    statusBar: <span>0 items, 0K in trash, 0K available</span>,
+  },
 ]
 
 export const APP_MAP: Record<string, AppDefinition> = Object.fromEntries(
