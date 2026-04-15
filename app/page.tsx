@@ -9,6 +9,8 @@ import { WelcomeScreen } from '@/app/components/welcome-screen'
 import { SIZING } from '@/app/components/types'
 import type { ScreenPhase } from '@/app/components/types'
 
+const WELCOME_HOLD_MS = 2600
+
 export default function Page() {
   const prefersReduced = useReducedMotion()
   const hasBooted = typeof window !== 'undefined' && sessionStorage.getItem('hasBooted') === '1'
@@ -18,6 +20,8 @@ export default function Page() {
   const [isDesktop, setIsDesktop] = useState(false)
   const [sizeReady, setSizeReady] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
+  const [introDone, setIntroDone] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
 
   // Responsive detection — must resolve before we render the iMac
   useEffect(() => {
@@ -31,7 +35,16 @@ export default function Page() {
     return () => mql.removeEventListener('change', handler)
   }, [])
 
-  // Phase state machine
+  // After the intro scale animation completes, drop the transform entirely.
+  // A persistent `transform: scale(1)` establishes a containing block that
+  // traps `position: fixed` descendants — which breaks maximize mode.
+  useEffect(() => {
+    if (!animateIn || introDone) return
+    const t = setTimeout(() => setIntroDone(true), prefersReduced ? 0 : 700)
+    return () => clearTimeout(t)
+  }, [animateIn, introDone, prefersReduced])
+
+  // Phase state machine — boot sequence
   useEffect(() => {
     if (skipBoot) {
       setPhase('welcome')
@@ -52,7 +65,21 @@ export default function Page() {
     return () => timers.forEach(clearTimeout)
   }, [skipBoot])
 
+  // Welcome → desktop auto-advance (desktop viewports only)
+  useEffect(() => {
+    if (phase !== 'welcome' || !isDesktop) return
+    const t = setTimeout(() => setPhase('desktop'), WELCOME_HOLD_MS)
+    return () => clearTimeout(t)
+  }, [phase, isDesktop])
+
+  // Drop maximize if the viewport narrows back to mobile mid-session
+  useEffect(() => {
+    if (!isDesktop && isMaximized) setIsMaximized(false)
+  }, [isDesktop, isMaximized])
+
   const s = isDesktop ? SIZING.desktop : SIZING.mobile
+  const screenIsOn = phase === 'welcome' || phase === 'desktop'
+  const toggleMaximize = isDesktop && screenIsOn ? () => setIsMaximized((v) => !v) : undefined
 
   return (
     <div
@@ -64,7 +91,7 @@ export default function Page() {
         flexDirection: 'column',
         gap: 16,
         background: '#1a1a1a',
-        padding: isDesktop ? 0 : '0 0 40px',
+        padding: isDesktop && !isMaximized ? 0 : isMaximized ? 0 : '0 0 40px',
         position: 'relative' as const,
       }}
     >
@@ -74,16 +101,27 @@ export default function Page() {
             width: '100%',
             display: 'flex',
             justifyContent: 'center',
-            transform: animateIn ? 'scale(1)' : 'scale(0)',
-            opacity: animateIn ? 1 : 0,
-            transition: prefersReduced
-              ? 'none'
-              : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
-            willChange: 'transform, opacity',
+            transform: introDone ? undefined : animateIn ? 'scale(1)' : 'scale(0)',
+            opacity: introDone ? undefined : animateIn ? 1 : 0,
+            transition:
+              introDone || prefersReduced
+                ? undefined
+                : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
+            willChange: introDone ? undefined : 'transform, opacity',
           }}
         >
-          <IMacG3Frame maxWidth={s.maxWidth}>
-            <CRTScreen phase={phase} minHeight={s.screenMinHeight}>
+          <IMacG3Frame
+            maxWidth={s.maxWidth}
+            isMaximized={isMaximized}
+            onToggleMaximize={toggleMaximize}
+            animateMaximize={!prefersReduced}
+          >
+            <CRTScreen
+              phase={phase}
+              minHeight={s.screenMinHeight}
+              isMaximized={isMaximized}
+              animateMaximize={!prefersReduced}
+            >
               {phase === 'boot' && (
                 <BootScreen
                   isActive
@@ -92,12 +130,29 @@ export default function Page() {
                 />
               )}
               {phase === 'welcome' && <WelcomeScreen isDesktop={isDesktop} />}
+              {phase === 'desktop' && (
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'var(--font-chicago)',
+                    color: 'rgba(0,0,0,0.45)',
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                    animation: prefersReduced ? 'none' : 'fadeIn 0.5s ease',
+                  }}
+                >
+                  Desktop — Phase 2 coming soon
+                </div>
+              )}
             </CRTScreen>
           </IMacG3Frame>
         </div>
       )}
 
-      {phase === 'welcome' && (
+      {phase === 'welcome' && !isMaximized && (
         <div
           style={{
             position: 'absolute',

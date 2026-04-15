@@ -1,4 +1,4 @@
-export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome'
+export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome' | 'desktop'
 
 export const SIZING = {
   mobile: {

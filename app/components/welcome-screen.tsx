@@ -1,4 +1,3 @@
-import { MenuBar } from './menu-bar'
 import { SIZING } from './types'
 
 export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
@@ -14,12 +13,6 @@ export function WelcomeScreen({ isDesktop }: { isDesktop: boolean }) {
         animation: 'fadeIn 0.8s ease',
       }}
     >
-      <MenuBar
-        fontSize={s.menuBarFont}
-        height={s.menuBarHeight}
-        interactive
-      />
-
       {/* Welcome dialog */}
       <div
         style={{
