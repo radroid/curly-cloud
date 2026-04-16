@@ -317,12 +317,66 @@ Mobile:
 - **Purpose**: Show what Raj is currently listening to on Spotify, as a playful Mac-era vinyl record
 - **Design**: Spinning vinyl record (CSS rotate animation) with the current album art as the record label (circular mask), playlist list beside it showing recent tracks. Chicago font captions.
 - **Live data**: Spotify Web API `me/player/currently-playing` endpoint, polled every ~10s. Uses refresh-token OAuth flow so no user login is needed by visitors — it's always Raj's account.
-- **Backend route**: `app/api/spotify/now-playing/route.ts` (Next.js App Router). Reads `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REFRESH_TOKEN` from env; exchanges refresh token → access token; proxies the Spotify API; returns `{ track, artist, album, albumArt, isPlaying, progressMs, durationMs }`.
-- **Secrets**: `.env.local` locally (gitignored), Cloudflare Pages env vars in production.
 - **Fallback**: If nothing playing, show a featured/last-played track (or a static "Offline" vinyl).
 - **Reduced-motion**: freeze the vinyl rotation when `prefers-reduced-motion: reduce`.
-- **Setup prerequisite**: Raj creates a Spotify Developer app → captures refresh token via one-time OAuth helper script → secrets land in `.env.local`. This must be done **before** the Music subagent starts.
 - **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+#### Spotify integration architecture — works on localhost, Cloudflare preview, and production
+
+**Key insight**: the runtime does NOT use the browser-based OAuth authorization flow. It uses the **refresh-token grant** — a server-side-only swap of `refresh_token` → `access_token` on each request. No user redirect, no CORS issues, no per-URL registration in the Spotify dashboard. The SAME code works on every deploy target.
+
+```
+┌──────────────┐   GET /api/spotify/now-playing  ┌─────────────────────┐
+│ Browser      │ ──────────────────────────────▶ │ Next.js route       │
+│ (vinyl UI)   │                                 │ (Cloudflare fn or   │
+│              │ ◀────────────────────────────── │  local dev server)  │
+└──────────────┘   JSON { track, artist, ... }   └─────────────────────┘
+                                                           │
+                                                           │  POST /api/token (grant_type=refresh_token)
+                                                           ▼
+                                                 ┌─────────────────────┐
+                                                 │ Spotify Accounts    │
+                                                 │ (auth server)       │
+                                                 └─────────────────────┘
+                                                           │
+                                                           │  { access_token, expires_in }
+                                                           ▼
+                                                 ┌─────────────────────┐
+                                                 │ Spotify Web API     │
+                                                 │ me/player/currently │
+                                                 │   -playing          │
+                                                 └─────────────────────┘
+```
+
+**One-time setup** (user runs `scripts/spotify-oauth.mjs` once, locally):
+1. Creates a Spotify Developer app at https://developer.spotify.com/dashboard
+2. Registers redirect URI `http://127.0.0.1:8888/callback` (for the one-shot helper ONLY)
+3. Sets `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` in `.env.local`
+4. Runs `node scripts/spotify-oauth.mjs` → helper starts a local HTTP server on port 8888 → opens browser → user authorizes with the `user-read-currently-playing user-read-playback-state` scopes → Spotify redirects back to `127.0.0.1:8888/callback` with a `code` → helper exchanges it for a refresh token → prints the token
+5. User appends `SPOTIFY_REFRESH_TOKEN=<printed value>` to `.env.local`
+
+The `127.0.0.1:8888/callback` URL only exists for this 30-second ritual. **It is never used at runtime.** The refresh token is long-lived (effectively non-expiring unless revoked).
+
+**Runtime (every environment — localhost / preview / production)**:
+- Backend route `app/api/spotify/now-playing/route.ts` reads three env vars:
+  - `SPOTIFY_CLIENT_ID`
+  - `SPOTIFY_CLIENT_SECRET`
+  - `SPOTIFY_REFRESH_TOKEN`
+- On each request: POST to `https://accounts.spotify.com/api/token` with `grant_type=refresh_token` → get an `access_token` (valid 1 hour, but we don't cache — Cloudflare functions are stateless per invocation, so each request gets a fresh one; acceptable rate cost)
+- GET `https://api.spotify.com/v1/me/player/currently-playing` with the access token
+- Return `{ isPlaying, track, artist, album, albumArt, progressMs, durationMs }` as JSON
+- Browser polls this route every ~10 seconds (no auth needed on the browser side — it's just a fetch to a same-origin API route)
+
+**Environment variable setup by deploy target**:
+| Environment | Where to set the 3 env vars |
+|-------------|-----------------------------|
+| **Local dev** (`bun run dev`) | `.env.local` at project root (gitignored — never commit). Next.js auto-loads it. |
+| **Cloudflare Pages preview** (any `*.pages.dev` branch deploy) | Pages → Settings → Environment variables → **"Preview"** scope. Add all three vars. |
+| **Cloudflare Pages production** (`curlycloud.dev`) | Same dashboard → **"Production"** scope. Add all three vars (can be the same values as Preview). |
+
+OpenNext/Cloudflare Pages passes `process.env.*` through to the runtime for both Next.js API routes and Cloudflare functions. No code differences between environments — it's literally the same `route.ts` reading the same variable names.
+
+**Why this works on preview links despite the dynamic `*.pages.dev` hostnames**: the runtime never talks to Spotify's auth server with a redirect URI. The only place a redirect URI matters is the one-time OAuth helper, which always runs on `http://127.0.0.1:8888/callback` — completely decoupled from any deploy URL.
 
 ---
 
@@ -331,39 +385,35 @@ Mobile:
 ### Branch Structure
 ```
 main
- └── feat/mac-os-1984-desktop  (current branch — final merge target for everything)
-      ├── feat/pre-app-foundation  (PR #1 → feat/mac-os-1984-desktop)
-      ├── feat/app-calculator      (PR → feat/mac-os-1984-desktop, after PR #1 merged)
-      ├── feat/app-notepad         (PR → feat/mac-os-1984-desktop)
-      ├── feat/app-finder          (PR → feat/mac-os-1984-desktop)
-      ├── feat/app-browser         (PR → feat/mac-os-1984-desktop)
-      ├── feat/app-system          (PR → feat/mac-os-1984-desktop)
-      ├── feat/app-scrapbook       (PR → feat/mac-os-1984-desktop)
-      ├── feat/app-world-map       (PR → feat/mac-os-1984-desktop)
-      └── feat/app-music           (PR → feat/mac-os-1984-desktop)
+ └── feat/mac-os-1984-desktop  (long-lived integration branch — final merge target for everything)
+      ├── feat/pre-app-foundation  (PR #1 — MERGED 2026-04-15)
+      └── feat/desktop-apps        (PR #3 — all 8 apps + Spotify integration, per-app commits)
 ```
 
-### PR Workflow
-1. **PR #1** — `feat/pre-app-foundation` → `feat/mac-os-1984-desktop`
-   - Maximize mode, window component, desktop shell, window manager, dynamic menu bar, default Finder menus
-   - Must be reviewed & merged before app PRs begin
-   
-2. **App PRs** (parallel, one per app) — `feat/app-*` → `feat/mac-os-1984-desktop`
-   - Branch from `feat/mac-os-1984-desktop` (after PR #1 is merged)
-   - Each built by a subagent in its own worktree
-   - Can be developed simultaneously
-   - Each PR is small and reviewable (~200-500 lines)
-   - Merged one by one into `feat/mac-os-1984-desktop`
+One PR per major chunk. Pre-app-foundation shipped as PR #1/#2 (window system, desktop shell, context menus). All 8 apps ship together as **PR #3** off a single `feat/desktop-apps` branch, with **one commit per app** for reviewability.
 
-3. **Final merge** — `feat/mac-os-1984-desktop` → `main`
-   - After all apps merged and tested together
-   - Final integration testing before merging to main
+### PR #3 Workflow — `feat/desktop-apps` → `feat/mac-os-1984-desktop`
+1. **Branch off** `feat/mac-os-1984-desktop` (the merged foundation).
+2. **One commit per app** — even though everything rides one PR, each app lands as its own commit (subject line: `App: <Name> — <one-line summary>`). Keeps `git log` / bisect / review legible.
+3. **Commit plan (in order)**:
+   1. DESKTOP-PLAN refinements
+   2. Spotify OAuth helper script (`scripts/spotify-oauth.mjs`) — user runs locally to get refresh token
+   3. Calculator
+   4. Note Pad
+   5. Control Panel
+   6. Finder (Documents)
+   7. Scrapbook (Journal)
+   8. Curly Browser
+   9. World Map
+   10. Music (Spotify API route + vinyl UI) — last, gated on refresh token
+4. **Subagents** write individual component files (`app/components/apps/<name>.tsx`) into this one branch. Main agent handles every other step (registry wiring, `tsc --noEmit`, commits, push). **No isolated worktrees** — they break in this session's subagent sandbox. Subagents only Read + Write files inside the repo.
+5. **Final merge** — `feat/desktop-apps` → `feat/mac-os-1984-desktop`, then `feat/mac-os-1984-desktop` → `main` after final integration pass.
 
-### Why This Strategy
-- **Small PRs**: No 10k-line monster PRs. Each is focused and reviewable.
-- **Parallel work**: Subagents build apps simultaneously in isolated worktrees.
-- **Safe merges**: Foundation is stable before apps branch from it. Apps don't conflict with each other.
-- **Multi-session friendly**: Can pause after any PR and resume later.
+### Why This Strategy (revised)
+- **One PR, per-app commits**: reviewable without creating 8 parallel PRs. Each commit is a logical unit; bisect and blame still work.
+- **Matches subagent sandbox**: the earlier plan assumed subagents could run `git`/`gh`/`tsc` inside worktrees. In practice the sandbox denies Bash for subagents, so the main agent drives all git operations. Subagents are reduced to file writers.
+- **Conflict-free registry**: a single branch means the one shared file (`app-registry.tsx`) grows cleanly with each commit — no merge conflicts between app branches.
+- **Multi-session friendly**: still resumable — mid-PR state is just "N of M commits done" on a single branch.
 
 ---
 
@@ -409,28 +459,26 @@ main
 | 2.12 | Add maximize nudge dialog (shown after first app open) |
 | 2.13 | Test: full flow — boot → welcome (no menu bar) → desktop → open placeholder window → drag → close → focus → icon select → menu updates |
 
-### Phase 4: Application Development (Parallel Subagents)
-**PRs**: One per app, branching from `feat/mac-os-1984-desktop` (after PR #1 is merged)
-**Method**: Each app built by a subagent in an isolated worktree
+### Phase 4: Application Development (Single PR, per-app commits)
+**PR**: #3 — `feat/desktop-apps` → `feat/mac-os-1984-desktop`
+**Method**: Subagents write component files into the repo; main agent handles all git operations. No worktrees (the subagent sandbox denies Bash, so in-worktree `git`/`gh`/`tsc` is impossible).
 
-Each subagent receives a **contract** (see [Subagent Contracts](#subagent-contracts)) defining:
-- What the app does
-- What component interface to implement
-- What the window config looks like
-- Where to put the file
-- How to register in the app registry
+Each subagent gets a focused **write-only contract**: target file path, component spec, references to read. They use only Read + Write tools. All branching, registry edits, tsc checks, commits, pushes, and the PR are done by the main agent.
 
-Apps can be built in parallel since they don't depend on each other — only on the foundation.
+**Commit order on `feat/desktop-apps`** (reflects build dependencies — Spotify helper lands early so the user can run it in parallel):
 
-**App build order priority** (for sequential work if needed):
-1. Calculator (simplest — validates the window system)
-2. Note Pad (localStorage integration)
-3. Finder (static files + download)
-4. Scrapbook (blog content rendering)
-5. System/Control Panel (diagnostics)
-6. Browser (most complex — user mockups needed)
-7. World Map (SVG + patterns — travel data needed)
-8. Music (TBD scope)
+| # | Commit | Author |
+|---|--------|--------|
+| 1 | DESKTOP-PLAN refinements | main agent |
+| 2 | `scripts/spotify-oauth.mjs` — one-shot OAuth helper | main agent |
+| 3 | App: Calculator | main agent (file staged from earlier agent run) |
+| 4 | App: Note Pad | main agent (file staged from earlier agent run) |
+| 5 | App: Control Panel | main agent (file staged from earlier agent run) |
+| 6 | App: Finder (Documents) | main agent (file staged from earlier agent run) |
+| 7 | App: Scrapbook (Journal) | main agent (file staged from earlier agent run) |
+| 8 | App: Curly Browser | subagent writes file → main agent commits |
+| 9 | App: World Map | subagent writes file → main agent commits |
+| 10 | App: Music (API route + vinyl UI) | subagent writes file → main agent commits; **gated on Spotify refresh token** |
 
 ### Phase 5: Integration & Polish
 **After all app PRs merged into `feat/mac-os-1984-desktop`**
@@ -553,21 +601,51 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 - [x] Reviewed & approved
 - [x] Merged 2026-04-15 — ready for app branches
 
-### Phase 4: Apps (parallel)
-- [ ] Calculator
-- [ ] Note Pad
-- [ ] Finder
-- [ ] Scrapbook
-- [ ] System / Control Panel
-- [ ] Browser (needs mockups)
-- [ ] World Map (needs travel data)
-- [ ] Music (needs scope)
+### Phase 4: Apps (single PR `feat/desktop-apps`, per-app commits)
+- [x] Commit 1: DESKTOP-PLAN refinements
+- [x] Commit 2: `scripts/spotify-oauth.mjs` OAuth helper
+- [x] Commit 3: Calculator
+- [x] Commit 4: Note Pad
+- [x] Commit 5: Control Panel
+- [x] Commit 6: Finder (Documents)
+- [x] Commit 7: Polish — +10% text and icon scale for readability *(added from live review)*
+- [x] Commit 8: Scrapbook (Journal)
+- [x] Commit 9: Finder — use `public/app-icons/folder.svg` for folder icons *(added from live review)*
+- [x] Commit 10: Window — inset focus-state horizontal lines, clean gap around close box *(added from live review)*
+- [x] Commit 11: Scrapbook — correct blog post year 2025 → 2026 *(added from live review)*
+- [x] Commit 12: Polish — larger Control Panel avatar + tighter title-bar stripe inset *(added from live review)*
+- [x] Commit 13: Polish — Control Panel avatar + tighter title-bar stripe inset (v2) *(live review)*
+- [x] Commit 14: Window — stripes reach window edges with close box sitting on them (v3) *(live review)*
+- [x] Commit 15: Curly Browser
+- [x] Commit 16: World Map
+- [x] Commit 17: World Map — filled tooltip for visited countries *(live review)*
+- [x] Commit 18: World Map — larger map + Equal Earth, remove legend *(live review)*
+- [x] Commit 19: World Map — flat Equirectangular + full Antarctica *(live review)*
+- [x] Commit 20: World Map — window aspect = 2:1 so Antarctica hits the bottom *(live review)*
+- [x] Commit 21: World Map — move visited count to bottom-left + gitignore `.dev.vars` *(live review)*
+- [x] Commit 22: World Map — white background + border on the visited-count label *(live review)*
+- [x] Commit 23: Music (Spotify API route + vinyl UI)
+- [x] Commit 24: Curly Browser — SVG nav icons + embed Tools in-place *(live review)*
+- [x] Commit 25: Music — larger window + vinyl, clickable Spotify links per track *(live review)*
+- [x] Commit 26: Update Curly Browser app icon *(user-provided asset tweak)*
+- [x] Commit 27: Tracker — Phase 4 complete
+- [x] Commit 28: Music — defeat every cache layer so data refreshes *(live review)*
+- [x] Commit 29: World Map — 2× window size *(live review)*
+- [x] Commit 30: Music — top 10 genres + top 10 artists, `short_term` (last 4 weeks) *(live review)*
+- [x] Commit 31: Music — fix tsc errors + genre/artist overlap *(live review)*
+- [x] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop` (https://github.com/radroid/curly-cloud/pull/3)
+
+**Phase 4 complete — 32 commits, all 8 apps shipped + live-review polish.**
 
 ### Phase 5: Integration
-- [ ] All app PRs merged into `feat/mac-os-1984-desktop`
-- [ ] Integration testing passed
-- [ ] User provides final 1-bit SVG icons → replace placeholders
-- [ ] Merged to `main`
+- [ ] PR #3 reviewed and merged into `feat/mac-os-1984-desktop`
+- [ ] Integration testing — all 8 apps open/close/focus/drag correctly together
+- [ ] Menu bar shows correct menus per app (defaults + overrides)
+- [ ] Maximize mode works with all apps
+- [ ] Spotify now-playing works on localhost, Cloudflare preview, and production
+- [x] Cloudflare Pages env vars set for Preview + Production scopes (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN)
+- [ ] User provides final 1-bit SVG icons → replace placeholders (if desired)
+- [ ] Final merge `feat/mac-os-1984-desktop` → `main`
 
 ---
 
@@ -605,9 +683,12 @@ Content gates were resolved during the pre-app-foundation review. Every app has 
 | World Map | 24 visited countries by ISO-3 code; `react-simple-maps` + `world-atlas` for data; no game UI chrome |
 | Music | Spotify now-playing with vinyl presentation; OAuth refresh-token flow via `/api/spotify/now-playing` route |
 
-### 🔴 Still blocked
-- **Music** is gated on user providing Spotify Client ID + Secret, then running the one-time OAuth helper to capture the refresh token. All other apps can build in parallel while Spotify is being wired.
-- Final 1-bit SVG icons for all 8 apps — user iterates after app frames are live.
+### ✅ Phase 4 complete (2026-04-15)
+All 8 apps built, polished via live review, and committed on `feat/desktop-apps` (32 commits). Spotify refresh token captured, Cloudflare Pages env vars set for both Preview and Production. PR #3 open for review.
+
+### 🟡 Remaining for Phase 5
+- Final 1-bit SVG icons for all 8 apps — user can iterate after merging, since placeholders look solid.
+- Integration testing + final merge to `main`.
 
 ### ❓ Open questions before implementation starts
 None currently. Design Decisions table covers all settled choices. If anything surfaces, add it there rather than improvising in code.

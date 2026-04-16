@@ -23,7 +23,7 @@ type MenuBarProps = {
   height?: number
 }
 
-export function MenuBar({ fontSize = 12, height = 22 }: MenuBarProps) {
+export function MenuBar({ fontSize = 13, height = 24 }: MenuBarProps) {
   const { activeWindowId } = useWindowManager()
   const activeApp = activeWindowId ? APP_MAP[activeWindowId] : null
   const appMenus =

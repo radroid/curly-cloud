@@ -95,13 +95,13 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
         background: 'transparent',
         border: 'none',
         outline: 'none',
-        padding: large ? '6px 4px' : '4px 2px',
+        padding: large ? '7px 4px' : '5px 2px',
         cursor: 'default',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: large ? 4 : 2,
-        width: large ? 96 : 82,
+        gap: large ? 5 : 3,
+        width: large ? 106 : 90,
         fontFamily: 'var(--font-chicago)',
         color: '#000',
         userSelect: 'none',
@@ -109,8 +109,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
     >
       <div
         style={{
-          width: large ? 44 : 30,
-          height: large ? 44 : 30,
+          width: large ? 48 : 33,
+          height: large ? 48 : 33,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -132,7 +132,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
       </div>
       <span
         style={{
-          fontSize: large ? 12 : 10,
+          fontSize: large ? 13 : 11,
           lineHeight: 1.2,
           textAlign: 'center',
           padding: '1px 4px',

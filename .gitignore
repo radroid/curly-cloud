@@ -42,6 +42,8 @@ next-env.d.ts
 
 # wrangler
 .wrangler/
+.dev.vars
+.dev.vars.*
 
 github-banner.html
 clash-api-player-response.json
