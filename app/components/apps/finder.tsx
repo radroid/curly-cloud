@@ -213,7 +213,7 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
           gap: 12,
           padding: 16,
           fontFamily: 'var(--font-chicago)',
-          fontSize: 12,
+          fontSize: 13,
         }}
       >
         <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
@@ -228,7 +228,7 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
         style={{
           padding: 16,
           fontFamily: 'var(--font-chicago)',
-          fontSize: 12,
+          fontSize: 13,
           display: 'flex',
           flexDirection: 'column',
           gap: 12,
@@ -236,13 +236,13 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
       >
         <style>{`@font-face { font-family: '${fontFaceName}'; src: url('${entry.path}'); }`}</style>
         <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
-        <div style={{ fontSize: 11, color: '#555' }}>
+        <div style={{ fontSize: 12, color: '#555' }}>
           Font file — right-click and choose Download to save.
         </div>
         <div
           style={{
             fontFamily: `'${fontFaceName}', monospace`,
-            fontSize: 18,
+            fontSize: 20,
             marginTop: 8,
             borderTop: '1px solid #000',
             paddingTop: 8,
@@ -253,7 +253,7 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
         <div
           style={{
             fontFamily: `'${fontFaceName}', monospace`,
-            fontSize: 13,
+            fontSize: 14,
           }}
         >
           ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
@@ -268,7 +268,7 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
         style={{
           padding: 16,
           fontFamily: 'var(--font-chicago)',
-          fontSize: 12,
+          fontSize: 13,
           display: 'flex',
           flexDirection: 'column',
           gap: 8,
@@ -327,7 +327,7 @@ function PreviewOverlay({ entry, onClose }: PreviewProps) {
         >
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 'bold',
               background: '#fff',
               padding: '0 6px',
@@ -447,7 +447,7 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
       <span
         style={{
           fontFamily: 'var(--font-chicago)',
-          fontSize: 10,
+          fontSize: 11,
           textAlign: 'center',
           lineHeight: 1.2,
           wordBreak: 'break-word',
@@ -596,7 +596,7 @@ export function FinderApp() {
           style={{
             appearance: 'none',
             fontFamily: 'var(--font-chicago)',
-            fontSize: 10,
+            fontSize: 11,
             background: '#fff',
             border: '1px solid #000',
             padding: '1px 6px',
@@ -609,7 +609,7 @@ export function FinderApp() {
         </button>
         <span
           style={{
-            fontSize: 10,
+            fontSize: 11,
             color: '#000',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -657,7 +657,7 @@ export function FinderApp() {
         style={{
           borderTop: '1px solid #000',
           padding: '2px 6px',
-          fontSize: 10,
+          fontSize: 11,
           background: '#f0f0f0',
           flexShrink: 0,
           fontFamily: 'var(--font-chicago)',

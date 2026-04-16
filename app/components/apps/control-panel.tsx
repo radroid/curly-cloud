@@ -33,7 +33,7 @@ const sectionStyle: React.CSSProperties = {
 
 const sectionHeaderStyle: React.CSSProperties = {
   ...chicago,
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 'bold',
   marginBottom: 4,
   textTransform: 'uppercase',
@@ -50,14 +50,14 @@ const rowStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   ...chicago,
-  fontSize: 11,
+  fontSize: 12,
   color: '#000',
   flexShrink: 0,
 }
 
 const valueStyle: React.CSSProperties = {
   ...chicago,
-  fontSize: 11,
+  fontSize: 12,
   color: '#000',
   textAlign: 'right',
   overflow: 'hidden',
@@ -319,17 +319,17 @@ export function ControlPanelApp() {
           <div
             style={{
               ...chicago,
-              fontSize: 13,
+              fontSize: 14,
               fontWeight: 'bold',
               marginBottom: 2,
             }}
           >
             Raj Dholakia
           </div>
-          <div style={{ ...chicago, fontSize: 11, marginBottom: 2 }}>
+          <div style={{ ...chicago, fontSize: 12, marginBottom: 2 }}>
             Full-Stack Engineer &amp; Founder
           </div>
-          <div style={{ ...chicago, fontSize: 11, color: '#555', marginBottom: 6 }}>
+          <div style={{ ...chicago, fontSize: 12, color: '#555', marginBottom: 6 }}>
             Toronto, CA
           </div>
 
@@ -341,7 +341,7 @@ export function ControlPanelApp() {
               rel="noopener noreferrer"
               style={{
                 ...chicago,
-                fontSize: 10,
+                fontSize: 11,
                 color: '#000',
                 textDecoration: 'none',
                 border: '1px solid #000',
@@ -356,7 +356,7 @@ export function ControlPanelApp() {
               rel="noopener noreferrer"
               style={{
                 ...chicago,
-                fontSize: 10,
+                fontSize: 11,
                 color: '#000',
                 textDecoration: 'none',
                 border: '1px solid #000',
@@ -369,7 +369,7 @@ export function ControlPanelApp() {
               href="mailto:raj9dholakia@gmail.com"
               style={{
                 ...chicago,
-                fontSize: 10,
+                fontSize: 11,
                 color: '#000',
                 textDecoration: 'none',
                 border: '1px solid #000',
@@ -384,7 +384,7 @@ export function ControlPanelApp() {
               rel="noopener noreferrer"
               style={{
                 ...chicago,
-                fontSize: 10,
+                fontSize: 11,
                 color: '#000',
                 textDecoration: 'none',
                 border: '1px solid #000',
@@ -400,7 +400,7 @@ export function ControlPanelApp() {
       {/* ── Section 2: Date & Time ───────────────────────────────────────── */}
       <div style={sectionStyle}>
         <SectionHeader label="Date & Time" />
-        <div style={{ ...chicago, fontSize: 11, lineHeight: 1.5 }}>
+        <div style={{ ...chicago, fontSize: 12, lineHeight: 1.5 }}>
           {now ? formatDateTime(now) : '—'}
         </div>
       </div>

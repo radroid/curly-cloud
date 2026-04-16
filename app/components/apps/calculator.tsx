@@ -169,7 +169,7 @@ export function CalculatorApp() {
 
   const btnBase: React.CSSProperties = {
     fontFamily: 'var(--font-chicago)',
-    fontSize: 13,
+    fontSize: 14,
     background: '#fff',
     color: '#000',
     border: '1px solid #000',
@@ -223,7 +223,7 @@ export function CalculatorApp() {
           borderBottom: '2px solid #000',
           padding: '6px 8px',
           fontFamily: 'var(--font-chicago)',
-          fontSize: 20,
+          fontSize: 22,
           textAlign: 'right',
           background: '#fff',
           overflow: 'hidden',

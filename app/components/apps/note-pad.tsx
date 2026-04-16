@@ -62,7 +62,7 @@ export function NotePadApp() {
         style={{
           flex: 1,
           backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0, transparent 19px, #c8d4e6 19px, #c8d4e6 20px)',
+            'repeating-linear-gradient(to bottom, transparent 0, transparent 21px, #c8d4e6 21px, #c8d4e6 22px)',
           overflow: 'hidden',
           position: 'relative',
         }}
@@ -80,8 +80,8 @@ export function NotePadApp() {
             resize: 'none',
             background: 'transparent',
             fontFamily: 'var(--font-chicago)',
-            fontSize: '13px',
-            lineHeight: '20px',
+            fontSize: '14px',
+            lineHeight: '22px',
             paddingLeft: '14px',
             paddingRight: '8px',
             paddingTop: '0px',

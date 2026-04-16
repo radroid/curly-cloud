@@ -251,7 +251,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         </button>
         <span
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 'bold',
             letterSpacing: 0.3,
             background: '#fff',
@@ -282,8 +282,8 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         <div
           style={{
             borderTop: '1px solid #000',
-            padding: '2px 6px',
-            fontSize: 10,
+            padding: '3px 7px',
+            fontSize: 11,
             background: '#f0f0f0',
             flexShrink: 0,
           }}
