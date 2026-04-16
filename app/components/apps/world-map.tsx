@@ -62,11 +62,14 @@ export function WorldMapApp() {
         style={{
           position: 'absolute',
           bottom: 8,
-          left: 10,
+          left: 8,
           zIndex: 10,
           ...chicago,
           fontSize: 12,
           lineHeight: 1,
+          background: '#fff',
+          border: '1px solid #000',
+          padding: '4px 7px',
           pointerEvents: 'none',
           userSelect: 'none',
         }}
