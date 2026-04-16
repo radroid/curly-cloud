@@ -628,14 +628,24 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 - [x] Commit 24: Curly Browser — SVG nav icons + embed Tools in-place *(live review)*
 - [x] Commit 25: Music — larger window + vinyl, clickable Spotify links per track *(live review)*
 - [x] Commit 26: Update Curly Browser app icon *(user-provided asset tweak)*
+- [x] Commit 27: Tracker — Phase 4 complete
+- [x] Commit 28: Music — defeat every cache layer so data refreshes *(live review)*
+- [x] Commit 29: World Map — 2× window size *(live review)*
+- [x] Commit 30: Music — top 10 genres + top 10 artists, `short_term` (last 4 weeks) *(live review)*
+- [x] Commit 31: Music — fix tsc errors + genre/artist overlap *(live review)*
 - [x] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop` (https://github.com/radroid/curly-cloud/pull/3)
 
+**Phase 4 complete — 32 commits, all 8 apps shipped + live-review polish.**
+
 ### Phase 5: Integration
-- [ ] PR #3 merged into `feat/mac-os-1984-desktop`
-- [ ] Integration testing passed
-- [ ] User provides final 1-bit SVG icons → replace placeholders
-- [ ] Cloudflare Pages env vars set for Preview + Production scopes
-- [ ] Merged to `main`
+- [ ] PR #3 reviewed and merged into `feat/mac-os-1984-desktop`
+- [ ] Integration testing — all 8 apps open/close/focus/drag correctly together
+- [ ] Menu bar shows correct menus per app (defaults + overrides)
+- [ ] Maximize mode works with all apps
+- [ ] Spotify now-playing works on localhost, Cloudflare preview, and production
+- [x] Cloudflare Pages env vars set for Preview + Production scopes (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN)
+- [ ] User provides final 1-bit SVG icons → replace placeholders (if desired)
+- [ ] Final merge `feat/mac-os-1984-desktop` → `main`
 
 ---
 
@@ -673,9 +683,12 @@ Content gates were resolved during the pre-app-foundation review. Every app has 
 | World Map | 24 visited countries by ISO-3 code; `react-simple-maps` + `world-atlas` for data; no game UI chrome |
 | Music | Spotify now-playing with vinyl presentation; OAuth refresh-token flow via `/api/spotify/now-playing` route |
 
-### 🔴 Still blocked
-- **Music** is gated on user providing Spotify Client ID + Secret, then running the one-time OAuth helper to capture the refresh token. All other apps can build in parallel while Spotify is being wired.
-- Final 1-bit SVG icons for all 8 apps — user iterates after app frames are live.
+### ✅ Phase 4 complete (2026-04-15)
+All 8 apps built, polished via live review, and committed on `feat/desktop-apps` (32 commits). Spotify refresh token captured, Cloudflare Pages env vars set for both Preview and Production. PR #3 open for review.
+
+### 🟡 Remaining for Phase 5
+- Final 1-bit SVG icons for all 8 apps — user can iterate after merging, since placeholders look solid.
+- Integration testing + final merge to `main`.
 
 ### ❓ Open questions before implementation starts
 None currently. Design Decisions table covers all settled choices. If anything surfaces, add it there rather than improvising in code.
