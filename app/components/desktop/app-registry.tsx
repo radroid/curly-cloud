@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { CalculatorApp } from '../apps/calculator'
 import { NotePadApp } from '../apps/note-pad'
+import { ControlPanelApp } from '../apps/control-panel'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -111,8 +112,14 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(250px, 55cqw, 420px)',
       height: 'clamp(200px, 55cqh, 350px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Control Panel'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+    ],
+    component: ControlPanelApp,
+    showScrollbar: true,
   },
   {
     id: 'calculator',
