@@ -446,12 +446,16 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
           fontSize: 11,
           textAlign: 'center',
           lineHeight: 1.2,
-          wordBreak: 'break-word',
-          maxWidth: 64,
+          maxWidth: 72,
           padding: '1px 3px',
           background: selected ? '#000' : 'transparent',
           color: selected ? '#fff' : '#000',
           outline: selected ? '1px solid #000' : 'none',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          display: '-webkit-box',
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: 'vertical',
         }}
       >
         {entry.label}
@@ -485,7 +489,9 @@ function ContextGridItem({ entry, selected, onSelect, onOpen, onPreview }: Conte
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div style={{ display: 'inline-block' }}>
+        <div
+          onContextMenu={() => onSelect()}
+        >
           <GridItem
             entry={entry}
             selected={selected}
@@ -623,10 +629,11 @@ export function FinderApp() {
           overflowY: 'auto',
           overflowX: 'hidden',
           padding: 8,
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignContent: 'flex-start',
-          gap: 4,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gap: '4px',
+          justifyItems: 'center',
+          alignContent: 'start',
         }}
         onClick={(e) => {
           // Deselect when clicking the container background
