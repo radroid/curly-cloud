@@ -217,7 +217,7 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
         padding: '6px 4px',
         cursor: 'default',
         userSelect: 'none',
-        width: 72,
+        width: '100%',
         outline: 'none',
       }}
     >
@@ -231,7 +231,7 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
           fontSize: 11,
           textAlign: 'center',
           lineHeight: 1.2,
-          maxWidth: 84,
+          maxWidth: '100%',
           padding: '1px 3px',
           background: selected ? '#000' : 'transparent',
           color: selected ? '#fff' : '#000',
@@ -470,7 +470,7 @@ export function FinderApp() {
           overflowX: 'hidden',
           padding: 8,
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
           gap: '4px',
           justifyItems: 'center',
           alignContent: 'start',
