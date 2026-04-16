@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -45,6 +45,14 @@ const TOOLS: Bookmark[] = [
   { label: 'Claude',  url: 'https://claude.ai/',      openMode: 'embed' },
   { label: 'ChatGPT', url: 'https://chatgpt.com/',    openMode: 'embed' },
 ]
+
+const HOME_URL = 'file:///Curly OS/Home.html'
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function viewToUrl(view: View): string {
+  return view.mode === 'home' ? HOME_URL : view.url
+}
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
@@ -387,24 +395,75 @@ function EmbedView({ url, label }: { url: string; label: string }) {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function CurlyBrowserApp() {
-  const [view, setView] = useState<View>({ mode: 'home' })
+  const [history, setHistory] = useState<View[]>([{ mode: 'home' }])
+  const [historyIndex, setHistoryIndex] = useState(0)
+  const currentView = history[historyIndex]
+  const [urlInput, setUrlInput] = useState(HOME_URL)
+
+  const canGoBack = historyIndex > 0
+  const canGoForward = historyIndex < history.length - 1
+  const isHome = currentView.mode === 'home'
+
+  const navigate = useCallback(
+    (view: View) => {
+      setHistory((prev) => [...prev.slice(0, historyIndex + 1), view])
+      setHistoryIndex((prev) => prev + 1)
+      setUrlInput(viewToUrl(view))
+    },
+    [historyIndex],
+  )
+
+  function goBack() {
+    if (!canGoBack) return
+    const newIndex = historyIndex - 1
+    setHistoryIndex(newIndex)
+    setUrlInput(viewToUrl(history[newIndex]))
+  }
+
+  function goForward() {
+    if (!canGoForward) return
+    const newIndex = historyIndex + 1
+    setHistoryIndex(newIndex)
+    setUrlInput(viewToUrl(history[newIndex]))
+  }
+
+  function goHome() {
+    navigate({ mode: 'home' })
+  }
 
   function openBookmark(bm: Bookmark) {
     if (bm.openMode === 'tab') {
       window.open(bm.url, '_blank', 'noopener,noreferrer')
     } else {
-      setView({ mode: 'embed', url: bm.url, label: bm.label })
+      navigate({ mode: 'embed', url: bm.url, label: bm.label })
     }
   }
 
-  function goHome() {
-    setView({ mode: 'home' })
-  }
+  function handleUrlKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    const raw = urlInput.trim()
+    if (!raw) return
 
-  const isHome = view.mode === 'home'
-  const currentUrl = isHome
-    ? 'file:///Curly OS/Home.html'
-    : view.url
+    let url: string
+    let label: string
+
+    if (raw.includes('.') || raw.startsWith('http')) {
+      // Treat as a URL
+      url = raw.startsWith('http://') || raw.startsWith('https://') ? raw : `https://${raw}`
+      // Derive a label from the hostname
+      try {
+        label = new URL(url).hostname
+      } catch {
+        label = raw
+      }
+    } else {
+      // Treat as a search query
+      url = `https://www.google.com/search?igu=1&q=${encodeURIComponent(raw)}`
+      label = `Search: ${raw}`
+    }
+
+    navigate({ mode: 'embed', url, label })
+  }
 
   return (
     <div
@@ -432,13 +491,14 @@ export function CurlyBrowserApp() {
         <IconButton
           src="/browser-icons/back.svg"
           label="Back"
-          disabled={isHome}
-          onClick={goHome}
+          disabled={!canGoBack}
+          onClick={goBack}
         />
         <IconButton
           src="/browser-icons/forward.svg"
           label="Forward"
-          disabled
+          disabled={!canGoForward}
+          onClick={goForward}
         />
         <IconButton
           src="/browser-icons/home.svg"
@@ -447,35 +507,34 @@ export function CurlyBrowserApp() {
           onClick={goHome}
         />
 
-        <div style={{ flex: 1 }} />
-
-        {/* Address bar — read-only, reflects current view */}
-        <div
+        {/* Address bar — editable, navigates on Enter */}
+        <input
+          type="text"
+          value={urlInput}
+          onChange={(e) => setUrlInput(e.target.value)}
+          onKeyDown={handleUrlKeyDown}
           style={{
             ...chicago,
-            fontSize: 12,
-            color: '#555',
-            background: '#f5f5f5',
-            border: '1px solid #aaa',
+            fontSize: 11,
+            color: '#000',
+            background: '#fff',
+            border: '1px solid #000',
+            outline: 'none',
             padding: '2px 8px',
-            minWidth: 200,
-            maxWidth: 340,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            userSelect: 'none',
+            flex: 1,
+            minWidth: 0,
           }}
-          title={currentUrl}
-        >
-          {currentUrl}
-        </div>
+          spellCheck={false}
+          autoComplete="off"
+          aria-label="Address bar"
+        />
       </div>
 
       {/* ── Content: home or embed ──────────────────────────────────────── */}
       {isHome ? (
         <HomeView onOpen={openBookmark} />
       ) : (
-        <EmbedView url={view.url} label={view.label} />
+        <EmbedView url={currentView.url} label={currentView.label} />
       )}
     </div>
   )
