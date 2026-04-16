@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CalculatorApp } from '../apps/calculator'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -101,8 +102,21 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(120px, 25cqw, 200px)',
       height: 'clamp(180px, 45cqh, 280px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Calculator'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+      {
+        label: 'Edit',
+        items: [
+          { label: 'Copy Display', disabled: true },
+          { type: 'divider' },
+          { label: 'Clear', disabled: true },
+        ],
+      },
+    ],
+    component: CalculatorApp,
   },
   {
     id: 'finder',
