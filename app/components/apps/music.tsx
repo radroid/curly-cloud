@@ -184,7 +184,7 @@ function GenreList({ genres }: { genres: Genre[] }) {
   const maxCount = genres[0]?.count ?? 1
 
   return (
-    <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
+    <div style={{ padding: '4px 0' }}>
       {genres.map((genre, i) => {
         const barPct = Math.max(8, (genre.count / maxCount) * 100)
 

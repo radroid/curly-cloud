@@ -49,7 +49,7 @@ async function fetchTopData(accessToken: string): Promise<TopData> {
 
     // Merge entries where one is the other + trailing "s"
     const merged = new Map<string, number>()
-    const keys = [...raw.keys()].sort((a, b) => (raw.get(b) ?? 0) - (raw.get(a) ?? 0))
+    const keys = Array.from(raw.keys()).sort((a, b) => (raw.get(b) ?? 0) - (raw.get(a) ?? 0))
     const consumed = new Set<string>()
     for (const key of keys) {
       if (consumed.has(key)) continue
@@ -69,7 +69,7 @@ async function fetchTopData(accessToken: string): Promise<TopData> {
       merged.set(label, count)
     }
 
-    const genres = [...merged.entries()]
+    const genres = Array.from(merged.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([name, count]) => ({ name, count }))
@@ -123,7 +123,7 @@ export async function GET() {
       headers: { Authorization: `Bearer ${access_token}` },
       cache: 'no-store',
     })
-    let lastTrack = null
+    let lastTrack: any = null
     if (recentRes.ok) {
       const data = await recentRes.json() as any
       const first = (data.items ?? [])[0]
