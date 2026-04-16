@@ -446,16 +446,12 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
           fontSize: 11,
           textAlign: 'center',
           lineHeight: 1.2,
-          maxWidth: 72,
+          maxWidth: 84,
           padding: '1px 3px',
           background: selected ? '#000' : 'transparent',
           color: selected ? '#fff' : '#000',
           outline: selected ? '1px solid #000' : 'none',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
+          wordBreak: 'break-word',
         }}
       >
         {entry.label}
@@ -630,7 +626,7 @@ export function FinderApp() {
           overflowX: 'hidden',
           padding: 8,
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
           gap: '4px',
           justifyItems: 'center',
           alignContent: 'start',
