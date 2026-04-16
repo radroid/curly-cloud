@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { CalculatorApp } from '../apps/calculator'
 import { NotePadApp } from '../apps/note-pad'
 import { ControlPanelApp } from '../apps/control-panel'
+import { FinderApp } from '../apps/finder'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -60,6 +61,42 @@ function ComingSoon({ name }: { name: string }) {
 const makePlaceholder = (name: string) => () => <ComingSoon name={name} />
 
 const defaultMenus: MenuConfig[] = []
+
+export const FINDER_DEFAULT_MENUS: MenuConfig[] = [
+  {
+    label: 'File',
+    items: [
+      { label: 'New Folder', disabled: true },
+      { label: 'Open', disabled: true },
+      { type: 'divider' },
+      { label: 'Close', disabled: true },
+    ],
+  },
+  {
+    label: 'Edit',
+    items: [
+      { label: 'Undo', disabled: true },
+      { type: 'divider' },
+      { label: 'Cut', disabled: true },
+      { label: 'Copy', disabled: true },
+      { label: 'Paste', disabled: true },
+    ],
+  },
+  {
+    label: 'View',
+    items: [
+      { label: 'by Icon', disabled: true },
+      { label: 'by Name', disabled: true },
+    ],
+  },
+  {
+    label: 'Special',
+    items: [
+      { label: 'Clean Up', disabled: true },
+      { label: 'Empty Trash', disabled: true },
+    ],
+  },
+]
 
 export const APP_REGISTRY: AppDefinition[] = [
   {
@@ -153,9 +190,8 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(220px, 48cqw, 380px)',
       height: 'clamp(180px, 50cqh, 320px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Documents'),
-    statusBar: <span>0 items</span>,
+    menuItems: FINDER_DEFAULT_MENUS,
+    component: FinderApp,
   },
   {
     id: 'scrapbook',
@@ -207,39 +243,3 @@ export const APP_REGISTRY: AppDefinition[] = [
 export const APP_MAP: Record<string, AppDefinition> = Object.fromEntries(
   APP_REGISTRY.map((app) => [app.id, app]),
 )
-
-export const FINDER_DEFAULT_MENUS: MenuConfig[] = [
-  {
-    label: 'File',
-    items: [
-      { label: 'New Folder', disabled: true },
-      { label: 'Open', disabled: true },
-      { type: 'divider' },
-      { label: 'Close', disabled: true },
-    ],
-  },
-  {
-    label: 'Edit',
-    items: [
-      { label: 'Undo', disabled: true },
-      { type: 'divider' },
-      { label: 'Cut', disabled: true },
-      { label: 'Copy', disabled: true },
-      { label: 'Paste', disabled: true },
-    ],
-  },
-  {
-    label: 'View',
-    items: [
-      { label: 'by Icon', disabled: true },
-      { label: 'by Name', disabled: true },
-    ],
-  },
-  {
-    label: 'Special',
-    items: [
-      { label: 'Clean Up', disabled: true },
-      { label: 'Empty Trash', disabled: true },
-    ],
-  },
-]
