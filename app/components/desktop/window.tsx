@@ -208,12 +208,14 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       }}
     >
       {/* Title bar — outer provides the white top/bottom inset around the
-         active-state stripes, inner holds the stripes + close/title */}
+         active-state stripes, inner holds the stripes + close/title. Stripes
+         run edge-to-edge horizontally (no outer left/right padding) so the
+         pattern meets the window border like the classic Mac reference. */}
       <div
         style={{
           background: '#fff',
           borderBottom: '1px solid #000',
-          padding: '2px 4px',
+          padding: '3px 0',
           flexShrink: 0,
           userSelect: 'none',
         }}
@@ -229,11 +231,13 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
             background: isActive ? titleBarActiveBg : '#fff',
           }}
         >
-          {/* Close box with a small white pad so the stripes don't touch it */}
+          {/* Close box cluster — 4px white cushion on the LEFT against the
+             window edge, 6px on the right against the stripes */}
           <span
             style={{
               background: '#fff',
-              padding: '0 4px',
+              paddingLeft: 4,
+              paddingRight: 6,
               display: 'flex',
               alignItems: 'center',
               flexShrink: 0,
@@ -276,30 +280,33 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
               </svg>
             </button>
           </span>
+
           <span
             style={{
               fontSize: 12,
               fontWeight: 'bold',
               letterSpacing: 0.3,
               background: '#fff',
-              padding: '0 8px',
+              padding: '0 10px',
             }}
           >
             {app.name}
           </span>
-          {/* Mirror the close-box cluster on the right so the title stays centered */}
+
+          {/* Mirror the close-box cluster on the right to keep the title
+             visually centered: same 6+11+4 = 21px footprint */}
           <span
             style={{
               background: '#fff',
-              padding: '0 4px',
+              paddingLeft: 6,
+              paddingRight: 4,
               display: 'flex',
               alignItems: 'center',
               flexShrink: 0,
-              width: 11,
-              height: 11,
-              boxSizing: 'content-box',
             }}
-          />
+          >
+            <span style={{ width: 11, height: 11, display: 'block' }} />
+          </span>
         </div>
       </div>
 

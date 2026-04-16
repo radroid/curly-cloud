@@ -303,9 +303,11 @@ export function ControlPanelApp() {
         <img
           src="/raj-avatar.webp"
           alt="Raj Dholakia"
-          width={56}
-          height={56}
+          width={84}
+          height={84}
           style={{
+            width: 84,
+            height: 84,
             border: '2px solid #000',
             borderRadius: 2,
             imageRendering: 'pixelated',
