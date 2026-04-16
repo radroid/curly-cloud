@@ -246,9 +246,13 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'world-map',
     name: 'World Map',
     iconSrc: '/app-icons/world-map.svg',
+    // Window aspect matches the flat 2:1 Equirectangular map exactly, so
+    // Antarctica lines up with the bottom of the window. Content is
+    // width × 0.5 (= 35cqw since width is 70cqw); +21px accounts for the
+    // title bar (3px outer pad + 14px inner + 3px outer pad + 1px border).
     defaultSize: {
       width: 'clamp(280px, 70cqw, 540px)',
-      height: 'clamp(220px, 60cqh, 380px)',
+      height: 'clamp(161px, calc(35cqw + 21px), 291px)',
     },
     menuItems: [
       {
