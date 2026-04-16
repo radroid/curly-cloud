@@ -13,8 +13,10 @@ type WindowProps = {
   prefersReduced: boolean
 }
 
+type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+
 export function Window({ app, containerRef, prefersReduced }: WindowProps) {
-  const { windows, activeWindowId, closeApp, focusApp, moveWindow } = useWindowManager()
+  const { windows, activeWindowId, closeApp, focusApp, moveWindow, resizeWindow, toggleFullscreen } = useWindowManager()
   const state = windows[app.id]
   const windowRef = useRef<HTMLDivElement>(null)
   const [contentReady, setContentReady] = useState(false)
@@ -87,6 +89,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       if (e.button !== 0) return
       const target = e.target as HTMLElement
       if (target.closest('[data-window-close]')) return
+      if (target.closest('[data-window-fullscreen]')) return
       const container = containerRef.current
       if (!container) return
       const cRect = container.getBoundingClientRect()
@@ -164,14 +167,182 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
     }
   }, [app.id, containerRef, focusApp, moveWindow])
 
+  // Resize wiring — similar pattern to drag, but adjusts size + position
+  useEffect(() => {
+    const el = windowRef.current
+    if (!el) return
+    if (app.resizable === false) return
+
+    const handles = el.querySelectorAll<HTMLDivElement>('[data-resize-edge]')
+    if (handles.length === 0) return
+
+    let resizing = false
+    let edge: ResizeEdge = 's'
+    let startClientX = 0
+    let startClientY = 0
+    let containerRect = { left: 0, top: 0, width: 0, height: 0 }
+    let startLeftPx = 0
+    let startTopPx = 0
+    let startWidthPx = 0
+    let startHeightPx = 0
+    let currentWidthPx = 0
+    let currentHeightPx = 0
+    let currentLeftPx = 0
+    let currentTopPx = 0
+    let rafId = 0
+
+    const minW = app.minSize?.width ?? 150
+    const minH = app.minSize?.height ?? 100
+
+    const applyResize = () => {
+      rafId = 0
+      el.style.width = `${currentWidthPx}px`
+      el.style.height = `${currentHeightPx}px`
+      // If top or left edge is being dragged, translate the window
+      const dx = currentLeftPx - startLeftPx
+      const dy = currentTopPx - startTopPx
+      if (dx !== 0 || dy !== 0) {
+        el.style.transform = `translate3d(${dx}px, ${dy}px, 0)`
+      }
+    }
+
+    const onDown = (e: MouseEvent) => {
+      if (e.button !== 0) return
+      const target = e.target as HTMLElement
+      const edgeAttr = target.getAttribute('data-resize-edge') as ResizeEdge | null
+      if (!edgeAttr) return
+
+      const container = containerRef.current
+      if (!container) return
+      const cRect = container.getBoundingClientRect()
+      const eRect = el.getBoundingClientRect()
+
+      edge = edgeAttr
+      containerRect = {
+        left: cRect.left,
+        top: cRect.top,
+        width: cRect.width,
+        height: cRect.height,
+      }
+      startLeftPx = eRect.left - cRect.left
+      startTopPx = eRect.top - cRect.top
+      startWidthPx = eRect.width
+      startHeightPx = eRect.height
+      currentWidthPx = startWidthPx
+      currentHeightPx = startHeightPx
+      currentLeftPx = startLeftPx
+      currentTopPx = startTopPx
+      startClientX = e.clientX
+      startClientY = e.clientY
+      resizing = true
+
+      el.style.transition = 'none'
+      focusApp(app.id)
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    const onMove = (e: MouseEvent) => {
+      if (!resizing) return
+      const dx = e.clientX - startClientX
+      const dy = e.clientY - startClientY
+
+      let newW = startWidthPx
+      let newH = startHeightPx
+      let newLeft = startLeftPx
+      let newTop = startTopPx
+
+      // Compute new dimensions based on which edge/corner is being dragged
+      if (edge.includes('e')) {
+        newW = Math.max(minW, startWidthPx + dx)
+        // Clamp to container right edge
+        const maxW = containerRect.width - startLeftPx
+        newW = Math.min(newW, maxW)
+      }
+      if (edge.includes('w')) {
+        const rawDx = Math.min(dx, startWidthPx - minW)
+        newLeft = Math.max(0, startLeftPx + rawDx)
+        newW = startWidthPx + (startLeftPx - newLeft)
+      }
+      if (edge.includes('s')) {
+        newH = Math.max(minH, startHeightPx + dy)
+        // Clamp to container bottom edge
+        const maxH = containerRect.height - startTopPx
+        newH = Math.min(newH, maxH)
+      }
+      if (edge.includes('n')) {
+        const rawDy = Math.min(dy, startHeightPx - minH)
+        newTop = Math.max(0, startTopPx + rawDy)
+        newH = startHeightPx + (startTopPx - newTop)
+      }
+
+      // Apply max constraints if defined
+      if (app.maxSize) {
+        newW = Math.min(newW, app.maxSize.width)
+        newH = Math.min(newH, app.maxSize.height)
+      }
+
+      currentWidthPx = newW
+      currentHeightPx = newH
+      currentLeftPx = newLeft
+      currentTopPx = newTop
+
+      if (!rafId) rafId = requestAnimationFrame(applyResize)
+    }
+
+    const onUp = () => {
+      if (!resizing) return
+      resizing = false
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+        rafId = 0
+      }
+      // Clear inline styles so React takes over
+      el.style.transform = ''
+      el.style.width = ''
+      el.style.height = ''
+
+      if (containerRect.width > 0 && containerRect.height > 0) {
+        setSkipTransition(true)
+        resizeWindow(app.id, { width: currentWidthPx, height: currentHeightPx })
+        // If the left or top edge moved, update position too
+        if (currentLeftPx !== startLeftPx || currentTopPx !== startTopPx) {
+          const newX = currentLeftPx / containerRect.width
+          const newY = currentTopPx / containerRect.height
+          moveWindow(app.id, { x: newX, y: newY })
+        }
+      } else {
+        el.style.transition = ''
+      }
+    }
+
+    handles.forEach((h) => h.addEventListener('mousedown', onDown))
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      handles.forEach((h) => h.removeEventListener('mousedown', onDown))
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [app.id, app.resizable, app.minSize, app.maxSize, containerRef, focusApp, moveWindow, resizeWindow])
+
   if (!state || !state.isOpen) return null
 
-  const normalStyle: React.CSSProperties = {
-    left: `${state.position.x * 100}%`,
-    top: `${state.position.y * 100}%`,
-    width: app.defaultSize.width,
-    height: app.defaultSize.height,
-  }
+  // Determine width/height — fullscreen > user resize > default
+  const isFullscreen = !!state.isFullscreen
+  const hasUserSize = !!state.size
+
+  const normalStyle: React.CSSProperties = isFullscreen
+    ? {
+        inset: 0,
+      }
+    : {
+        left: `${state.position.x * 100}%`,
+        top: `${state.position.y * 100}%`,
+        width: hasUserSize ? `${state.size!.width}px` : app.defaultSize.width,
+        height: hasUserSize ? `${state.size!.height}px` : app.defaultSize.height,
+      }
 
   const zoomStyle: React.CSSProperties = atOrigin && state.fromOrigin
     ? {
@@ -181,6 +352,8 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         height: state.fromOrigin.height,
       }
     : normalStyle
+
+  const showResizeHandles = app.resizable !== false && !isFullscreen
 
   return (
     <div
@@ -207,12 +380,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         ...zoomStyle,
       }}
     >
-      {/* Title bar — outer provides the white top/bottom inset around the
-         active-state stripes. Inner row carries the stripes as a background
-         image; the flex padding-left/right pushes the close box and spacer
-         a few px inward, but the stripes fill the padding area too (because
-         background-image extends through padding), so the pattern reaches
-         the window edge on both sides. Matches the Mac OS 1 reference. */}
+      {/* Title bar */}
       <div
         style={{
           background: '#fff',
@@ -229,49 +397,19 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            cursor: 'grab',
+            cursor: isFullscreen ? 'default' : 'grab',
             background: isActive ? titleBarActiveBg : '#fff',
             padding: '0 4px',
           }}
         >
-          {/* Close box — opaque white, sits on top of the stripes */}
-          <button
-            type="button"
-            data-window-close
-            aria-label="Close"
-            onClick={(e) => {
-              e.stopPropagation()
-              closeApp(app.id)
-            }}
-            style={{
-              appearance: 'none',
-              width: 11,
-              height: 11,
-              background: '#fff',
-              border: '1px solid #000',
-              padding: 0,
-              cursor: 'pointer',
-              flexShrink: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg
-              width="9"
-              height="9"
-              viewBox="0 0 9 9"
-              aria-hidden="true"
-              style={{ display: 'block' }}
-            >
-              <path
-                d="M2 2 L7 7 M7 2 L2 7"
-                stroke="#000"
-                strokeWidth="1"
-                strokeLinecap="square"
-              />
-            </svg>
-          </button>
+          {/* Close box + fullscreen toggle */}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
+            <CloseButton onClose={() => closeApp(app.id)} />
+            <FullscreenButton
+              isFullscreen={isFullscreen}
+              onToggle={() => toggleFullscreen(app.id)}
+            />
+          </span>
 
           {/* Title text cuts a white hole in the stripes */}
           <span
@@ -286,11 +424,11 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
             {app.name}
           </span>
 
-          {/* Transparent mirror spacer — no background so stripes show through,
-             same width as close box so the title stays centered */}
+          {/* Transparent mirror spacer — same total width as close+fullscreen+gap
+              so the title stays centered */}
           <span
             aria-hidden="true"
-            style={{ width: 11, height: 11, flexShrink: 0, display: 'block' }}
+            style={{ width: 25, height: 11, flexShrink: 0, display: 'block' }}
           />
         </div>
       </div>
@@ -322,8 +460,115 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
           {app.statusBar}
         </div>
       )}
+
+      {/* Resize handles */}
+      {showResizeHandles && (
+        <>
+          {/* Edges */}
+          <div data-resize-edge="n" style={{ ...resizeEdgeBase, top: -2, left: 4, right: 4, height: 5, cursor: 'n-resize' }} />
+          <div data-resize-edge="s" style={{ ...resizeEdgeBase, bottom: -2, left: 4, right: 4, height: 5, cursor: 's-resize' }} />
+          <div data-resize-edge="w" style={{ ...resizeEdgeBase, left: -2, top: 4, bottom: 4, width: 5, cursor: 'w-resize' }} />
+          <div data-resize-edge="e" style={{ ...resizeEdgeBase, right: -2, top: 4, bottom: 4, width: 5, cursor: 'e-resize' }} />
+          {/* Corners */}
+          <div data-resize-edge="nw" style={{ ...resizeCornerBase, top: -2, left: -2, cursor: 'nw-resize' }} />
+          <div data-resize-edge="ne" style={{ ...resizeCornerBase, top: -2, right: -2, cursor: 'ne-resize' }} />
+          <div data-resize-edge="sw" style={{ ...resizeCornerBase, bottom: -2, left: -2, cursor: 'sw-resize' }} />
+          <div data-resize-edge="se" style={{ ...resizeCornerBase, bottom: -2, right: -2, cursor: 'se-resize' }} />
+        </>
+      )}
     </div>
   )
 }
 
 const titleBarActiveBg = 'repeating-linear-gradient(to bottom, #000 0 1px, #fff 1px 2px)'
+
+const resizeEdgeBase: React.CSSProperties = {
+  position: 'absolute',
+  zIndex: 10,
+  background: 'transparent',
+}
+
+const resizeCornerBase: React.CSSProperties = {
+  position: 'absolute',
+  width: 8,
+  height: 8,
+  zIndex: 11,
+  background: 'transparent',
+}
+
+function CloseButton({ onClose }: { onClose: () => void }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      type="button"
+      data-window-close
+      aria-label="Close"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClose()
+      }}
+      style={{
+        appearance: 'none',
+        width: 11,
+        height: 11,
+        background: '#fff',
+        border: '1px solid #000',
+        padding: 0,
+        cursor: 'pointer',
+        flexShrink: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {hovered && (
+        <svg
+          width="9"
+          height="9"
+          viewBox="0 0 9 9"
+          aria-hidden="true"
+          style={{ display: 'block' }}
+        >
+          <path
+            d="M2 2 L7 7 M7 2 L2 7"
+            stroke="#000"
+            strokeWidth="1"
+            strokeLinecap="square"
+          />
+        </svg>
+      )}
+    </button>
+  )
+}
+
+function FullscreenButton({
+  isFullscreen,
+  onToggle,
+}: {
+  isFullscreen: boolean
+  onToggle: () => void
+}) {
+  return (
+    <button
+      type="button"
+      data-window-fullscreen
+      aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
+      onClick={(e) => {
+        e.stopPropagation()
+        onToggle()
+      }}
+      style={{
+        appearance: 'none',
+        width: 11,
+        height: 11,
+        background: isFullscreen ? '#000' : '#fff',
+        border: '1px solid #000',
+        padding: 0,
+        cursor: 'pointer',
+        flexShrink: 0,
+      }}
+    />
+  )
+}

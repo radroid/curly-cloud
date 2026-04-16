@@ -11,6 +11,8 @@ export type WindowState = {
   isOpen: boolean
   fromOrigin?: Rect // clicked-icon rect relative to CRT screen, px
   openedAt: number // timestamp for "first open" checks and animation keys
+  size?: { width: number; height: number } // pixel override when user resizes
+  isFullscreen?: boolean
 }
 
 type WindowsRecord = Record<string, WindowState>
@@ -25,6 +27,8 @@ type WindowManagerContextType = {
   focusApp: (appId: string) => void
   selectIcon: (appId: string | null) => void
   moveWindow: (appId: string, pos: { x: number; y: number }) => void
+  resizeWindow: (appId: string, size: { width: number; height: number }) => void
+  toggleFullscreen: (appId: string) => void
 }
 
 const WindowManagerContext = createContext<WindowManagerContextType | null>(null)
@@ -35,9 +39,13 @@ const CASCADE_MAX = { x: 0.6, y: 0.55 }
 
 function nextCascadePosition(topmost: WindowState | null) {
   if (!topmost) return { ...BASE_POS }
-  const x = topmost.position.x + CASCADE_STEP
-  const y = topmost.position.y + CASCADE_STEP
-  if (x > CASCADE_MAX.x || y > CASCADE_MAX.y) return { ...BASE_POS }
+  let x = topmost.position.x + CASCADE_STEP
+  let y = topmost.position.y + CASCADE_STEP
+  // Clamp: if cascade goes too far right or too far down, wrap back
+  if (x > 0.55 || y > 0.50) {
+    x = BASE_POS.x
+    y = BASE_POS.y
+  }
   return { x, y }
 }
 
@@ -122,6 +130,25 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     [],
   )
 
+  const resizeWindow = useCallback(
+    (appId: string, size: { width: number; height: number }) => {
+      setWindows((prev) => {
+        const w = prev[appId]
+        if (!w) return prev
+        return { ...prev, [appId]: { ...w, size } }
+      })
+    },
+    [],
+  )
+
+  const toggleFullscreen = useCallback((appId: string) => {
+    setWindows((prev) => {
+      const w = prev[appId]
+      if (!w) return prev
+      return { ...prev, [appId]: { ...w, isFullscreen: !w.isFullscreen } }
+    })
+  }, [])
+
   const value: WindowManagerContextType = {
     windows,
     activeWindowId,
@@ -132,6 +159,8 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     focusApp,
     selectIcon,
     moveWindow,
+    resizeWindow,
+    toggleFullscreen,
   }
 
   return <WindowManagerContext.Provider value={value}>{children}</WindowManagerContext.Provider>
