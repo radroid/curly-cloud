@@ -36,8 +36,8 @@
 
 ## 6. Documents/Finder App
 - [x] Increase default window size
-- [ ] Preview opens as a separate movable window (not overlay)
-- [ ] Preview window is fully resizable
+- [x] Preview opens as a separate movable window (not overlay)
+- [x] Preview window is fully resizable
 - [x] Fix icon grid alignment — full names shown, uniform grid
-- [ ] Preview window title bar matches standard window style
+- [x] Preview window title bar matches standard window style
 - [x] Right-click on item highlights/selects it
