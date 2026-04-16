@@ -14,19 +14,22 @@ interface TrackInfo {
   durationMs?: number
 }
 
-interface RecentTrack {
+interface Genre {
   name: string
-  artist: string
-  album: string
-  albumArt: string | null
+  count: number
+}
+
+interface TopArtist {
+  name: string
+  image: string | null
   spotifyUrl: string | null
-  playedAt: string
 }
 
 interface SpotifyData {
   isPlaying: boolean
   track: TrackInfo | null
-  recent: RecentTrack[]
+  genres: Genre[]
+  artists: TopArtist[]
   error?: string
 }
 
@@ -159,132 +162,155 @@ function VinylRecord({
   )
 }
 
-// ── Recently Played List ───────────────────────────────────────────────────────
+// ── Top Genres List ────────────────────────────────────────────────────────────
 
-function RecentList({ items }: { items: RecentTrack[] }) {
-  if (items.length === 0) {
+function GenreList({ genres }: { genres: Genre[] }) {
+  if (genres.length === 0) {
     return (
       <div
         style={{
           ...chicago,
-          fontSize: 11,
+          fontSize: 12,
           color: '#555',
-          padding: '8px 6px',
+          padding: '12px 10px',
           textAlign: 'center',
         }}
       >
-        No recent tracks
+        No genre data
       </div>
     )
   }
 
-  const displayItems = items.slice(0, 8)
+  const maxCount = genres[0]?.count ?? 1
 
   return (
-    <div style={{ overflowY: 'auto', flex: 1 }}>
-      {displayItems.map((track, i) => {
-        const rowStyle: React.CSSProperties = {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '7px 10px',
-          borderBottom: i < displayItems.length - 1 ? '1px solid #000' : 'none',
-          minWidth: 0,
-          color: '#000',
-          textDecoration: 'none',
-          cursor: track.spotifyUrl ? 'pointer' : 'default',
-        }
+    <div style={{ overflowY: 'auto', flex: 1, padding: '4px 0' }}>
+      {genres.map((genre, i) => {
+        const barPct = Math.max(8, (genre.count / maxCount) * 100)
 
-        const thumb = (
+        return (
           <div
+            key={genre.name}
             style={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              overflow: 'hidden',
-              background: '#ccc',
-              border: '1px solid #000',
+              padding: '6px 10px',
+              borderBottom: i < genres.length - 1 ? '1px solid #e0e0e0' : 'none',
             }}
           >
-            {track.albumArt ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={track.albumArt}
-                alt={track.album}
-                width={44}
-                height={44}
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  display: 'block',
-                }}
-              />
-            ) : (
-              <div style={{ width: '100%', height: '100%', background: '#888' }} />
-            )}
-          </div>
-        )
-
-        const text = (
-          <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
                 ...chicago,
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: 'bold',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                lineHeight: 1.3,
+                lineHeight: 1.4,
+                marginBottom: 3,
               }}
             >
-              {track.name}
+              {genre.name}
             </div>
             <div
               style={{
-                ...chicago,
-                fontSize: 11,
-                color: '#555',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                lineHeight: 1.3,
+                width: '100%',
+                height: 6,
+                background: '#e8e8e8',
+                borderRadius: 1,
               }}
             >
-              {track.artist}
+              <div
+                style={{
+                  width: `${barPct}%`,
+                  height: '100%',
+                  background: '#000',
+                  borderRadius: 1,
+                }}
+              />
             </div>
           </div>
         )
+      })}
+    </div>
+  )
+}
 
-        const key = `${track.name}-${track.playedAt}-${i}`
+// ── Top Artists List ──────────────────────────────────────────────────────────
 
-        if (track.spotifyUrl) {
+function ArtistList({ artists }: { artists: TopArtist[] }) {
+  if (artists.length === 0) return null
+
+  return (
+    <div style={{ padding: '4px 0' }}>
+      {artists.map((artist, i) => {
+        const row = (
+          <>
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                flexShrink: 0,
+                overflow: 'hidden',
+                background: '#ccc',
+                border: '1px solid #000',
+              }}
+            >
+              {artist.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={artist.image}
+                  alt=""
+                  width={28}
+                  height={28}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              )}
+            </div>
+            <span
+              style={{
+                ...chicago,
+                fontSize: 11,
+                fontWeight: 'bold',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                flex: 1,
+                minWidth: 0,
+              }}
+            >
+              {artist.name}
+            </span>
+          </>
+        )
+
+        const style: React.CSSProperties = {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '4px 10px',
+          borderBottom: i < artists.length - 1 ? '1px solid #e0e0e0' : 'none',
+          textDecoration: 'none',
+          color: '#000',
+        }
+
+        if (artist.spotifyUrl) {
           return (
             <a
-              key={key}
-              href={track.spotifyUrl}
+              key={artist.name}
+              href={artist.spotifyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={rowStyle}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = '#f0f0f0'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-              }}
-              title={`Open "${track.name}" on Spotify`}
+              style={style}
+              title={`Open ${artist.name} on Spotify`}
             >
-              {thumb}
-              {text}
+              {row}
             </a>
           )
         }
 
         return (
-          <div key={key} style={rowStyle}>
-            {thumb}
-            {text}
+          <div key={artist.name} style={style}>
+            {row}
           </div>
         )
       })}
@@ -463,7 +489,7 @@ export function MusicApp() {
   // ── Normal state: have track data ──────────────────────────────────────────
   // `isOffline` above already guarantees `data.track` is non-null, but the
   // destructure doesn't narrow `track` for TS — assert via non-null.
-  const { isPlaying, recent } = data
+  const { isPlaying, genres, artists } = data
   const track = data.track!
 
   return (
@@ -584,17 +610,17 @@ export function MusicApp() {
           )}
         </div>
 
-        {/* ── Right column: Recent tracks ───────────────────────────────── */}
+        {/* ── Right column: Genres + Artists ────────────────────────────── */}
         <div
           style={{
             flex: '0 0 45%',
             display: 'flex',
             flexDirection: 'column',
-            overflow: 'hidden',
+            overflow: 'auto',
             minWidth: 0,
           }}
         >
-          {/* Header */}
+          {/* Top Genres */}
           <div
             style={{
               ...chicago,
@@ -607,11 +633,27 @@ export function MusicApp() {
               flexShrink: 0,
             }}
           >
-            Recently Played
+            Top Genres
           </div>
+          <GenreList genres={genres ?? []} />
 
-          {/* List */}
-          <RecentList items={recent ?? []} />
+          {/* Top Artists */}
+          <div
+            style={{
+              ...chicago,
+              fontSize: 12,
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: 1.2,
+              padding: '8px 10px 7px',
+              borderTop: '1px solid #000',
+              borderBottom: '1px solid #000',
+              flexShrink: 0,
+            }}
+          >
+            Top Artists
+          </div>
+          <ArtistList artists={artists ?? []} />
         </div>
       </div>
     </>

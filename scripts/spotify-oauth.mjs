@@ -41,7 +41,7 @@ import { exec } from 'node:child_process'
 import { randomBytes } from 'node:crypto'
 
 const REDIRECT_URI = 'http://127.0.0.1:8888/callback'
-const SCOPES = 'user-read-currently-playing user-read-playback-state user-read-recently-played'
+const SCOPES = 'user-read-currently-playing user-read-playback-state user-read-recently-played user-top-read'
 const PORT = 8888
 
 function loadEnvLocal() {
