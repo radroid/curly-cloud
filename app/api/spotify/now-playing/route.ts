@@ -56,6 +56,7 @@ export async function GET() {
       artist: (item.track?.artists ?? []).map((a: any) => a.name).join(', '),
       album: item.track?.album?.name ?? '',
       albumArt: item.track?.album?.images?.[0]?.url ?? null,
+      spotifyUrl: item.track?.external_urls?.spotify ?? null,
       playedAt: item.played_at,
     }))
     return Response.json({
@@ -91,6 +92,7 @@ export async function GET() {
       artist: (r.track?.artists ?? []).map((a: any) => a.name).join(', '),
       album: r.track?.album?.name ?? '',
       albumArt: r.track?.album?.images?.[0]?.url ?? null,
+      spotifyUrl: r.track?.external_urls?.spotify ?? null,
       playedAt: r.played_at,
     }))
   }
@@ -102,6 +104,7 @@ export async function GET() {
       artist: (item.artists ?? []).map((a: any) => a.name).join(', '),
       album: item.album?.name ?? '',
       albumArt: item.album?.images?.[0]?.url ?? null,
+      spotifyUrl: item.external_urls?.spotify ?? null,
       progressMs: nowData.progress_ms ?? 0,
       durationMs: item.duration_ms ?? 0,
     },

@@ -275,8 +275,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     name: 'Music',
     iconSrc: '/app-icons/music.svg',
     defaultSize: {
-      width: 'clamp(320px, 60cqw, 480px)',
-      height: 'clamp(220px, 55cqh, 340px)',
+      width: 'clamp(440px, 78cqw, 640px)',
+      height: 'clamp(300px, 72cqh, 440px)',
     },
     menuItems: [
       {

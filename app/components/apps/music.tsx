@@ -9,6 +9,7 @@ interface TrackInfo {
   artist: string
   album: string
   albumArt: string | null
+  spotifyUrl: string | null
   progressMs?: number
   durationMs?: number
 }
@@ -18,6 +19,7 @@ interface RecentTrack {
   artist: string
   album: string
   albumArt: string | null
+  spotifyUrl: string | null
   playedAt: string
 }
 
@@ -59,9 +61,9 @@ function VinylRecord({
 
   const shouldSpin = isPlaying && !isOffline && !reduceMotion
 
-  const outerSize = 150
-  const labelSize = 66 // ~44% of outer
-  const holeSize = 10
+  const outerSize = 210
+  const labelSize = 96 // ~46% of outer
+  const holeSize = 14
 
   return (
     <div
@@ -73,15 +75,15 @@ function VinylRecord({
         background: isOffline ? '#e8e8e8' : '#1a1a1a',
         // Groove rings via box-shadow
         boxShadow: isOffline
-          ? '0 0 0 2px #bbb inset, 0 0 0 4px #e8e8e8 inset, 0 0 0 6px #bbb inset'
+          ? '0 0 0 3px #bbb inset, 0 0 0 6px #e8e8e8 inset, 0 0 0 9px #bbb inset'
           : [
-              '0 0 0 8px #222 inset',
-              '0 0 0 16px #1a1a1a inset',
-              '0 0 0 24px #242424 inset',
-              '0 0 0 32px #1a1a1a inset',
-              '0 0 0 40px #222 inset',
-              '0 0 0 48px #1a1a1a inset',
-              '0 0 0 56px #242424 inset',
+              '0 0 0 11px #222 inset',
+              '0 0 0 22px #1a1a1a inset',
+              '0 0 0 33px #242424 inset',
+              '0 0 0 44px #1a1a1a inset',
+              '0 0 0 55px #222 inset',
+              '0 0 0 66px #1a1a1a inset',
+              '0 0 0 77px #242424 inset',
             ].join(', '),
         flexShrink: 0,
         animation: shouldSpin ? 'curly-vinyl-spin 8s linear infinite' : 'none',
@@ -180,24 +182,24 @@ function RecentList({ items }: { items: RecentTrack[] }) {
 
   return (
     <div style={{ overflowY: 'auto', flex: 1 }}>
-      {displayItems.map((track, i) => (
-        <div
-          key={`${track.name}-${track.playedAt}-${i}`}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '4px 6px',
-            borderBottom: i < displayItems.length - 1 ? '1px solid #000' : 'none',
-            minWidth: 0,
-          }}
-        >
-          {/* Thumbnail */}
+      {displayItems.map((track, i) => {
+        const rowStyle: React.CSSProperties = {
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '7px 10px',
+          borderBottom: i < displayItems.length - 1 ? '1px solid #000' : 'none',
+          minWidth: 0,
+          color: '#000',
+          textDecoration: 'none',
+          cursor: track.spotifyUrl ? 'pointer' : 'default',
+        }
+
+        const thumb = (
           <div
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: 2,
+              width: 44,
+              height: 44,
               flexShrink: 0,
               overflow: 'hidden',
               background: '#ccc',
@@ -209,21 +211,27 @@ function RecentList({ items }: { items: RecentTrack[] }) {
               <img
                 src={track.albumArt}
                 alt={track.album}
-                width={30}
-                height={30}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                width={44}
+                height={44}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  display: 'block',
+                }}
               />
             ) : (
               <div style={{ width: '100%', height: '100%', background: '#888' }} />
             )}
           </div>
+        )
 
-          {/* Text */}
+        const text = (
           <div style={{ minWidth: 0, flex: 1 }}>
             <div
               style={{
                 ...chicago,
-                fontSize: 11,
+                fontSize: 13,
                 fontWeight: 'bold',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -236,7 +244,7 @@ function RecentList({ items }: { items: RecentTrack[] }) {
             <div
               style={{
                 ...chicago,
-                fontSize: 10,
+                fontSize: 11,
                 color: '#555',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -247,8 +255,39 @@ function RecentList({ items }: { items: RecentTrack[] }) {
               {track.artist}
             </div>
           </div>
-        </div>
-      ))}
+        )
+
+        const key = `${track.name}-${track.playedAt}-${i}`
+
+        if (track.spotifyUrl) {
+          return (
+            <a
+              key={key}
+              href={track.spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={rowStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#f0f0f0'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+              }}
+              title={`Open "${track.name}" on Spotify`}
+            >
+              {thumb}
+              {text}
+            </a>
+          )
+        }
+
+        return (
+          <div key={key} style={rowStyle}>
+            {thumb}
+            {text}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -450,13 +489,13 @@ export function MusicApp() {
         {/* ── Left column: Vinyl ────────────────────────────────────────── */}
         <div
           style={{
-            flex: '0 0 50%',
+            flex: '0 0 55%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 6,
-            padding: '12px 8px',
+            gap: 10,
+            padding: '18px 14px',
             borderRight: '1px solid #000',
             overflow: 'hidden',
           }}
@@ -465,8 +504,8 @@ export function MusicApp() {
           <div
             style={{
               ...chicago,
-              fontSize: 9,
-              letterSpacing: 1.5,
+              fontSize: 11,
+              letterSpacing: 1.8,
               color: '#555',
               textTransform: 'uppercase',
             }}
@@ -474,19 +513,35 @@ export function MusicApp() {
             {isPlaying ? 'Now Playing' : 'Last Played'}
           </div>
 
-          {/* Vinyl */}
-          <VinylRecord
-            albumArt={track.albumArt}
-            isPlaying={isPlaying}
-            isOffline={false}
-          />
+          {/* Vinyl (linked to Spotify if we have a URL) */}
+          {track.spotifyUrl ? (
+            <a
+              href={track.spotifyUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
+              title={`Open "${track.name}" on Spotify`}
+            >
+              <VinylRecord
+                albumArt={track.albumArt}
+                isPlaying={isPlaying}
+                isOffline={false}
+              />
+            </a>
+          ) : (
+            <VinylRecord
+              albumArt={track.albumArt}
+              isPlaying={isPlaying}
+              isOffline={false}
+            />
+          )}
 
           {/* Track info */}
-          <div style={{ width: '100%', textAlign: 'center', minWidth: 0, padding: '0 4px' }}>
+          <div style={{ width: '100%', textAlign: 'center', minWidth: 0, padding: '0 6px' }}>
             <div
               style={{
                 ...chicago,
-                fontSize: 12,
+                fontSize: 15,
                 fontWeight: 'bold',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -500,7 +555,7 @@ export function MusicApp() {
             <div
               style={{
                 ...chicago,
-                fontSize: 11,
+                fontSize: 13,
                 color: '#555',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
@@ -527,7 +582,7 @@ export function MusicApp() {
         {/* ── Right column: Recent tracks ───────────────────────────────── */}
         <div
           style={{
-            flex: '0 0 50%',
+            flex: '0 0 45%',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -538,11 +593,11 @@ export function MusicApp() {
           <div
             style={{
               ...chicago,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 'bold',
               textTransform: 'uppercase',
-              letterSpacing: 1,
-              padding: '5px 6px 4px',
+              letterSpacing: 1.2,
+              padding: '8px 10px 7px',
               borderBottom: '1px solid #000',
               flexShrink: 0,
             }}
