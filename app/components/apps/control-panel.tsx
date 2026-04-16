@@ -31,57 +31,44 @@ const sectionStyle: React.CSSProperties = {
   padding: '6px 8px',
 }
 
-const sectionHeaderStyle: React.CSSProperties = {
+const tileStyle: React.CSSProperties = {
+  border: '1px solid #000',
+  padding: '6px 8px',
+  background: '#fff',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minHeight: 72,
+}
+
+const tileLabelStyle: React.CSSProperties = {
   ...chicago,
-  fontSize: 12,
+  fontSize: 9,
   fontWeight: 'bold',
-  marginBottom: 4,
   textTransform: 'uppercase',
   letterSpacing: 1,
-}
-
-const rowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'baseline',
-  gap: 4,
-  minHeight: 16,
-}
-
-const labelStyle: React.CSSProperties = {
-  ...chicago,
-  fontSize: 12,
+  marginBottom: 4,
   color: '#000',
-  flexShrink: 0,
 }
 
-const valueStyle: React.CSSProperties = {
+const tileValueStyle: React.CSSProperties = {
   ...chicago,
-  fontSize: 12,
+  fontSize: 13,
   color: '#000',
-  textAlign: 'right',
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  maxWidth: '60%',
+  textAlign: 'center',
+  lineHeight: 1.3,
 }
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function SectionHeader({ label }: { label: string }) {
-  return <div style={sectionHeaderStyle}>{label}</div>
+const tileSubValueStyle: React.CSSProperties = {
+  ...chicago,
+  fontSize: 10,
+  color: '#000',
+  textAlign: 'center',
+  marginTop: 2,
 }
 
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={rowStyle}>
-      <span style={labelStyle}>{label}</span>
-      <span style={valueStyle}>{value}</span>
-    </div>
-  )
-}
-
-// ── Browser & OS detection ────────────────────────────────────────────────────
+// ── Browser detection ─────────────────────────────────────────────────────────
 
 function detectBrowser(ua: string): string {
   if (/Edg\/(\d+)/.test(ua)) return `Edge ${ua.match(/Edg\/(\d+)/)?.[1] ?? ''}`
@@ -93,19 +80,32 @@ function detectBrowser(ua: string): string {
   return 'Unknown'
 }
 
-function detectOS(ua: string): string {
-  if (/iPhone|iPad|iPod/.test(ua)) return 'iOS'
-  if (/Android/.test(ua)) return 'Android'
-  if (/Mac OS X/.test(ua)) return 'macOS'
-  if (/Windows NT 10/.test(ua)) return 'Windows 10/11'
-  if (/Windows NT/.test(ua)) return 'Windows'
-  if (/Linux/.test(ua)) return 'Linux'
-  return 'Unknown'
+// ── Dashboard Tiles ──────────────────────────────────────────────────────────
+
+function ClockTile({ now }: { now: Date | null }) {
+  if (!now) return <div style={tileStyle}><span style={tileLabelStyle}>TIME</span><span style={tileValueStyle}>--:--</span></div>
+
+  const time = now.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+  const date = now.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+
+  return (
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>TIME</span>
+      <span style={{ ...tileValueStyle, fontSize: 16 }}>{time}</span>
+      <span style={tileSubValueStyle}>{date}</span>
+    </div>
+  )
 }
 
-// ── Battery Section ───────────────────────────────────────────────────────────
-
-function BatterySection() {
+function BatteryTile() {
   const [batteryState, setBatteryState] = useState<{
     level: number
     charging: boolean
@@ -150,101 +150,129 @@ function BatterySection() {
     }
   }, [])
 
-  if (unavailable) {
-    return (
-      <div style={sectionStyle}>
-        <SectionHeader label="Battery" />
-        <Row label="Status" value="Not available" />
-      </div>
-    )
-  }
-
-  if (!batteryState) {
-    return (
-      <div style={sectionStyle}>
-        <SectionHeader label="Battery" />
-        <Row label="Status" value="Loading..." />
-      </div>
-    )
-  }
-
-  const pct = Math.round(batteryState.level * 100)
-  const chargeSymbol = batteryState.charging ? '▲' : '▼'
-  const chargeLabel = batteryState.charging ? 'Charging' : 'Discharging'
-
-  let timeValue = '—'
-  if (batteryState.charging && batteryState.chargingTime !== Infinity && batteryState.chargingTime > 0) {
-    const mins = Math.round(batteryState.chargingTime / 60)
-    timeValue = `~${mins} min`
-  } else if (!batteryState.charging && batteryState.dischargingTime !== Infinity && batteryState.dischargingTime > 0) {
-    const hrs = Math.floor(batteryState.dischargingTime / 3600)
-    const mins = Math.round((batteryState.dischargingTime % 3600) / 60)
-    timeValue = hrs > 0 ? `~${hrs}h ${mins}m` : `~${mins} min`
-  }
+  const pct = batteryState ? Math.round(batteryState.level * 100) : 0
+  const label = unavailable
+    ? 'N/A'
+    : !batteryState
+      ? '...'
+      : `${pct}%${batteryState.charging ? ' \u25B2' : ''}`
 
   return (
-    <div style={sectionStyle}>
-      <SectionHeader label="Battery" />
-      <Row label="Level" value={`${pct}%`} />
-      <Row label="State" value={`${chargeSymbol} ${chargeLabel}`} />
-      {timeValue !== '—' && <Row label="Est. Time" value={timeValue} />}
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>BATTERY</span>
+      {/* Battery bar */}
+      <div
+        style={{
+          width: 48,
+          height: 18,
+          border: '1px solid #000',
+          position: 'relative',
+          marginBottom: 4,
+          display: 'flex',
+          alignItems: 'stretch',
+        }}
+      >
+        {/* Nub on right side */}
+        <div
+          style={{
+            position: 'absolute',
+            right: -4,
+            top: 4,
+            width: 3,
+            height: 8,
+            background: '#000',
+          }}
+        />
+        {/* Fill */}
+        {!unavailable && batteryState && (
+          <div
+            style={{
+              width: `${pct}%`,
+              background: '#000',
+              height: '100%',
+            }}
+          />
+        )}
+      </div>
+      <span style={tileSubValueStyle}>{label}</span>
     </div>
   )
 }
 
-// ── System Section ────────────────────────────────────────────────────────────
+function DisplayTile() {
+  const [resolution, setResolution] = useState<string | null>(null)
 
-function SystemSection() {
-  const [info, setInfo] = useState<{
-    browser: string
-    os: string
-    screenRes: string
-    windowSize: string
-    language: string
-    timezone: string
-    connection: string
-  } | null>(null)
+  useEffect(() => {
+    setResolution(`${window.screen.width} \u00D7 ${window.screen.height}`)
+  }, [])
+
+  return (
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>DISPLAY</span>
+      <span style={tileValueStyle}>{resolution ?? '...'}</span>
+    </div>
+  )
+}
+
+function BrowserTile() {
+  const [browser, setBrowser] = useState<string | null>(null)
+
+  useEffect(() => {
+    setBrowser(detectBrowser(navigator.userAgent))
+  }, [])
+
+  return (
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>BROWSER</span>
+      <span style={tileValueStyle}>{browser ?? '...'}</span>
+    </div>
+  )
+}
+
+function NetworkTile() {
+  const [connection, setConnection] = useState<string | null>(null)
 
   useEffect(() => {
     const nav = navigator as NavWithBattery
-    const ua = navigator.userAgent
-
-    const getInfo = () => ({
-      browser: detectBrowser(ua),
-      os: detectOS(ua),
-      screenRes: `${window.screen.width} × ${window.screen.height}`,
-      windowSize: `${window.innerWidth} × ${window.innerHeight}`,
-      language: navigator.language,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      connection: nav.connection?.effectiveType ?? 'Unknown',
-    })
-
-    setInfo(getInfo())
-
-    const onResize = () => {
-      setInfo((prev) =>
-        prev
-          ? { ...prev, windowSize: `${window.innerWidth} × ${window.innerHeight}` }
-          : getInfo()
-      )
+    const effectiveType = nav.connection?.effectiveType
+    if (effectiveType) {
+      const label = effectiveType === '4g' ? '4G'
+        : effectiveType === '3g' ? '3G'
+        : effectiveType === '2g' ? '2G'
+        : effectiveType === 'slow-2g' ? 'Slow 2G'
+        : effectiveType === 'wifi' ? 'WiFi'
+        : effectiveType.toUpperCase()
+      setConnection(label)
+    } else {
+      setConnection(navigator.onLine ? 'Online' : 'Offline')
     }
-
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  if (!info) return null
+  return (
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>NETWORK</span>
+      <span style={tileValueStyle}>{connection ?? '...'}</span>
+    </div>
+  )
+}
+
+function LocationTile() {
+  const [location, setLocation] = useState<string | null>(null)
+
+  useEffect(() => {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const parts = tz.split('/')
+    // Use the city part (last segment), replacing underscores with spaces
+    const city = parts.length >= 2
+      ? parts[parts.length - 1].replace(/_/g, ' ')
+      : tz
+    setLocation(city)
+  }, [])
 
   return (
-    <div style={sectionStyle}>
-      <SectionHeader label="System" />
-      <Row label="Browser" value={info.browser} />
-      <Row label="OS" value={info.os} />
-      <Row label="Screen" value={info.screenRes} />
-      <Row label="Window" value={info.windowSize} />
-      <Row label="Language" value={info.language} />
-      <Row label="Timezone" value={info.timezone} />
-      <Row label="Connection" value={info.connection} />
+    <div style={tileStyle}>
+      <span style={tileLabelStyle}>LOCATION</span>
+      <span style={tileValueStyle}>{location ?? '...'}</span>
     </div>
   )
 }
@@ -260,31 +288,6 @@ export function ControlPanelApp() {
     const id = setInterval(() => setNow(new Date()), 1000)
     return () => clearInterval(id)
   }, [])
-
-  const formatDateTime = (d: Date): string => {
-    const weekday = d.toLocaleDateString('en-US', { weekday: 'long' })
-    const month = d.toLocaleDateString('en-US', { month: 'long' })
-    const day = d.getDate()
-    const year = d.getFullYear()
-    const time = d.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: true,
-    })
-    return `${weekday}, ${month} ${day} ${year} — ${time}`
-  }
-
-  // ── Location from timezone ────────────────────────────────────────────────
-  const timezone =
-    typeof window !== 'undefined'
-      ? Intl.DateTimeFormat().resolvedOptions().timeZone
-      : ''
-  const tzParts = timezone.split('/')
-  const tzDisplay =
-    tzParts.length >= 2
-      ? tzParts.slice(0, 2).join(' / ').replace(/_/g, ' ')
-      : timezone
 
   return (
     <div
@@ -399,24 +402,22 @@ export function ControlPanelApp() {
         </div>
       </div>
 
-      {/* ── Section 2: Date & Time ───────────────────────────────────────── */}
-      <div style={sectionStyle}>
-        <SectionHeader label="Date & Time" />
-        <div style={{ ...chicago, fontSize: 12, lineHeight: 1.5 }}>
-          {now ? formatDateTime(now) : '—'}
-        </div>
-      </div>
-
-      {/* ── Section 3: System ───────────────────────────────────────────── */}
-      <SystemSection />
-
-      {/* ── Section 4: Battery ──────────────────────────────────────────── */}
-      <BatterySection />
-
-      {/* ── Section 5: Location (from timezone) ─────────────────────────── */}
-      <div style={{ ...sectionStyle, borderBottom: 'none' }}>
-        <SectionHeader label="Location (from timezone)" />
-        <Row label="Region" value={tzDisplay || '—'} />
+      {/* ── Section 2: Dashboard Tiles ──────────────────────────────────── */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap: 6,
+          padding: 8,
+          overflowY: 'auto',
+        }}
+      >
+        <ClockTile now={now} />
+        <BatteryTile />
+        <DisplayTile />
+        <BrowserTile />
+        <NetworkTile />
+        <LocationTile />
       </div>
     </div>
   )
