@@ -618,8 +618,17 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 - [x] Commit 14: Window — stripes reach window edges with close box sitting on them (v3) *(live review)*
 - [x] Commit 15: Curly Browser
 - [x] Commit 16: World Map
-- [ ] Commit 17: Music (Spotify API route + vinyl UI) — gated on refresh token
-- [ ] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop`
+- [x] Commit 17: World Map — filled tooltip for visited countries *(live review)*
+- [x] Commit 18: World Map — larger map + Equal Earth, remove legend *(live review)*
+- [x] Commit 19: World Map — flat Equirectangular + full Antarctica *(live review)*
+- [x] Commit 20: World Map — window aspect = 2:1 so Antarctica hits the bottom *(live review)*
+- [x] Commit 21: World Map — move visited count to bottom-left + gitignore `.dev.vars` *(live review)*
+- [x] Commit 22: World Map — white background + border on the visited-count label *(live review)*
+- [x] Commit 23: Music (Spotify API route + vinyl UI)
+- [x] Commit 24: Curly Browser — SVG nav icons + embed Tools in-place *(live review)*
+- [x] Commit 25: Music — larger window + vinyl, clickable Spotify links per track *(live review)*
+- [x] Commit 26: Update Curly Browser app icon *(user-provided asset tweak)*
+- [x] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop` (https://github.com/radroid/curly-cloud/pull/3)
 
 ### Phase 5: Integration
 - [ ] PR #3 merged into `feat/mac-os-1984-desktop`
