@@ -57,11 +57,11 @@ export function WorldMapApp() {
         ...chicago,
       }}
     >
-      {/* ── Visited count — top-left ──────────────────────────────────────── */}
+      {/* ── Visited count — bottom-left ───────────────────────────────────── */}
       <div
         style={{
           position: 'absolute',
-          top: 8,
+          bottom: 8,
           left: 10,
           zIndex: 10,
           ...chicago,
