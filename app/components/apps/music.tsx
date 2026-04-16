@@ -489,8 +489,12 @@ export function MusicApp() {
   // ── Normal state: have track data ──────────────────────────────────────────
   // `isOffline` above already guarantees `data.track` is non-null, but the
   // destructure doesn't narrow `track` for TS — assert via non-null.
-  const { isPlaying, genres, artists } = data
+  const { isPlaying, artists } = data
   const track = data.track!
+
+  // Sort genres descending by count so the bar chart renders largest-first
+  // and GenreList's maxCount (genres[0].count) is always the true maximum.
+  const sortedGenres = [...(data.genres ?? [])].sort((a, b) => b.count - a.count)
 
   return (
     <>
@@ -635,7 +639,7 @@ export function MusicApp() {
           >
             Top Genres
           </div>
-          <GenreList genres={genres ?? []} />
+          <GenreList genres={sortedGenres} />
 
           {/* Top Artists */}
           <div
