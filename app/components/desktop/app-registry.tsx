@@ -3,6 +3,7 @@ import { CalculatorApp } from '../apps/calculator'
 import { NotePadApp } from '../apps/note-pad'
 import { ControlPanelApp } from '../apps/control-panel'
 import { FinderApp } from '../apps/finder'
+import { ScrapbookApp } from '../apps/scrapbook'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -201,8 +202,20 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(250px, 55cqw, 420px)',
       height: 'clamp(220px, 60cqh, 380px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Journal'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+      {
+        label: 'View',
+        items: [
+          { label: 'Previous Page', disabled: true },
+          { label: 'Next Page', disabled: true },
+        ],
+      },
+    ],
+    component: ScrapbookApp,
   },
   {
     id: 'world-map',
