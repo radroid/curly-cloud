@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { CalculatorApp } from '../apps/calculator'
+import { NotePadApp } from '../apps/note-pad'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -80,8 +81,27 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(180px, 40cqw, 300px)',
       height: 'clamp(220px, 60cqh, 380px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Note Pad'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [
+          { label: 'Clear Note', disabled: true },
+          { type: 'divider' },
+          { label: 'Close', disabled: true },
+        ],
+      },
+      {
+        label: 'Edit',
+        items: [
+          { label: 'Undo', disabled: true },
+          { type: 'divider' },
+          { label: 'Cut', disabled: true },
+          { label: 'Copy', disabled: true },
+          { label: 'Paste', disabled: true },
+        ],
+      },
+    ],
+    component: NotePadApp,
   },
   {
     id: 'control-panel',
