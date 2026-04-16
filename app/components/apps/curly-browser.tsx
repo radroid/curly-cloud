@@ -11,28 +11,39 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type OpenMode = 'tab' | 'embed'
+
 interface Bookmark {
   label: string
   url: string
+  openMode: OpenMode
 }
 
+type View =
+  | { mode: 'home' }
+  | { mode: 'embed'; url: string; label: string }
+
 // ── Data ──────────────────────────────────────────────────────────────────────
+// Projects open in a real browser tab (iframes would be blocked anyway).
+// Tools open inside the Curly Browser window — real iframes will be blocked
+// by Google/Claude/ChatGPT's frame-ancestors policy, so we show a fallback
+// banner under the iframe pointing users at the real browser.
 
 const PROJECTS: Bookmark[] = [
-  { label: 'Penguin Mail',       url: 'https://www.penguinmail.app/' },
-  { label: 'ARK Experience',     url: 'https://www.funwithark.ca/' },
-  { label: 'Bridger',            url: 'https://bridger.atawalk.ca/' },
-  { label: 'Stella 56 Diamonds', url: 'https://www.stella56diamonds.com/' },
-  { label: 'Playground',         url: 'https://playground.createplus.club/' },
-  { label: 'Couples Budget',     url: 'https://couplesbudget.ca/' },
-  { label: '75 Creates',         url: 'https://75.createplus.club/' },
-  { label: 'KayVee Gems',        url: 'https://kayveegems.com/' },
+  { label: 'Penguin Mail',       url: 'https://www.penguinmail.app/',       openMode: 'tab' },
+  { label: 'ARK Experience',     url: 'https://www.funwithark.ca/',         openMode: 'tab' },
+  { label: 'Bridger',            url: 'https://bridger.atawalk.ca/',        openMode: 'tab' },
+  { label: 'Stella 56 Diamonds', url: 'https://www.stella56diamonds.com/',  openMode: 'tab' },
+  { label: 'Playground',         url: 'https://playground.createplus.club/',openMode: 'tab' },
+  { label: 'Couples Budget',     url: 'https://couplesbudget.ca/',          openMode: 'tab' },
+  { label: '75 Creates',         url: 'https://75.createplus.club/',        openMode: 'tab' },
+  { label: 'KayVee Gems',        url: 'https://kayveegems.com/',            openMode: 'tab' },
 ]
 
 const TOOLS: Bookmark[] = [
-  { label: 'Google',  url: 'https://www.google.com/' },
-  { label: 'Claude',  url: 'https://claude.ai/' },
-  { label: 'ChatGPT', url: 'https://chatgpt.com/' },
+  { label: 'Google',  url: 'https://www.google.com/', openMode: 'embed' },
+  { label: 'Claude',  url: 'https://claude.ai/',      openMode: 'embed' },
+  { label: 'ChatGPT', url: 'https://chatgpt.com/',    openMode: 'embed' },
 ]
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
@@ -43,28 +54,88 @@ const chicago: React.CSSProperties = {
   MozOsxFontSmoothing: 'grayscale',
 }
 
+// ── Icon button (SVG from public/browser-icons/) ──────────────────────────────
+
+function IconButton({
+  src,
+  label,
+  disabled,
+  onClick,
+}: {
+  src: string
+  label: string
+  disabled?: boolean
+  onClick?: () => void
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-label={label}
+      title={label}
+      style={{
+        appearance: 'none',
+        background: 'none',
+        border: 'none',
+        padding: '2px 3px',
+        cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.3 : 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        width={16}
+        height={16}
+        style={{
+          width: 16,
+          height: 16,
+          imageRendering: 'pixelated',
+          display: 'block',
+        }}
+      />
+    </button>
+  )
+}
+
 // ── Bookmark tile ─────────────────────────────────────────────────────────────
 
-function BookmarkTile({ label, url }: Bookmark) {
+function BookmarkTile({
+  bookmark,
+  onOpen,
+}: {
+  bookmark: Bookmark
+  onOpen: (bm: Bookmark) => void
+}) {
   const [hovered, setHovered] = useState(false)
 
   const host = (() => {
     try {
-      return new URL(url).hostname
+      return new URL(bookmark.url).hostname
     } catch {
-      return url
+      return bookmark.url
     }
   })()
 
   const faviconSrc = `https://www.google.com/s2/favicons?domain=${host}&sz=128`
 
-  function openUrl() {
-    window.open(url, '_blank', 'noopener,noreferrer')
+  function handleOpen() {
+    onOpen(bookmark)
+  }
+
+  function openInNewTab() {
+    // Always opens externally regardless of the bookmark's default openMode.
+    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
   }
 
   async function copyLink() {
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(bookmark.url)
     } catch {
       // silently fail — clipboard may be unavailable
     }
@@ -91,12 +162,15 @@ function BookmarkTile({ label, url }: Bookmark) {
           style={tileStyle}
           onMouseEnter={() => setHovered(true)}
           onMouseLeave={() => setHovered(false)}
-          onClick={openUrl}
+          onClick={handleOpen}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openUrl() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') handleOpen()
+          }}
         >
           {/* Favicon */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={faviconSrc}
             alt=""
@@ -125,13 +199,13 @@ function BookmarkTile({ label, url }: Bookmark) {
               lineHeight: 1.2,
             }}
           >
-            {label}
+            {bookmark.label}
           </span>
         </div>
       </ContextMenuTrigger>
 
       <ContextMenuContent>
-        <ContextMenuItem onSelect={openUrl}>
+        <ContextMenuItem onSelect={openInNewTab}>
           Open in New Tab
         </ContextMenuItem>
         <ContextMenuItem onSelect={copyLink}>
@@ -151,7 +225,15 @@ function BookmarkTile({ label, url }: Bookmark) {
 
 // ── Bookmark section ──────────────────────────────────────────────────────────
 
-function BookmarkSection({ title, bookmarks }: { title: string; bookmarks: Bookmark[] }) {
+function BookmarkSection({
+  title,
+  bookmarks,
+  onOpen,
+}: {
+  title: string
+  bookmarks: Bookmark[]
+  onOpen: (bm: Bookmark) => void
+}) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div
@@ -176,8 +258,127 @@ function BookmarkSection({ title, bookmarks }: { title: string; bookmarks: Bookm
         }}
       >
         {bookmarks.map((bm) => (
-          <BookmarkTile key={bm.url} label={bm.label} url={bm.url} />
+          <BookmarkTile key={bm.url} bookmark={bm} onOpen={onOpen} />
         ))}
+      </div>
+    </div>
+  )
+}
+
+// ── Home view (bookmarks grid) ────────────────────────────────────────────────
+
+function HomeView({ onOpen }: { onOpen: (bm: Bookmark) => void }) {
+  return (
+    <>
+      {/* Info banner — only visible on the home page */}
+      <div
+        style={{
+          background: '#FFF8DC',
+          borderBottom: '1px solid #000',
+          padding: '6px 10px',
+          flexShrink: 0,
+        }}
+      >
+        <span
+          style={{
+            ...chicago,
+            fontSize: 12,
+            color: '#000',
+            display: 'block',
+          }}
+        >
+          ⓘ Curly Browser uses iframes, which most sites block for security.
+          Project links open in your real browser instead.
+        </span>
+      </div>
+
+      {/* Bookmarks */}
+      <div
+        style={{
+          flex: 1,
+          overflow: 'auto',
+          padding: '16px 20px',
+          background: '#fff',
+          minHeight: 0,
+        }}
+      >
+        <div
+          style={{
+            ...chicago,
+            fontSize: 18,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            marginBottom: 20,
+          }}
+        >
+          Bookmarks
+        </div>
+
+        <BookmarkSection title="Projects" bookmarks={PROJECTS} onOpen={onOpen} />
+        <BookmarkSection title="Tools" bookmarks={TOOLS} onOpen={onOpen} />
+      </div>
+    </>
+  )
+}
+
+// ── Embed view (iframe + fallback banner) ─────────────────────────────────────
+
+function EmbedView({ url, label }: { url: string; label: string }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        minHeight: 0,
+        background: '#fff',
+      }}
+    >
+      <iframe
+        src={url}
+        title={label}
+        style={{
+          flex: 1,
+          width: '100%',
+          border: 'none',
+          minHeight: 0,
+          background: '#fff',
+        }}
+        sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
+      />
+      {/* Always-visible fallback: most sites set frame-ancestors and the
+         iframe above will come up blank. Give the user a direct escape hatch. */}
+      <div
+        style={{
+          background: '#FFF8DC',
+          borderTop: '1px solid #000',
+          padding: '6px 10px',
+          flexShrink: 0,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          justifyContent: 'space-between',
+        }}
+      >
+        <span style={{ ...chicago, fontSize: 11, color: '#000' }}>
+          ⚠ {label} may block embedding. If the page is blank,
+        </span>
+        <button
+          type="button"
+          onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
+          style={{
+            ...chicago,
+            fontSize: 11,
+            border: '1px solid #000',
+            background: '#fff',
+            padding: '2px 8px',
+            cursor: 'pointer',
+            flexShrink: 0,
+          }}
+        >
+          Open in real browser →
+        </button>
       </div>
     </div>
   )
@@ -186,6 +387,25 @@ function BookmarkSection({ title, bookmarks }: { title: string; bookmarks: Bookm
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function CurlyBrowserApp() {
+  const [view, setView] = useState<View>({ mode: 'home' })
+
+  function openBookmark(bm: Bookmark) {
+    if (bm.openMode === 'tab') {
+      window.open(bm.url, '_blank', 'noopener,noreferrer')
+    } else {
+      setView({ mode: 'embed', url: bm.url, label: bm.label })
+    }
+  }
+
+  function goHome() {
+    setView({ mode: 'home' })
+  }
+
+  const isHome = view.mode === 'home'
+  const currentUrl = isHome
+    ? 'file:///Curly OS/Home.html'
+    : view.url
+
   return (
     <div
       style={{
@@ -202,68 +422,34 @@ export function CurlyBrowserApp() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 6,
+          gap: 4,
           padding: '4px 8px',
           borderBottom: '1px solid #000',
           background: '#fff',
           flexShrink: 0,
         }}
       >
-        {/* Back button — disabled */}
-        <button
+        <IconButton
+          src="/browser-icons/back.svg"
+          label="Back"
+          disabled={isHome}
+          onClick={goHome}
+        />
+        <IconButton
+          src="/browser-icons/forward.svg"
+          label="Forward"
           disabled
-          style={{
-            ...chicago,
-            fontSize: 14,
-            color: '#aaa',
-            background: 'none',
-            border: 'none',
-            cursor: 'default',
-            padding: '0 2px',
-            lineHeight: 1,
-          }}
-          aria-label="Back (disabled)"
-        >
-          ◀
-        </button>
+        />
+        <IconButton
+          src="/browser-icons/home.svg"
+          label="Home"
+          disabled={isHome}
+          onClick={goHome}
+        />
 
-        {/* Forward button — disabled */}
-        <button
-          disabled
-          style={{
-            ...chicago,
-            fontSize: 14,
-            color: '#aaa',
-            background: 'none',
-            border: 'none',
-            cursor: 'default',
-            padding: '0 2px',
-            lineHeight: 1,
-          }}
-          aria-label="Forward (disabled)"
-        >
-          ▶
-        </button>
-
-        {/* Home — decorative */}
-        <span
-          style={{
-            ...chicago,
-            fontSize: 13,
-            color: '#000',
-            padding: '0 4px',
-            userSelect: 'none',
-          }}
-          title="Home"
-          aria-label="Home"
-        >
-          ⌂
-        </span>
-
-        {/* Spacer */}
         <div style={{ flex: 1 }} />
 
-        {/* Address bar — read-only */}
+        {/* Address bar — read-only, reflects current view */}
         <div
           style={{
             ...chicago,
@@ -279,60 +465,18 @@ export function CurlyBrowserApp() {
             whiteSpace: 'nowrap',
             userSelect: 'none',
           }}
-          title="file:///Curly OS/Home.html"
+          title={currentUrl}
         >
-          file:///Curly OS/Home.html
+          {currentUrl}
         </div>
       </div>
 
-      {/* ── Info banner ──────────────────────────────────────────────────── */}
-      <div
-        style={{
-          background: '#FFF8DC',
-          borderBottom: '1px solid #000',
-          borderTop: '1px solid #000',
-          padding: '6px 10px',
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            ...chicago,
-            fontSize: 12,
-            color: '#000',
-            display: 'block',
-          }}
-        >
-          ⓘ Curly Browser uses iframes, which most sites block for security. Links open in your real browser instead.
-        </span>
-      </div>
-
-      {/* ── Bookmarks home page ───────────────────────────────────────────── */}
-      <div
-        style={{
-          flex: 1,
-          overflow: 'auto',
-          padding: '16px 20px',
-          background: '#fff',
-          minHeight: 0,
-        }}
-      >
-        {/* Heading */}
-        <div
-          style={{
-            ...chicago,
-            fontSize: 18,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: 20,
-          }}
-        >
-          Bookmarks
-        </div>
-
-        <BookmarkSection title="Projects" bookmarks={PROJECTS} />
-        <BookmarkSection title="Tools" bookmarks={TOOLS} />
-      </div>
+      {/* ── Content: home or embed ──────────────────────────────────────── */}
+      {isHome ? (
+        <HomeView onOpen={openBookmark} />
+      ) : (
+        <EmbedView url={view.url} label={view.label} />
+      )}
     </div>
   )
 }
