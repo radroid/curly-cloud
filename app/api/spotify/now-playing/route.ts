@@ -1,4 +1,20 @@
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+export const fetchCache = 'force-no-store'
+
+// Response headers that prevent both browser and Cloudflare edge from
+// caching the response. Without these, the Recently Played list can get
+// stuck on a stale copy from the first request even though the client
+// polls every 10s.
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+  'CDN-Cache-Control': 'no-store',
+  'Cloudflare-CDN-Cache-Control': 'no-store',
+} as const
+
+function json(body: unknown, status = 200) {
+  return Response.json(body, { status, headers: NO_CACHE_HEADERS })
+}
 
 export async function GET() {
   const clientId = process.env.SPOTIFY_CLIENT_ID
@@ -6,10 +22,7 @@ export async function GET() {
   const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN
 
   if (!clientId || !clientSecret || !refreshToken) {
-    return Response.json(
-      { error: 'Spotify env vars not configured', isPlaying: false, track: null },
-      { status: 200 },
-    )
+    return json({ error: 'Spotify env vars not configured', isPlaying: false, track: null })
   }
 
   // 1. Exchange refresh token for access token
@@ -26,10 +39,7 @@ export async function GET() {
   })
 
   if (!tokenRes.ok) {
-    return Response.json(
-      { error: 'Spotify token refresh failed', isPlaying: false, track: null },
-      { status: 200 },
-    )
+    return json({ error: 'Spotify token refresh failed', isPlaying: false, track: null })
   }
 
   const { access_token } = await tokenRes.json() as { access_token: string }
@@ -48,7 +58,7 @@ export async function GET() {
       cache: 'no-store',
     })
     if (!recentRes.ok) {
-      return Response.json({ isPlaying: false, track: null, recent: [] }, { status: 200 })
+      return json({ isPlaying: false, track: null, recent: [] })
     }
     const data = await recentRes.json() as any
     const items = (data.items ?? []).map((item: any) => ({
@@ -59,24 +69,21 @@ export async function GET() {
       spotifyUrl: item.track?.external_urls?.spotify ?? null,
       playedAt: item.played_at,
     }))
-    return Response.json({
+    return json({
       isPlaying: false,
       track: items[0] ?? null,
       recent: items,
-    }, { status: 200 })
+    })
   }
 
   if (!nowRes.ok) {
-    return Response.json(
-      { error: 'Spotify currently-playing failed', isPlaying: false, track: null },
-      { status: 200 },
-    )
+    return json({ error: 'Spotify currently-playing failed', isPlaying: false, track: null })
   }
 
   const nowData = await nowRes.json() as any
   const item = nowData?.item
   if (!item) {
-    return Response.json({ isPlaying: false, track: null, recent: [] }, { status: 200 })
+    return json({ isPlaying: false, track: null, recent: [] })
   }
 
   // 3. Also grab recent tracks for the playlist column
@@ -97,7 +104,7 @@ export async function GET() {
     }))
   }
 
-  return Response.json({
+  return json({
     isPlaying: nowData.is_playing === true,
     track: {
       name: item.name ?? 'Unknown',
@@ -109,5 +116,5 @@ export async function GET() {
       durationMs: item.duration_ms ?? 0,
     },
     recent,
-  }, { status: 200 })
+  })
 }

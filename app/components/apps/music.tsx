@@ -356,7 +356,12 @@ export function MusicApp() {
 
     async function load() {
       try {
-        const res = await fetch('/api/spotify/now-playing', { cache: 'no-store' })
+        // Cache-bust via timestamp query param so no layer (browser, SW,
+        // Cloudflare edge, OpenNext) can serve a stale Recently Played list.
+        const res = await fetch(`/api/spotify/now-playing?t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        })
         if (!res.ok) throw new Error('bad status')
         const json = await res.json()
         if (!cancelled) {
