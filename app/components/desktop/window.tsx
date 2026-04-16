@@ -207,61 +207,100 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         ...zoomStyle,
       }}
     >
-      {/* Title bar */}
+      {/* Title bar — outer provides the white top/bottom inset around the
+         active-state stripes, inner holds the stripes + close/title */}
       <div
-        data-window-titlebar
         style={{
-          height: 18,
+          background: '#fff',
           borderBottom: '1px solid #000',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 3px',
-          cursor: 'grab',
-          background: isActive ? titleBarActiveBg : '#fff',
+          padding: '2px 4px',
           flexShrink: 0,
           userSelect: 'none',
         }}
       >
-        <button
-          type="button"
-          data-window-close
-          aria-label="Close"
-          onClick={(e) => {
-            e.stopPropagation()
-            closeApp(app.id)
-          }}
+        <div
+          data-window-titlebar
           style={{
-            appearance: 'none',
-            width: 11,
-            height: 11,
-            background: '#fff',
-            border: '1px solid #000',
-            padding: 0,
-            cursor: 'pointer',
-            flexShrink: 0,
+            height: 14,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
+            cursor: 'grab',
+            background: isActive ? titleBarActiveBg : '#fff',
           }}
         >
-          <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true" style={{ display: 'block' }}>
-            <path d="M2 2 L7 7 M7 2 L2 7" stroke="#000" strokeWidth="1" strokeLinecap="square" />
-          </svg>
-        </button>
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 'bold',
-            letterSpacing: 0.3,
-            background: '#fff',
-            padding: '0 6px',
-          }}
-        >
-          {app.name}
-        </span>
-        {/* Spacer matching close box width so the title centers */}
-        <span style={{ width: 11, flexShrink: 0 }} />
+          {/* Close box with a small white pad so the stripes don't touch it */}
+          <span
+            style={{
+              background: '#fff',
+              padding: '0 4px',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              type="button"
+              data-window-close
+              aria-label="Close"
+              onClick={(e) => {
+                e.stopPropagation()
+                closeApp(app.id)
+              }}
+              style={{
+                appearance: 'none',
+                width: 11,
+                height: 11,
+                background: '#fff',
+                border: '1px solid #000',
+                padding: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <svg
+                width="9"
+                height="9"
+                viewBox="0 0 9 9"
+                aria-hidden="true"
+                style={{ display: 'block' }}
+              >
+                <path
+                  d="M2 2 L7 7 M7 2 L2 7"
+                  stroke="#000"
+                  strokeWidth="1"
+                  strokeLinecap="square"
+                />
+              </svg>
+            </button>
+          </span>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 'bold',
+              letterSpacing: 0.3,
+              background: '#fff',
+              padding: '0 8px',
+            }}
+          >
+            {app.name}
+          </span>
+          {/* Mirror the close-box cluster on the right so the title stays centered */}
+          <span
+            style={{
+              background: '#fff',
+              padding: '0 4px',
+              display: 'flex',
+              alignItems: 'center',
+              flexShrink: 0,
+              width: 11,
+              height: 11,
+              boxSizing: 'content-box',
+            }}
+          />
+        </div>
       </div>
 
       {/* Content */}
