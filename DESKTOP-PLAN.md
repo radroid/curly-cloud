@@ -614,9 +614,11 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 - [x] Commit 10: Window — inset focus-state horizontal lines, clean gap around close box *(added from live review)*
 - [x] Commit 11: Scrapbook — correct blog post year 2025 → 2026 *(added from live review)*
 - [x] Commit 12: Polish — larger Control Panel avatar + tighter title-bar stripe inset *(added from live review)*
-- [ ] Commit 13: Curly Browser
-- [ ] Commit 14: World Map
-- [ ] Commit 15: Music (Spotify API route + vinyl UI) — gated on refresh token
+- [x] Commit 13: Polish — Control Panel avatar + tighter title-bar stripe inset (v2) *(live review)*
+- [x] Commit 14: Window — stripes reach window edges with close box sitting on them (v3) *(live review)*
+- [x] Commit 15: Curly Browser
+- [x] Commit 16: World Map
+- [ ] Commit 17: Music (Spotify API route + vinyl UI) — gated on refresh token
 - [ ] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop`
 
 ### Phase 5: Integration
