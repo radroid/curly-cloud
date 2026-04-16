@@ -24,7 +24,7 @@ interface TopData {
 async function fetchTopData(accessToken: string): Promise<TopData> {
   try {
     const res = await fetch(
-      'https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term',
+      'https://api.spotify.com/v1/me/top/artists?limit=50&time_range=medium_term',
       { headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' },
     )
     if (!res.ok) return { genres: [], artists: [] }
