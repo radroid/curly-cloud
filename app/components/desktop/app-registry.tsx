@@ -6,6 +6,7 @@ import { FinderApp } from '../apps/finder'
 import { ScrapbookApp } from '../apps/scrapbook'
 import { CurlyBrowserApp } from '../apps/curly-browser'
 import { WorldMapApp } from '../apps/world-map'
+import { MusicApp } from '../apps/music'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -274,11 +275,23 @@ export const APP_REGISTRY: AppDefinition[] = [
     name: 'Music',
     iconSrc: '/app-icons/music.svg',
     defaultSize: {
-      width: 'clamp(180px, 40cqw, 300px)',
-      height: 'clamp(220px, 60cqh, 380px)',
+      width: 'clamp(320px, 60cqw, 480px)',
+      height: 'clamp(220px, 55cqh, 340px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Music'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+      {
+        label: 'View',
+        items: [
+          { label: 'Now Playing', disabled: true },
+          { label: 'Recently Played', disabled: true },
+        ],
+      },
+    ],
+    component: MusicApp,
   },
   {
     id: 'trash',
