@@ -56,6 +56,36 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
     return () => clearTimeout(t)
   }, [prefersReduced])
 
+  // Clamp position so the window stays within the container bounds.
+  // Runs once after mount (when CSS clamp() sizes have resolved) and
+  // adjusts the position if the window overflows right or bottom.
+  useLayoutEffect(() => {
+    const el = windowRef.current
+    const container = containerRef.current
+    if (!el || !container || !state?.isOpen || state.isFullscreen) return
+    // Wait a frame so CSS clamp() sizes have resolved
+    const raf = requestAnimationFrame(() => {
+      const cRect = container.getBoundingClientRect()
+      const wRect = el.getBoundingClientRect()
+      if (cRect.width === 0 || cRect.height === 0) return
+      const currentX = state.position.x
+      const currentY = state.position.y
+      const wRatioX = wRect.width / cRect.width
+      const wRatioY = wRect.height / cRect.height
+      const maxX = Math.max(0, 1 - wRatioX)
+      const maxY = Math.max(0, 1 - wRatioY)
+      if (currentX > maxX || currentY > maxY) {
+        setSkipTransition(true)
+        moveWindow(app.id, {
+          x: Math.min(currentX, maxX),
+          y: Math.min(currentY, maxY),
+        })
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.isOpen, state?.openedAt])
+
   // Drag wiring — direct DOM `transform` manipulation during drag so the
   // window tracks the cursor 1:1 without going through React state. Only
   // the final position is committed via moveWindow on mouseup.
