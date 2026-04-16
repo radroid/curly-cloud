@@ -111,10 +111,12 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
         {/* Windows layer */}
         {Object.values(windows).map((w) => {
           const app = APP_REGISTRY.find((a) => a.id === w.appId)
-          if (!app) return null
+          // Render both registry apps and dynamic windows (e.g. Finder previews)
+          if (!app && !w.content) return null
           return (
             <Window
-              key={app.id}
+              key={w.appId}
+              windowId={w.appId}
               app={app}
               containerRef={containerRef}
               prefersReduced={prefersReduced}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
+import { useWindowManager } from '../desktop/window-manager'
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -155,223 +156,7 @@ function countItems(entries: FSEntry[]): number {
   return entries.length
 }
 
-// ─── Preview overlay ─────────────────────────────────────────────────────────
-
-type PreviewProps = {
-  entry: FileEntry
-  onClose: () => void
-}
-
-function PreviewOverlay({ entry, onClose }: PreviewProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
-
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === overlayRef.current) onClose()
-  }
-
-  const imageExts = ['.svg', '.png', '.webp', '.jpg', '.jpeg']
-  const audioExts = ['.wav', '.mp3']
-  const fontExts  = ['.woff', '.woff2', '.ttf', '.otf']
-
-  let content: React.ReactNode
-
-  if (imageExts.includes(entry.ext)) {
-    content = (
-      <img
-        src={entry.path}
-        alt={entry.label}
-        style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
-      />
-    )
-  } else if (entry.ext === '.pdf') {
-    content = (
-      <iframe
-        src={entry.path}
-        title={entry.label}
-        style={{ width: '100%', height: '100%', border: 'none' }}
-      />
-    )
-  } else if (audioExts.includes(entry.ext)) {
-    content = (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-          padding: 16,
-          fontFamily: 'var(--font-chicago)',
-          fontSize: 13,
-        }}
-      >
-        <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <audio controls src={entry.path} style={{ fontFamily: 'var(--font-chicago)' }} />
-      </div>
-    )
-  } else if (fontExts.includes(entry.ext)) {
-    const fontFaceName = `preview-font-${entry.label.replace(/\s+/g, '-')}`
-    content = (
-      <div
-        style={{
-          padding: 16,
-          fontFamily: 'var(--font-chicago)',
-          fontSize: 13,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-        }}
-      >
-        <style>{`@font-face { font-family: '${fontFaceName}'; src: url('${entry.path}'); }`}</style>
-        <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
-        <div style={{ fontSize: 12, color: '#555' }}>
-          Font file — right-click and choose Download to save.
-        </div>
-        <div
-          style={{
-            fontFamily: `'${fontFaceName}', monospace`,
-            fontSize: 20,
-            marginTop: 8,
-            borderTop: '1px solid #000',
-            paddingTop: 8,
-          }}
-        >
-          The quick brown fox jumps over the lazy dog.
-        </div>
-        <div
-          style={{
-            fontFamily: `'${fontFaceName}', monospace`,
-            fontSize: 14,
-          }}
-        >
-          ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />
-          abcdefghijklmnopqrstuvwxyz<br />
-          0123456789
-        </div>
-      </div>
-    )
-  } else {
-    content = (
-      <div
-        style={{
-          padding: 16,
-          fontFamily: 'var(--font-chicago)',
-          fontSize: 13,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 8,
-        }}
-      >
-        <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
-        <div>Preview not available for this file type.</div>
-        <div style={{ color: '#555', fontSize: 11 }}>
-          Right-click the file and choose Download to save it.
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div
-      ref={overlayRef}
-      onClick={handleOverlayClick}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background: 'rgba(0,0,0,0.35)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
-    >
-      <div
-        style={{
-          background: '#fff',
-          border: '2px solid #000',
-          boxShadow: '3px 3px 0 #000',
-          width: entry.ext === '.pdf' ? '90%' : '80%',
-          height: entry.ext === '.pdf' ? '90%' : 'auto',
-          maxHeight: '85%',
-          maxWidth: 520,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          fontFamily: 'var(--font-chicago)',
-        }}
-      >
-        {/* Preview title bar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '3px 6px',
-            borderBottom: '1px solid #000',
-            background: 'repeating-linear-gradient(to bottom, #000 0 1px, #fff 1px 2px)',
-            flexShrink: 0,
-            height: 18,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 'bold',
-              background: '#fff',
-              padding: '0 6px',
-              fontFamily: 'var(--font-chicago)',
-            }}
-          >
-            {entry.label}
-          </span>
-          <button
-            type="button"
-            aria-label="Close preview"
-            onClick={onClose}
-            style={{
-              appearance: 'none',
-              width: 11,
-              height: 11,
-              background: '#fff',
-              border: '1px solid #000',
-              padding: 0,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true" style={{ display: 'block' }}>
-              <path d="M2 2 L7 7 M7 2 L2 7" stroke="#000" strokeWidth="1" strokeLinecap="square" />
-            </svg>
-          </button>
-        </div>
-        {/* Preview content */}
-        <div
-          style={{
-            flex: 1,
-            overflow: 'auto',
-            display: 'flex',
-            alignItems: entry.ext === '.pdf' ? 'stretch' : 'center',
-            justifyContent: 'center',
-            padding: entry.ext === '.pdf' ? 0 : 12,
-            minHeight: 0,
-          }}
-        >
-          {content}
-        </div>
-      </div>
-    </div>
-  )
-}
+// Preview content is now rendered inside dynamic windows — see previewContent() above
 
 // ─── Download helper ─────────────────────────────────────────────────────────
 
@@ -515,11 +300,64 @@ function ContextGridItem({ entry, selected, onSelect, onOpen, onPreview }: Conte
 
 // ─── Main FinderApp ──────────────────────────────────────────────────────────
 
+function previewContent(entry: FileEntry): React.ReactNode {
+  const imageExts = ['.svg', '.png', '.webp', '.jpg', '.jpeg']
+  const audioExts = ['.wav', '.mp3']
+  const fontExts  = ['.woff', '.woff2', '.ttf', '.otf']
+
+  if (imageExts.includes(entry.ext)) {
+    return (
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 12 }}>
+        <img
+          src={entry.path}
+          alt={entry.label}
+          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+        />
+      </div>
+    )
+  }
+  if (entry.ext === '.pdf') {
+    return <iframe src={entry.path} title={entry.label} style={{ width: '100%', height: '100%', border: 'none', flex: 1 }} />
+  }
+  if (audioExts.includes(entry.ext)) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: 16, fontFamily: 'var(--font-chicago)', fontSize: 13 }}>
+        <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+        <audio controls src={entry.path} />
+      </div>
+    )
+  }
+  if (fontExts.includes(entry.ext)) {
+    const fontFaceName = `preview-font-${entry.label.replace(/\s+/g, '-')}`
+    return (
+      <div style={{ padding: 16, fontFamily: 'var(--font-chicago)', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <style>{`@font-face { font-family: '${fontFaceName}'; src: url('${entry.path}'); }`}</style>
+        <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
+        <div style={{ fontSize: 12, color: '#555' }}>Font file — right-click and choose Download to save.</div>
+        <div style={{ fontFamily: `'${fontFaceName}', monospace`, fontSize: 20, marginTop: 8, borderTop: '1px solid #000', paddingTop: 8 }}>
+          The quick brown fox jumps over the lazy dog.
+        </div>
+        <div style={{ fontFamily: `'${fontFaceName}', monospace`, fontSize: 14 }}>
+          ABCDEFGHIJKLMNOPQRSTUVWXYZ<br />abcdefghijklmnopqrstuvwxyz<br />0123456789
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ padding: 16, fontFamily: 'var(--font-chicago)', fontSize: 13, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontWeight: 'bold' }}>{entry.label}</div>
+      <div>Preview not available for this file type.</div>
+      <div style={{ color: '#555', fontSize: 11 }}>Right-click the file and choose Download to save it.</div>
+    </div>
+  )
+}
+
 export function FinderApp() {
   // Path stack: null = root, string = folder id
   const [pathStack, setPathStack] = useState<string[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [preview, setPreview] = useState<FileEntry | null>(null)
+  const { openWindow } = useWindowManager()
 
   // Resolve current folder entries
   const currentEntries: FSEntry[] = (() => {
@@ -549,9 +387,15 @@ export function FinderApp() {
       setPathStack((prev) => [...prev, entry.id])
       setSelectedId(null)
     } else {
-      setPreview(entry)
+      const isPdf = entry.ext === '.pdf'
+      openWindow(`preview-${entry.path}`, {
+        title: entry.label,
+        size: { width: isPdf ? 500 : 400, height: isPdf ? 450 : 350 },
+        resizable: true,
+        content: previewContent(entry),
+      })
     }
-  }, [])
+  }, [openWindow])
 
   const handleBack = useCallback(() => {
     setPathStack((prev) => prev.slice(0, -1))
@@ -645,7 +489,7 @@ export function FinderApp() {
               selected={selectedId === id}
               onSelect={() => setSelectedId(id)}
               onOpen={() => handleOpen(entry)}
-              onPreview={entry.kind === 'file' ? setPreview : null}
+              onPreview={null}
             />
           )
         })}
@@ -665,13 +509,6 @@ export function FinderApp() {
         {statusText}
       </div>
 
-      {/* Preview overlay */}
-      {preview && (
-        <PreviewOverlay
-          entry={preview}
-          onClose={() => setPreview(null)}
-        />
-      )}
     </div>
   )
 }

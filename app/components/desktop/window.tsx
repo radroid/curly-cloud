@@ -8,16 +8,17 @@ const DRAG_THRESHOLD_PX = 5
 const OPEN_ANIM_MS = 220
 
 type WindowProps = {
-  app: AppDefinition
+  app?: AppDefinition
+  windowId: string
   containerRef: RefObject<HTMLDivElement | null>
   prefersReduced: boolean
 }
 
 type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
-export function Window({ app, containerRef, prefersReduced }: WindowProps) {
+export function Window({ app, windowId, containerRef, prefersReduced }: WindowProps) {
   const { windows, activeWindowId, closeApp, focusApp, moveWindow, resizeWindow, toggleFullscreen } = useWindowManager()
-  const state = windows[app.id]
+  const state = windows[windowId]
   const windowRef = useRef<HTMLDivElement>(null)
   const [contentReady, setContentReady] = useState(false)
   const [openAnimPlayed, setOpenAnimPlayed] = useState(false)
@@ -25,7 +26,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
   // transitions so the final position snaps in without a ghost animation.
   const [skipTransition, setSkipTransition] = useState(false)
 
-  const isActive = activeWindowId === app.id
+  const isActive = activeWindowId === windowId
 
   // Zoom-from-origin: first render shows the window at the clicked-icon rect,
   // then after a double raf we flip to the normal position so CSS transitions
@@ -76,7 +77,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       const maxY = Math.max(0, 1 - wRatioY)
       if (currentX > maxX || currentY > maxY) {
         setSkipTransition(true)
-        moveWindow(app.id, {
+        moveWindow(windowId, {
           x: Math.min(currentX, maxX),
           y: Math.min(currentY, maxY),
         })
@@ -142,7 +143,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       started = false
       // Disable CSS transitions while dragging so tracking is 1:1
       el.style.transition = 'none'
-      focusApp(app.id)
+      focusApp(windowId)
       e.preventDefault()
     }
 
@@ -178,7 +179,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         // Skip transition for one render so the commit is atomic with the
         // DOM's current visual position — no snap-back or ghost animation.
         setSkipTransition(true)
-        moveWindow(app.id, { x: newX, y: newY })
+        moveWindow(windowId, { x: newX, y: newY })
       } else {
         // Click without movement — restore transitions for any future changes.
         el.style.transition = ''
@@ -195,13 +196,14 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       document.removeEventListener('mouseup', onUp)
       if (rafId) cancelAnimationFrame(rafId)
     }
-  }, [app.id, containerRef, focusApp, moveWindow])
+  }, [windowId, containerRef, focusApp, moveWindow])
 
   // Resize wiring — similar pattern to drag, but adjusts size + position
   useEffect(() => {
     const el = windowRef.current
     if (!el) return
-    if (app.resizable === false) return
+    const resizable = app ? app.resizable !== false : (state?.dynamicResizable ?? true)
+    if (!resizable) return
 
     const handles = el.querySelectorAll<HTMLDivElement>('[data-resize-edge]')
     if (handles.length === 0) return
@@ -221,8 +223,8 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
     let currentTopPx = 0
     let rafId = 0
 
-    const minW = app.minSize?.width ?? 150
-    const minH = app.minSize?.height ?? 100
+    const minW = app?.minSize?.width ?? 150
+    const minH = app?.minSize?.height ?? 100
 
     const applyResize = () => {
       rafId = 0
@@ -267,7 +269,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       resizing = true
 
       el.style.transition = 'none'
-      focusApp(app.id)
+      focusApp(windowId)
       e.preventDefault()
       e.stopPropagation()
     }
@@ -307,7 +309,7 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       }
 
       // Apply max constraints if defined
-      if (app.maxSize) {
+      if (app?.maxSize) {
         newW = Math.min(newW, app.maxSize.width)
         newH = Math.min(newH, app.maxSize.height)
       }
@@ -334,12 +336,12 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
 
       if (containerRect.width > 0 && containerRect.height > 0) {
         setSkipTransition(true)
-        resizeWindow(app.id, { width: currentWidthPx, height: currentHeightPx })
+        resizeWindow(windowId, { width: currentWidthPx, height: currentHeightPx })
         // If the left or top edge moved, update position too
         if (currentLeftPx !== startLeftPx || currentTopPx !== startTopPx) {
           const newX = currentLeftPx / containerRect.width
           const newY = currentTopPx / containerRect.height
-          moveWindow(app.id, { x: newX, y: newY })
+          moveWindow(windowId, { x: newX, y: newY })
         }
       } else {
         el.style.transition = ''
@@ -355,13 +357,17 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       document.removeEventListener('mouseup', onUp)
       if (rafId) cancelAnimationFrame(rafId)
     }
-  }, [app.id, app.resizable, app.minSize, app.maxSize, containerRef, focusApp, moveWindow, resizeWindow])
+  }, [windowId, app?.resizable, app?.minSize, app?.maxSize, containerRef, focusApp, moveWindow, resizeWindow])
 
   if (!state || !state.isOpen) return null
 
   // Determine width/height — fullscreen > user resize > default
   const isFullscreen = !!state.isFullscreen
   const hasUserSize = !!state.size
+
+  // Default size: app registry clamp() string, or dynamic px size
+  const defaultWidth = app ? app.defaultSize.width : `${state.dynamicSize?.width ?? 400}px`
+  const defaultHeight = app ? app.defaultSize.height : `${state.dynamicSize?.height ?? 300}px`
 
   const normalStyle: React.CSSProperties = isFullscreen
     ? {
@@ -370,8 +376,8 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
     : {
         left: `${state.position.x * 100}%`,
         top: `${state.position.y * 100}%`,
-        width: hasUserSize ? `${state.size!.width}px` : app.defaultSize.width,
-        height: hasUserSize ? `${state.size!.height}px` : app.defaultSize.height,
+        width: hasUserSize ? `${state.size!.width}px` : defaultWidth,
+        height: hasUserSize ? `${state.size!.height}px` : defaultHeight,
       }
 
   const zoomStyle: React.CSSProperties = atOrigin && state.fromOrigin
@@ -383,14 +389,15 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
       }
     : normalStyle
 
-  const showResizeHandles = app.resizable !== false && !isFullscreen
+  const isResizable = app ? app.resizable !== false : (state.dynamicResizable ?? true)
+  const showResizeHandles = isResizable && !isFullscreen
 
   return (
     <div
       ref={windowRef}
       role="dialog"
-      aria-label={app.name}
-      onMouseDown={() => focusApp(app.id)}
+      aria-label={state.title ?? app?.name ?? windowId}
+      onMouseDown={() => focusApp(windowId)}
       style={{
         position: 'absolute',
         boxSizing: 'border-box',
@@ -434,11 +441,11 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
         >
           {/* Close box + fullscreen toggle */}
           <span style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
-            <CloseButton onClose={() => closeApp(app.id)} />
-            {app.fullscreenable !== false && (
+            <CloseButton onClose={() => closeApp(windowId)} />
+            {app?.fullscreenable !== false && (
               <FullscreenButton
                 isFullscreen={isFullscreen}
-                onToggle={() => toggleFullscreen(app.id)}
+                onToggle={() => toggleFullscreen(windowId)}
               />
             )}
           </span>
@@ -453,14 +460,14 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
               padding: '0 10px',
             }}
           >
-            {app.name}
+            {state.title ?? app?.name ?? windowId}
           </span>
 
           {/* Transparent mirror spacer — same total width as left buttons
               so the title stays centered */}
           <span
             aria-hidden="true"
-            style={{ width: app.fullscreenable !== false ? 25 : 11, height: 11, flexShrink: 0, display: 'block' }}
+            style={{ width: app?.fullscreenable !== false ? 25 : 11, height: 11, flexShrink: 0, display: 'block' }}
           />
         </div>
       </div>
@@ -472,14 +479,14 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
-          overflow: app.showScrollbar ? 'auto' : 'hidden',
+          overflow: app?.showScrollbar || state.content ? 'auto' : 'hidden',
         }}
       >
-        {contentReady ? <app.component /> : null}
+        {contentReady ? (state.content ?? (app && <app.component />)) : null}
       </div>
 
       {/* Optional status bar */}
-      {app.statusBar && (
+      {app?.statusBar && (
         <div
           style={{
             borderTop: '1px solid #000',

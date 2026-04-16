@@ -13,6 +13,11 @@ export type WindowState = {
   openedAt: number // timestamp for "first open" checks and animation keys
   size?: { width: number; height: number } // pixel override when user resizes
   isFullscreen?: boolean
+  // Dynamic window metadata (for windows not in APP_REGISTRY, e.g. Finder previews)
+  title?: string
+  dynamicSize?: { width: number; height: number }
+  dynamicResizable?: boolean
+  content?: React.ReactNode
 }
 
 type WindowsRecord = Record<string, WindowState>
@@ -29,6 +34,12 @@ type WindowManagerContextType = {
   moveWindow: (appId: string, pos: { x: number; y: number }) => void
   resizeWindow: (appId: string, size: { width: number; height: number }) => void
   toggleFullscreen: (appId: string) => void
+  openWindow: (windowId: string, config: {
+    title: string
+    size: { width: number; height: number }
+    resizable?: boolean
+    content: React.ReactNode
+  }) => void
 }
 
 const WindowManagerContext = createContext<WindowManagerContextType | null>(null)
@@ -149,6 +160,36 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     })
   }, [])
 
+  const openWindow = useCallback((windowId: string, config: {
+    title: string
+    size: { width: number; height: number }
+    resizable?: boolean
+    content: React.ReactNode
+  }) => {
+    setWindows((prev) => {
+      const existing = prev[windowId]
+      if (existing && existing.isOpen) {
+        return focusReshuffle(prev, windowId)
+      }
+      const count = countOpen(prev)
+      const position = nextCascadePosition(topmost(prev))
+      return {
+        ...prev,
+        [windowId]: {
+          appId: windowId,
+          position,
+          zIndex: count,
+          isOpen: true,
+          openedAt: Date.now(),
+          title: config.title,
+          dynamicSize: config.size,
+          dynamicResizable: config.resizable ?? true,
+          content: config.content,
+        },
+      }
+    })
+  }, [])
+
   const value: WindowManagerContextType = {
     windows,
     activeWindowId,
@@ -161,6 +202,7 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     moveWindow,
     resizeWindow,
     toggleFullscreen,
+    openWindow,
   }
 
   return <WindowManagerContext.Provider value={value}>{children}</WindowManagerContext.Provider>
