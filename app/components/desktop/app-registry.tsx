@@ -40,6 +40,7 @@ export type AppDefinition = {
   showScrollbar?: boolean
   statusBar?: ReactNode
   resizable?: boolean
+  fullscreenable?: boolean
   minSize?: { width: number; height: number }
   maxSize?: { width: number; height: number }
 }
@@ -186,6 +187,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'calculator',
     name: 'Calculator',
     iconSrc: '/app-icons/calculator.svg',
+    fullscreenable: false,
     defaultSize: {
       width: 'clamp(120px, 25cqw, 200px)',
       height: 'clamp(180px, 45cqh, 280px)',

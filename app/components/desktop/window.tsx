@@ -405,10 +405,12 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
           {/* Close box + fullscreen toggle */}
           <span style={{ display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0 }}>
             <CloseButton onClose={() => closeApp(app.id)} />
-            <FullscreenButton
-              isFullscreen={isFullscreen}
-              onToggle={() => toggleFullscreen(app.id)}
-            />
+            {app.fullscreenable !== false && (
+              <FullscreenButton
+                isFullscreen={isFullscreen}
+                onToggle={() => toggleFullscreen(app.id)}
+              />
+            )}
           </span>
 
           {/* Title text cuts a white hole in the stripes */}
@@ -424,11 +426,11 @@ export function Window({ app, containerRef, prefersReduced }: WindowProps) {
             {app.name}
           </span>
 
-          {/* Transparent mirror spacer — same total width as close+fullscreen+gap
+          {/* Transparent mirror spacer — same total width as left buttons
               so the title stays centered */}
           <span
             aria-hidden="true"
-            style={{ width: 25, height: 11, flexShrink: 0, display: 'block' }}
+            style={{ width: app.fullscreenable !== false ? 25 : 11, height: 11, flexShrink: 0, display: 'block' }}
           />
         </div>
       </div>
