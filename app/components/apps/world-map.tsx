@@ -238,27 +238,31 @@ export function WorldMapApp() {
       </div>
 
       {/* ── Tooltip ───────────────────────────────────────────────────────── */}
-      {tooltip.name !== null && tooltip.name !== '' && (
-        <div
-          style={{
-            position: 'fixed',
-            left: tooltip.x + 12,
-            top: tooltip.y + 12,
-            zIndex: 9999,
-            background: '#fff',
-            border: '1px solid #000',
-            padding: '5px 7px',
-            ...chicago,
-            fontSize: 12,
-            lineHeight: 1,
-            pointerEvents: 'none',
-            userSelect: 'none',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {tooltip.name}
-        </div>
-      )}
+      {tooltip.name !== null && tooltip.name !== '' && (() => {
+        const visited = VISITED.has(tooltip.name)
+        return (
+          <div
+            style={{
+              position: 'fixed',
+              left: tooltip.x + 12,
+              top: tooltip.y + 12,
+              zIndex: 9999,
+              background: visited ? '#000' : '#fff',
+              color: visited ? '#fff' : '#000',
+              border: '1px solid #000',
+              padding: '5px 7px',
+              ...chicago,
+              fontSize: 12,
+              lineHeight: 1,
+              pointerEvents: 'none',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {visited ? `✓ ${tooltip.name}` : tooltip.name}
+          </div>
+        )
+      })()}
     </div>
   )
 }
