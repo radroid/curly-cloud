@@ -4,6 +4,7 @@ import { NotePadApp } from '../apps/note-pad'
 import { ControlPanelApp } from '../apps/control-panel'
 import { FinderApp } from '../apps/finder'
 import { ScrapbookApp } from '../apps/scrapbook'
+import { CurlyBrowserApp } from '../apps/curly-browser'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -108,8 +109,31 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(300px, 78cqw, 600px)',
       height: 'clamp(250px, 75cqh, 450px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('Curly Browser'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [
+          { label: 'New Window', disabled: true },
+          { type: 'divider' },
+          { label: 'Close', disabled: true },
+        ],
+      },
+      {
+        label: 'View',
+        items: [
+          { label: 'Show Bookmarks Bar', disabled: true },
+          { label: 'Reload', disabled: true },
+        ],
+      },
+      {
+        label: 'History',
+        items: [
+          { label: 'Back', disabled: true },
+          { label: 'Forward', disabled: true },
+        ],
+      },
+    ],
+    component: CurlyBrowserApp,
     showScrollbar: true,
   },
   {
