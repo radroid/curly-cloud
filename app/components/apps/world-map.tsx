@@ -76,7 +76,10 @@ export function WorldMapApp() {
 
       {/* ── Map ──────────────────────────────────────────────────────────── */}
       <ComposableMap
-        projectionConfig={{ scale: 140 }}
+        projection="geoEqualEarth"
+        projectionConfig={{ scale: 175, center: [10, 15] }}
+        width={800}
+        height={400}
         style={{ width: '100%', height: '100%' }}
       >
         <defs>
@@ -148,94 +151,6 @@ export function WorldMapApp() {
           }
         </Geographies>
       </ComposableMap>
-
-      {/* ── Legend — bottom-right ─────────────────────────────────────────── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 10,
-          right: 10,
-          zIndex: 10,
-          background: '#fff',
-          border: '1px solid #000',
-          padding: '5px 7px',
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}
-      >
-        {/*
-          The legend uses its own hidden SVG with a duplicate pattern
-          (visitedPatternLegend) because SVG url(#id) lookups are
-          document-scoped and can't cross SVG element boundaries in some
-          browsers. The map SVG owns visitedPattern; this SVG owns
-          visitedPatternLegend.
-        */}
-        <svg
-          width="0"
-          height="0"
-          style={{ position: 'absolute', overflow: 'hidden' }}
-          aria-hidden="true"
-        >
-          <defs>
-            <pattern
-              id="visitedPatternLegend"
-              patternUnits="userSpaceOnUse"
-              width="4"
-              height="4"
-            >
-              <rect x="0" y="0" width="1" height="1" fill="#000" />
-              <rect x="2" y="2" width="1" height="1" fill="#000" />
-            </pattern>
-          </defs>
-        </svg>
-
-        {/* Row 1: Visited */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 4,
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            style={{ flexShrink: 0, border: '1px solid #000', display: 'block' }}
-          >
-            <rect
-              x="0"
-              y="0"
-              width="13"
-              height="13"
-              fill="url(#visitedPatternLegend)"
-            />
-          </svg>
-          <span style={{ ...chicago, fontSize: 12, lineHeight: 1 }}>
-            Visited
-          </span>
-        </div>
-
-        {/* Row 2: Not Visited */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-          }}
-        >
-          <svg
-            width="13"
-            height="13"
-            style={{ flexShrink: 0, border: '1px solid #000', display: 'block' }}
-          >
-            <rect x="0" y="0" width="13" height="13" fill="#fff" />
-          </svg>
-          <span style={{ ...chicago, fontSize: 12, lineHeight: 1 }}>
-            Not Visited
-          </span>
-        </div>
-      </div>
 
       {/* ── Tooltip ───────────────────────────────────────────────────────── */}
       {tooltip.name !== null && tooltip.name !== '' && (() => {
