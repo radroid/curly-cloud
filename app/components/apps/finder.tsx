@@ -29,28 +29,24 @@ type FSEntry = FileEntry | FolderEntry
 
 const ROOT_LABEL = 'Macintosh HD'
 
-// Folder icon SVG (drawn inline)
+// Folder icon — uses the 1-bit SVG asset from public/app-icons/
 function FolderIcon({ size = 36 }: { size?: number }) {
   return (
-    <svg
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/app-icons/folder.svg"
+      alt=""
       width={size}
-      height={Math.round(size * 0.8)}
-      viewBox="0 0 36 29"
-      fill="none"
-      aria-hidden="true"
-      style={{ imageRendering: 'pixelated', display: 'block' }}
-    >
-      {/* tab */}
-      <rect x="1" y="4" width="12" height="4" fill="#000" />
-      <rect x="2" y="5" width="10" height="3" fill="#fff" />
-      {/* body */}
-      <rect x="1" y="7" width="34" height="21" fill="#000" />
-      <rect x="2" y="8" width="32" height="19" fill="#fff" />
-      {/* bottom lines (Mac 1984 horizontal stripes) */}
-      <line x1="2" y1="12" x2="34" y2="12" stroke="#000" strokeWidth="1" />
-      <line x1="2" y1="16" x2="34" y2="16" stroke="#000" strokeWidth="1" />
-      <line x1="2" y1="20" x2="34" y2="20" stroke="#000" strokeWidth="1" />
-    </svg>
+      height={size}
+      draggable={false}
+      style={{
+        width: size,
+        height: size,
+        objectFit: 'contain',
+        imageRendering: 'pixelated',
+        display: 'block',
+      }}
+    />
   )
 }
 
