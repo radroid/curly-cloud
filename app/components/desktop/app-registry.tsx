@@ -39,6 +39,9 @@ export type AppDefinition = {
   component: React.FC
   showScrollbar?: boolean
   statusBar?: ReactNode
+  resizable?: boolean
+  minSize?: { width: number; height: number }
+  maxSize?: { width: number; height: number }
 }
 
 function ComingSoon({ name }: { name: string }) {
@@ -104,12 +107,23 @@ export const FINDER_DEFAULT_MENUS: MenuConfig[] = [
 
 export const APP_REGISTRY: AppDefinition[] = [
   {
+    id: 'finder',
+    name: 'Documents',
+    iconSrc: '/app-icons/finder.svg',
+    defaultSize: {
+      width: 'clamp(300px, 58cqw, 480px)',
+      height: 'clamp(240px, 58cqh, 400px)',
+    },
+    menuItems: FINDER_DEFAULT_MENUS,
+    component: FinderApp,
+  },
+  {
     id: 'browser',
     name: 'Curly Browser',
     iconSrc: '/app-icons/browser.svg',
     defaultSize: {
-      width: 'clamp(300px, 78cqw, 600px)',
-      height: 'clamp(250px, 75cqh, 450px)',
+      width: 'clamp(400px, 85cqw, 720px)',
+      height: 'clamp(320px, 82cqh, 540px)',
     },
     menuItems: [
       {
@@ -169,23 +183,6 @@ export const APP_REGISTRY: AppDefinition[] = [
     component: NotePadApp,
   },
   {
-    id: 'control-panel',
-    name: 'Control Panel',
-    iconSrc: '/app-icons/control-panel.svg',
-    defaultSize: {
-      width: 'clamp(250px, 55cqw, 420px)',
-      height: 'clamp(200px, 55cqh, 350px)',
-    },
-    menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
-    ],
-    component: ControlPanelApp,
-    showScrollbar: true,
-  },
-  {
     id: 'calculator',
     name: 'Calculator',
     iconSrc: '/app-icons/calculator.svg',
@@ -210,15 +207,21 @@ export const APP_REGISTRY: AppDefinition[] = [
     component: CalculatorApp,
   },
   {
-    id: 'finder',
-    name: 'Documents',
-    iconSrc: '/app-icons/finder.svg',
+    id: 'control-panel',
+    name: 'Control Panel',
+    iconSrc: '/app-icons/control-panel.svg',
     defaultSize: {
-      width: 'clamp(220px, 48cqw, 380px)',
-      height: 'clamp(180px, 50cqh, 320px)',
+      width: 'clamp(250px, 55cqw, 420px)',
+      height: 'clamp(200px, 55cqh, 350px)',
     },
-    menuItems: FINDER_DEFAULT_MENUS,
-    component: FinderApp,
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+    ],
+    component: ControlPanelApp,
+    showScrollbar: true,
   },
   {
     id: 'scrapbook',
@@ -247,11 +250,6 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'world-map',
     name: 'World Map',
     iconSrc: '/app-icons/world-map.svg',
-    // Window aspect matches the flat 2:1 Equirectangular map exactly, so
-    // Antarctica lines up with the bottom of the window. Content is
-    // width × 0.5 (= 45cqw since width is 90cqw); +21px accounts for the
-    // title bar (3px outer pad + 14px inner + 3px outer pad + 1px border).
-    // 2× the previous clamp to give the map real estate to read borders.
     defaultSize: {
       width: 'clamp(560px, 90cqw, 1080px)',
       height: 'clamp(301px, calc(45cqw + 21px), 561px)',

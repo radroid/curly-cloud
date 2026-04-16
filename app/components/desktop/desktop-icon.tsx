@@ -114,7 +114,7 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          imageRendering: 'pixelated',
+          overflow: 'visible',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -123,9 +123,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
           alt=""
           draggable={false}
           style={{
-            width: '100%',
             height: '100%',
-            objectFit: 'contain',
+            width: 'auto',
             imageRendering: 'pixelated',
           }}
         />
