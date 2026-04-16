@@ -176,7 +176,7 @@ export function NotePadApp() {
   const disabledButtonStyle: React.CSSProperties = {
     ...navButtonStyle,
     color: '#999',
-    borderColor: '#999',
+    border: '1px solid #999',
     cursor: 'default',
   };
 
