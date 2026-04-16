@@ -75,9 +75,16 @@ export function WorldMapApp() {
       </div>
 
       {/* ── Map ──────────────────────────────────────────────────────────── */}
+      {/*
+        geoEquirectangular = plate carrée: latitude and longitude lines are
+        evenly spaced straight lines, so the whole world fits a clean 2:1
+        rectangle with no polar distortion past the point of being flat. At
+        scale 128 the globe fills an 800×400 viewBox exactly, which makes
+        country borders read cleanly and keeps Antarctica in frame.
+      */}
       <ComposableMap
-        projection="geoEqualEarth"
-        projectionConfig={{ scale: 175, center: [10, 15] }}
+        projection="geoEquirectangular"
+        projectionConfig={{ scale: 128, center: [0, 0] }}
         width={800}
         height={400}
         style={{ width: '100%', height: '100%' }}
