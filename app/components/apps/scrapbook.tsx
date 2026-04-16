@@ -12,7 +12,7 @@ type Post = {
 const POSTS: Post[] = [
   {
     title: 'Building Product for Humans, Not Metrics',
-    publishedAt: 'January 15, 2025',
+    publishedAt: 'January 15, 2026',
     summary: 'The best products measure success by whether people grew, not just whether numbers went up.',
     body: `I measure success by whether people grew. Not by DAU, retention curves, or conversion rates--though those matter. The real question: did this product make someone's life better?
 
@@ -35,13 +35,13 @@ If you can't answer these, you're building for metrics, not humans. And metrics 
   },
   {
     title: 'Why Generalism is the Future',
-    publishedAt: 'February 10, 2025',
+    publishedAt: 'February 10, 2026',
     summary: 'As AI commoditizes specialists, generalists who can think across domains become the premium asset.',
     body: `The future belongs to generalists. While AI tools can now write code, design interfaces, and analyze data, they struggle to connect dots across disciplines. That's where generalists thrive.
 
 The Specialist Trap
 
-Specialization made sense when knowledge was scarce. But in 2025, AI can generate boilerplate, debug common issues, and follow established patterns. The specialist who only knows React or only designs UIs is competing with tools that do their job faster and cheaper.
+Specialization made sense when knowledge was scarce. But in 2026, AI can generate boilerplate, debug common issues, and follow established patterns. The specialist who only knows React or only designs UIs is competing with tools that do their job faster and cheaper.
 
 The Generalist Advantage
 
@@ -55,7 +55,7 @@ The question isn't whether you're a specialist or generalist. It's whether you c
   },
   {
     title: 'The Tension Between Physical & Digital',
-    publishedAt: 'March 5, 2025',
+    publishedAt: 'March 5, 2026',
     summary: 'Building ARK Adventures taught me that the best experiences bridge the gap between what happens on screen and what happens in real life.',
     body: `There's a gap between digital products and lived experiences. Most builders live in one world or the other. The magic happens in the bridge.
 
