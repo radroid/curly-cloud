@@ -23,56 +23,67 @@ interface TopData {
 
 async function fetchTopData(accessToken: string): Promise<TopData> {
   try {
-    const res = await fetch(
-      'https://api.spotify.com/v1/me/top/artists?limit=50&time_range=medium_term',
-      { headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' },
-    )
-    if (!res.ok) return { genres: [], artists: [] }
-    const data = await res.json() as any
-    const items: any[] = data.items ?? []
+    const headers = { Authorization: `Bearer ${accessToken}` }
+    const opts = { headers, cache: 'no-store' as const }
 
-    // Top 10 artists (already sorted by Spotify)
-    const artists = items.slice(0, 10).map((a: any) => ({
-      name: a.name ?? 'Unknown',
-      image: a.images?.[0]?.url ?? null,
-      spotifyUrl: a.external_urls?.spotify ?? null,
-    }))
+    // Two separate calls: short_term for genres (recent listening), long_term for artists (all time)
+    const [genreRes, artistRes] = await Promise.all([
+      fetch('https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term', opts),
+      fetch('https://api.spotify.com/v1/me/top/artists?limit=50&time_range=long_term', opts),
+    ])
 
-    // Aggregate genres, deduplicating near-duplicates (e.g. "afrobeats" vs "afrobeat")
-    const raw = new Map<string, number>()
-    for (const artist of items) {
-      for (const genre of artist.genres ?? []) {
-        const key = genre.toLowerCase()
-        raw.set(key, (raw.get(key) ?? 0) + 1)
-      }
+    // Top 10 artists from long_term
+    let artists: TopData['artists'] = []
+    if (artistRes.ok) {
+      const data = await artistRes.json() as any
+      artists = (data.items ?? []).slice(0, 10).map((a: any) => ({
+        name: a.name ?? 'Unknown',
+        image: a.images?.[0]?.url ?? null,
+        spotifyUrl: a.external_urls?.spotify ?? null,
+      }))
     }
 
-    // Merge entries where one is the other + trailing "s"
-    const merged = new Map<string, number>()
-    const keys = Array.from(raw.keys()).sort((a, b) => (raw.get(b) ?? 0) - (raw.get(a) ?? 0))
-    const consumed = new Set<string>()
-    for (const key of keys) {
-      if (consumed.has(key)) continue
-      let count = raw.get(key) ?? 0
-      const singular = key.endsWith('s') ? key.slice(0, -1) : null
-      const plural = key + 's'
-      if (singular && raw.has(singular) && !consumed.has(singular)) {
-        count += raw.get(singular) ?? 0
-        consumed.add(singular)
-      }
-      if (raw.has(plural) && !consumed.has(plural)) {
-        count += raw.get(plural) ?? 0
-        consumed.add(plural)
-      }
-      consumed.add(key)
-      const label = key.charAt(0).toUpperCase() + key.slice(1)
-      merged.set(label, count)
-    }
+    // Top 10 genres from short_term, deduplicated
+    let genres: TopData['genres'] = []
+    if (genreRes.ok) {
+      const data = await genreRes.json() as any
+      const items: any[] = data.items ?? []
 
-    const genres = Array.from(merged.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([name, count]) => ({ name, count }))
+      const raw = new Map<string, number>()
+      for (const artist of items) {
+        for (const genre of artist.genres ?? []) {
+          const key = genre.toLowerCase()
+          raw.set(key, (raw.get(key) ?? 0) + 1)
+        }
+      }
+
+      // Merge entries where one is the other + trailing "s"
+      const merged = new Map<string, number>()
+      const keys = Array.from(raw.keys()).sort((a, b) => (raw.get(b) ?? 0) - (raw.get(a) ?? 0))
+      const consumed = new Set<string>()
+      for (const key of keys) {
+        if (consumed.has(key)) continue
+        let count = raw.get(key) ?? 0
+        const singular = key.endsWith('s') ? key.slice(0, -1) : null
+        const plural = key + 's'
+        if (singular && raw.has(singular) && !consumed.has(singular)) {
+          count += raw.get(singular) ?? 0
+          consumed.add(singular)
+        }
+        if (raw.has(plural) && !consumed.has(plural)) {
+          count += raw.get(plural) ?? 0
+          consumed.add(plural)
+        }
+        consumed.add(key)
+        const label = key.charAt(0).toUpperCase() + key.slice(1)
+        merged.set(label, count)
+      }
+
+      genres = Array.from(merged.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([name, count]) => ({ name, count }))
+    }
 
     return { genres, artists }
   } catch {
