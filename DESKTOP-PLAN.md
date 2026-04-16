@@ -602,16 +602,21 @@ Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we'r
 - [x] Merged 2026-04-15 — ready for app branches
 
 ### Phase 4: Apps (single PR `feat/desktop-apps`, per-app commits)
-- [ ] Commit 1: DESKTOP-PLAN refinements
-- [ ] Commit 2: `scripts/spotify-oauth.mjs` OAuth helper
-- [ ] Commit 3: Calculator
-- [ ] Commit 4: Note Pad
-- [ ] Commit 5: Control Panel
-- [ ] Commit 6: Finder (Documents)
-- [ ] Commit 7: Scrapbook (Journal)
-- [ ] Commit 8: Curly Browser
-- [ ] Commit 9: World Map
-- [ ] Commit 10: Music (Spotify API route + vinyl UI) — gated on refresh token
+- [x] Commit 1: DESKTOP-PLAN refinements
+- [x] Commit 2: `scripts/spotify-oauth.mjs` OAuth helper
+- [x] Commit 3: Calculator
+- [x] Commit 4: Note Pad
+- [x] Commit 5: Control Panel
+- [x] Commit 6: Finder (Documents)
+- [x] Commit 7: Polish — +10% text and icon scale for readability *(added from live review)*
+- [x] Commit 8: Scrapbook (Journal)
+- [x] Commit 9: Finder — use `public/app-icons/folder.svg` for folder icons *(added from live review)*
+- [x] Commit 10: Window — inset focus-state horizontal lines, clean gap around close box *(added from live review)*
+- [x] Commit 11: Scrapbook — correct blog post year 2025 → 2026 *(added from live review)*
+- [x] Commit 12: Polish — larger Control Panel avatar + tighter title-bar stripe inset *(added from live review)*
+- [ ] Commit 13: Curly Browser
+- [ ] Commit 14: World Map
+- [ ] Commit 15: Music (Spotify API route + vinyl UI) — gated on refresh token
 - [ ] PR #3 opened: `feat/desktop-apps` → `feat/mac-os-1984-desktop`
 
 ### Phase 5: Integration
