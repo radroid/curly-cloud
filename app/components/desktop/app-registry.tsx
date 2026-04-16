@@ -5,6 +5,7 @@ import { ControlPanelApp } from '../apps/control-panel'
 import { FinderApp } from '../apps/finder'
 import { ScrapbookApp } from '../apps/scrapbook'
 import { CurlyBrowserApp } from '../apps/curly-browser'
+import { WorldMapApp } from '../apps/world-map'
 
 export type Rect = { x: number; y: number; width: number; height: number }
 
@@ -249,8 +250,20 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(280px, 70cqw, 540px)',
       height: 'clamp(220px, 60cqh, 380px)',
     },
-    menuItems: defaultMenus,
-    component: makePlaceholder('World Map'),
+    menuItems: [
+      {
+        label: 'File',
+        items: [{ label: 'Close', disabled: true }],
+      },
+      {
+        label: 'View',
+        items: [
+          { label: 'Show Legend', disabled: true },
+          { label: 'Show Country Names', disabled: true },
+        ],
+      },
+    ],
+    component: WorldMapApp,
   },
   {
     id: 'music',
