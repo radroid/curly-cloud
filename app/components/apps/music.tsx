@@ -370,11 +370,47 @@ function ProgressBar({ progressMs, durationMs }: { progressMs: number; durationM
   )
 }
 
+// ── Spotify prefetch cache ─────────────────────────────────────────────────────
+// Module-level cache so the data is available instantly when the Music app opens.
+// `prefetchSpotify()` is called by the desktop on mount; the Music component
+// reads from the cache on first render and starts its own 10s polling loop.
+
+let _cachedData: SpotifyData | null = null
+let _cacheTime = 0
+let _prefetchPromise: Promise<void> | null = null
+
+async function fetchSpotify(): Promise<SpotifyData> {
+  const res = await fetch(`/api/spotify/now-playing?t=${Date.now()}`, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' },
+  })
+  if (!res.ok) throw new Error('bad status')
+  return res.json()
+}
+
+export function prefetchSpotify() {
+  if (_prefetchPromise) return _prefetchPromise
+  _prefetchPromise = fetchSpotify()
+    .then((json) => {
+      _cachedData = json
+      _cacheTime = Date.now()
+    })
+    .catch(() => {
+      // silently fail — Music app will retry on open
+    })
+    .finally(() => {
+      _prefetchPromise = null
+    })
+  return _prefetchPromise
+}
+
 // ── Main Component ─────────────────────────────────────────────────────────────
 
 export function MusicApp() {
-  const [data, setData] = useState<SpotifyData | null>(null)
-  const [isLoading, setLoading] = useState(true)
+  // Use cached data if fresh (< 15s old), otherwise start in loading state
+  const hasFreshCache = _cachedData && (Date.now() - _cacheTime < 15_000)
+  const [data, setData] = useState<SpotifyData | null>(hasFreshCache ? _cachedData : null)
+  const [isLoading, setLoading] = useState(!hasFreshCache)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -382,15 +418,10 @@ export function MusicApp() {
 
     async function load() {
       try {
-        // Cache-bust via timestamp query param so no layer (browser, SW,
-        // Cloudflare edge, OpenNext) can serve a stale Recently Played list.
-        const res = await fetch(`/api/spotify/now-playing?t=${Date.now()}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' },
-        })
-        if (!res.ok) throw new Error('bad status')
-        const json = await res.json()
+        const json = await fetchSpotify()
         if (!cancelled) {
+          _cachedData = json
+          _cacheTime = Date.now()
           setData(json)
           setError(false)
           setLoading(false)
@@ -403,12 +434,20 @@ export function MusicApp() {
       }
     }
 
+    // If we already have fresh cache, skip the initial fetch and just start polling
+    if (hasFreshCache) {
+      const interval = setInterval(load, 10_000)
+      return () => { cancelled = true; clearInterval(interval) }
+    }
+
+    // No cache — fetch immediately then poll
     load()
     const interval = setInterval(load, 10_000)
     return () => {
       cancelled = true
       clearInterval(interval)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // ── Loading state ──────────────────────────────────────────────────────────

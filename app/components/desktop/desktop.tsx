@@ -1,12 +1,13 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { MenuBar } from '../menu-bar'
 import { WindowManagerProvider, useWindowManager } from './window-manager'
 import { DesktopIcon } from './desktop-icon'
 import { Window } from './window'
 import { APP_MAP, APP_REGISTRY } from './app-registry'
 import { MaximizeNudge } from './maximize-nudge'
+import { prefetchSpotify } from '../apps/music'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -34,6 +35,9 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
   const containerRef = useRef<HTMLDivElement>(null)
   const { windows, selectIcon } = useWindowManager()
   const trashApp = APP_MAP['trash']
+
+  // Prefetch Spotify data so the Music app loads instantly when opened
+  useEffect(() => { prefetchSpotify() }, [])
 
   return (
     <div
