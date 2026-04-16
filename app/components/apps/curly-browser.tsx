@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   ContextMenu,
   ContextMenuTrigger,
@@ -331,7 +331,22 @@ function HomeView({ onOpen }: { onOpen: (bm: Bookmark) => void }) {
 
 // ── Embed view (iframe + fallback banner) ─────────────────────────────────────
 
-function EmbedView({ url, label }: { url: string; label: string }) {
+function EmbedView({ url, label, onNavigate }: { url: string; label: string; onNavigate?: (url: string) => void }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  const handleLoad = useCallback(() => {
+    if (!iframeRef.current || !onNavigate) return
+    try {
+      // Same-origin: we can read the URL
+      const newUrl = iframeRef.current.contentWindow?.location.href
+      if (newUrl && newUrl !== 'about:blank') {
+        onNavigate(newUrl)
+      }
+    } catch {
+      // Cross-origin: can't read the URL — this is expected
+    }
+  }, [onNavigate])
+
   return (
     <div
       style={{
@@ -344,8 +359,10 @@ function EmbedView({ url, label }: { url: string; label: string }) {
       }}
     >
       <iframe
+        ref={iframeRef}
         src={url}
         title={label}
+        onLoad={handleLoad}
         style={{
           flex: 1,
           width: '100%',
@@ -534,7 +551,7 @@ export function CurlyBrowserApp() {
       {isHome ? (
         <HomeView onOpen={openBookmark} />
       ) : (
-        <EmbedView url={currentView.url} label={currentView.label} />
+        <EmbedView url={currentView.url} label={currentView.label} onNavigate={(newUrl) => setUrlInput(newUrl)} />
       )}
     </div>
   )
