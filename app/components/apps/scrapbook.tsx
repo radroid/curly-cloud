@@ -75,13 +75,88 @@ That's where the real innovation happens--not in pixels, but in the moments betw
   },
 ]
 
+type ViewMode = 'index' | 'article'
+
+function IndexRow({
+  post,
+  index,
+  onSelect,
+}: {
+  post: Post
+  index: number
+  onSelect: (index: number) => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(index)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display: 'block',
+        width: '100%',
+        textAlign: 'left',
+        padding: '8px 10px',
+        borderBottom: '1px solid #000',
+        background: hovered ? '#000' : 'transparent',
+        color: hovered ? '#fff' : '#000',
+        cursor: 'pointer',
+        border: 'none',
+        borderBlockEnd: '1px solid #000',
+        fontFamily: 'var(--font-chicago)',
+        WebkitFontSmoothing: 'none' as const,
+        transition: 'none',
+      }}
+    >
+      {/* Title */}
+      <div
+        style={{
+          fontSize: 13,
+          fontWeight: 'bold',
+          lineHeight: 1.3,
+          marginBottom: 2,
+        }}
+      >
+        {post.title}
+      </div>
+      {/* Date */}
+      <div
+        style={{
+          fontSize: 11,
+          color: hovered ? '#ccc' : '#555',
+          marginBottom: 2,
+        }}
+      >
+        {post.publishedAt}
+      </div>
+      {/* Summary truncated */}
+      <div
+        style={{
+          fontSize: 11,
+          color: hovered ? '#ddd' : '#333',
+          lineHeight: 1.3,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {post.summary}
+      </div>
+    </button>
+  )
+}
+
 export function ScrapbookApp() {
   const [page, setPage] = useState(0)
+  const [viewMode, setViewMode] = useState<ViewMode>('index')
   const total = POSTS.length
   const post = POSTS[page]
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (viewMode !== 'article') return
       if (e.key === 'ArrowLeft') {
         setPage((p) => Math.max(0, p - 1))
       } else if (e.key === 'ArrowRight') {
@@ -90,7 +165,12 @@ export function ScrapbookApp() {
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [total])
+  }, [total, viewMode])
+
+  const handleSelectEntry = (index: number) => {
+    setPage(index)
+    setViewMode('article')
+  }
 
   const navBtnBase: React.CSSProperties = {
     fontFamily: 'var(--font-chicago)',
@@ -141,66 +221,106 @@ export function ScrapbookApp() {
           style={{
             flex: 1,
             overflowY: 'auto',
-            padding: '10px 12px',
+            padding: viewMode === 'index' ? 0 : '10px 12px',
           }}
         >
-          {/* Title */}
-          <div
-            style={{
-              fontFamily: 'var(--font-chicago)',
-              fontSize: 16,
-              fontWeight: 'bold',
-              marginBottom: 4,
-              WebkitFontSmoothing: 'none',
-              lineHeight: 1.3,
-            }}
-          >
-            {post.title}
-          </div>
+          {viewMode === 'index' ? (
+            /* ---- Index / Table of Contents ---- */
+            <div>
+              {/* Index header */}
+              <div
+                style={{
+                  padding: '12px 12px 8px 12px',
+                  borderBottom: '1px solid #000',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: 'var(--font-chicago)',
+                    fontSize: 16,
+                    fontWeight: 'bold',
+                    WebkitFontSmoothing: 'none',
+                    lineHeight: 1.3,
+                  }}
+                >
+                  Journal
+                </div>
+              </div>
 
-          {/* Date */}
-          <div
-            style={{
-              fontFamily: 'var(--font-chicago)',
-              fontSize: 11,
-              color: '#555',
-              marginBottom: 8,
-              WebkitFontSmoothing: 'none',
-            }}
-          >
-            {post.publishedAt}
-          </div>
+              {/* Entry list */}
+              <div>
+                {POSTS.map((p, i) => (
+                  <IndexRow
+                    key={i}
+                    post={p}
+                    index={i}
+                    onSelect={handleSelectEntry}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* ---- Article view (unchanged) ---- */
+            <>
+              {/* Title */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-chicago)',
+                  fontSize: 16,
+                  fontWeight: 'bold',
+                  marginBottom: 4,
+                  WebkitFontSmoothing: 'none',
+                  lineHeight: 1.3,
+                }}
+              >
+                {post.title}
+              </div>
 
-          {/* Summary */}
-          <div
-            style={{
-              fontFamily: 'var(--font-chicago)',
-              fontSize: 12,
-              fontStyle: 'italic',
-              marginBottom: 10,
-              paddingBottom: 8,
-              borderBottom: '1px solid #ccc',
-              WebkitFontSmoothing: 'none',
-              lineHeight: 1.5,
-            }}
-          >
-            {post.summary}
-          </div>
+              {/* Date */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-chicago)',
+                  fontSize: 11,
+                  color: '#555',
+                  marginBottom: 8,
+                  WebkitFontSmoothing: 'none',
+                }}
+              >
+                {post.publishedAt}
+              </div>
 
-          {/* Body */}
-          <pre
-            style={{
-              fontFamily: 'var(--font-chicago)',
-              fontSize: 12,
-              whiteSpace: 'pre-wrap',
-              margin: 0,
-              WebkitFontSmoothing: 'none',
-              lineHeight: 1.6,
-              color: '#000',
-            }}
-          >
-            {post.body}
-          </pre>
+              {/* Summary */}
+              <div
+                style={{
+                  fontFamily: 'var(--font-chicago)',
+                  fontSize: 12,
+                  fontStyle: 'italic',
+                  marginBottom: 10,
+                  paddingBottom: 8,
+                  borderBottom: '1px solid #ccc',
+                  WebkitFontSmoothing: 'none',
+                  lineHeight: 1.5,
+                }}
+              >
+                {post.summary}
+              </div>
+
+              {/* Body */}
+              <pre
+                style={{
+                  fontFamily: 'var(--font-chicago)',
+                  fontSize: 12,
+                  whiteSpace: 'pre-wrap',
+                  margin: 0,
+                  WebkitFontSmoothing: 'none',
+                  lineHeight: 1.6,
+                  color: '#000',
+                }}
+              >
+                {post.body}
+              </pre>
+            </>
+          )}
         </div>
       </div>
 
@@ -209,7 +329,7 @@ export function ScrapbookApp() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
+          justifyContent: viewMode === 'article' ? 'space-between' : 'center',
           padding: '4px 6px',
           borderTop: '1px solid #000',
           background: '#fff',
@@ -217,35 +337,60 @@ export function ScrapbookApp() {
           marginTop: 6,
         }}
       >
-        <button
-          type="button"
-          style={page === 0 ? navBtnDisabled : navBtnBase}
-          disabled={page === 0}
-          onClick={() => setPage((p) => Math.max(0, p - 1))}
-          aria-label="Previous page"
-        >
-          &#9664;
-        </button>
+        {viewMode === 'article' ? (
+          <>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                type="button"
+                style={navBtnBase}
+                onClick={() => setViewMode('index')}
+                aria-label="Back to contents"
+              >
+                Contents
+              </button>
+              <button
+                type="button"
+                style={page === 0 ? navBtnDisabled : navBtnBase}
+                disabled={page === 0}
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                aria-label="Previous page"
+              >
+                &#9664;
+              </button>
+            </div>
 
-        <span
-          style={{
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 12,
-            WebkitFontSmoothing: 'none',
-          }}
-        >
-          {page + 1} / {total}
-        </span>
+            <span
+              style={{
+                fontFamily: 'var(--font-chicago)',
+                fontSize: 12,
+                WebkitFontSmoothing: 'none',
+              }}
+            >
+              {page + 1} / {total}
+            </span>
 
-        <button
-          type="button"
-          style={page === total - 1 ? navBtnDisabled : navBtnBase}
-          disabled={page === total - 1}
-          onClick={() => setPage((p) => Math.min(total - 1, p + 1))}
-          aria-label="Next page"
-        >
-          &#9654;
-        </button>
+            <button
+              type="button"
+              style={page === total - 1 ? navBtnDisabled : navBtnBase}
+              disabled={page === total - 1}
+              onClick={() => setPage((p) => Math.min(total - 1, p + 1))}
+              aria-label="Next page"
+            >
+              &#9654;
+            </button>
+          </>
+        ) : (
+          <span
+            style={{
+              fontFamily: 'var(--font-chicago)',
+              fontSize: 12,
+              WebkitFontSmoothing: 'none',
+              color: '#555',
+            }}
+          >
+            {total} {total === 1 ? 'entry' : 'entries'}
+          </span>
+        )}
       </div>
     </div>
   )
