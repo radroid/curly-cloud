@@ -81,7 +81,7 @@ async function fetchTopData(accessToken: string): Promise<TopData> {
 
       genres = Array.from(merged.entries())
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
+        .slice(0, 5)
         .map(([name, count]) => ({ name, count }))
     }
 
