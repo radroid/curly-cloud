@@ -47,11 +47,7 @@ export default function Page() {
 
   // Phase state machine — boot sequence
   useEffect(() => {
-    if (skipBoot) {
-      setPhase('welcome')
-      return
-    }
-
+    if (skipBoot) { setPhase('welcome'); return }
     const timers = [
       setTimeout(() => setPhase('flicker'), 500),
       setTimeout(() => setPhase('boot'), 1200),
@@ -62,7 +58,6 @@ export default function Page() {
         sessionStorage.setItem('hasBooted', '1')
       }, 5700),
     ]
-
     return () => timers.forEach(clearTimeout)
   }, [skipBoot])
 
