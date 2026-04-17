@@ -177,9 +177,7 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
       role="button"
       tabIndex={0}
       onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() }
-      }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } }}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         gap: 3, padding: '6px 4px', cursor: 'default', userSelect: 'none',
