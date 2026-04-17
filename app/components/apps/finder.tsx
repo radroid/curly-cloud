@@ -57,18 +57,9 @@ function DocIcon({ size = 36, ext }: { size?: number; ext: string }) {
       aria-hidden="true"
       style={{ imageRendering: 'pixelated', display: 'block' }}
     >
-      {/* dog-ear */}
       <polygon points="0,0 26,0 36,10 36,40 0,40" fill="#fff" stroke="#000" strokeWidth="1.5" />
       <polygon points="26,0 36,10 26,10" fill="#000" />
-      {/* extension label */}
-      <text
-        x="18"
-        y="28"
-        textAnchor="middle"
-        fontSize="8"
-        fontFamily="monospace"
-        fill="#000"
-      >
+      <text x="18" y="28" textAnchor="middle" fontSize="8" fontFamily="monospace" fill="#000">
         {label}
       </text>
     </svg>
@@ -173,11 +164,8 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
     clickCount.current++
     if (clickTimer.current) clearTimeout(clickTimer.current)
     clickTimer.current = setTimeout(() => {
-      if (clickCount.current === 1) {
-        onSelect()
-      } else if (clickCount.current >= 2) {
-        onOpen()
-      }
+      if (clickCount.current === 1) onSelect()
+      else if (clickCount.current >= 2) onOpen()
       clickCount.current = 0
     }, 250)
   }
@@ -193,33 +181,18 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() }
       }}
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: 3,
-        padding: '6px 4px',
-        cursor: 'default',
-        userSelect: 'none',
-        width: '100%',
-        outline: 'none',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        gap: 3, padding: '6px 4px', cursor: 'default', userSelect: 'none',
+        width: '100%', outline: 'none',
       }}
     >
-      {isFolder
-        ? <FolderIcon size={36} />
-        : <FileThumbnail entry={entry as FileEntry} size={36} />
-      }
+      {isFolder ? <FolderIcon size={36} /> : <FileThumbnail entry={entry as FileEntry} size={36} />}
       <span
         style={{
-          fontFamily: 'var(--font-chicago)',
-          fontSize: 11,
-          textAlign: 'center',
-          lineHeight: 1.2,
-          maxWidth: '100%',
-          padding: '1px 3px',
-          background: selected ? '#000' : 'transparent',
-          color: selected ? '#fff' : '#000',
-          outline: selected ? '1px solid #000' : 'none',
-          wordBreak: 'break-word',
+          fontFamily: 'var(--font-chicago)', fontSize: 11, textAlign: 'center',
+          lineHeight: 1.2, maxWidth: '100%', padding: '1px 3px',
+          background: selected ? '#000' : 'transparent', color: selected ? '#fff' : '#000',
+          outline: selected ? '1px solid #000' : 'none', wordBreak: 'break-word',
         }}
       >
         {entry.label}
@@ -245,15 +218,8 @@ function ContextGridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div
-          onContextMenu={() => onSelect()}
-        >
-          <GridItem
-            entry={entry}
-            selected={selected}
-            onSelect={onSelect}
-            onOpen={onOpen}
-          />
+        <div onContextMenu={() => onSelect()}>
+          <GridItem entry={entry} selected={selected} onSelect={onSelect} onOpen={onOpen} />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
@@ -265,9 +231,7 @@ function ContextGridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
           </>
         )}
         <ContextMenuItem disabled>Get Info</ContextMenuItem>
-        {!isFolder && (
-          <ContextMenuItem disabled>Rename</ContextMenuItem>
-        )}
+        {!isFolder && <ContextMenuItem disabled>Rename</ContextMenuItem>}
       </ContextMenuContent>
     </ContextMenu>
   )
