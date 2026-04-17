@@ -12,32 +12,22 @@ export function BootScreen({
   useEffect(() => {
     const audio = new Audio('/StartupMacI.wav')
     audioRef.current = audio
-
     const timer = setTimeout(() => {
       audio.play().catch(() => {})
-      if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200])
-      }
+      navigator.vibrate?.([200, 100, 200])
     }, 1000) // 1s after boot phase starts
-
     return () => {
       clearTimeout(timer)
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
+      audioRef.current?.pause()
+      audioRef.current = null
     }
   }, [])
 
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        opacity: fadeOut ? 0 : 1,
-        transition: 'opacity 0.6s ease',
+        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: fadeOut ? 0 : 1, transition: 'opacity 0.6s ease',
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
