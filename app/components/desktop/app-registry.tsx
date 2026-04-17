@@ -55,8 +55,6 @@ function ComingSoon({ name }: { name: string }) {
   )
 }
 
-const makePlaceholder = (name: string) => () => <ComingSoon name={name} />
-
 const D = { type: 'divider' as const }
 const d = (label: string): MenuItem => ({ label, disabled: true })
 
@@ -160,7 +158,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/trash.svg',
     defaultSize: { width: 'clamp(200px, 45cqw, 340px)', height: 'clamp(140px, 40cqh, 220px)' },
     menuItems: [],
-    component: makePlaceholder('Trash'),
+    component: () => <ComingSoon name="Trash" />,
     statusBar: <span>0 items, 0K in trash, 0K available</span>,
   },
 ]

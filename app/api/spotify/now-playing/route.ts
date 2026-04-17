@@ -16,6 +16,9 @@ function json(body: unknown) {
   return Response.json(body, { headers: NO_CACHE_HEADERS })
 }
 
+const bearerOpts = (token: string) =>
+  ({ headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' as const })
+
 interface TopData {
   genres: { name: string; count: number }[]
   artists: { name: string; image: string | null; spotifyUrl: string | null }[]
@@ -34,7 +37,7 @@ function makeTrack(item: any, nowPlaying?: { progressMs: number }) {
 
 async function fetchTopData(accessToken: string): Promise<TopData> {
   try {
-    const opts = { headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' as const }
+    const opts = bearerOpts(accessToken)
     // Two separate calls: short_term for genres (recent listening), long_term for artists (all time)
     const [genreRes, artistRes] = await Promise.all([
       fetch('https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term', opts),
@@ -124,18 +127,14 @@ export async function GET() {
   const { access_token } = await tokenRes.json() as { access_token: string }
 
   // 2. Fetch currently playing
-  const nowRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-    headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store',
-  })
+  const nowRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', bearerOpts(access_token))
 
   // Fetch top genres in parallel with the currently-playing check
   const topPromise = fetchTopData(access_token)
 
   // 204 = nothing playing, 202 = processing
   if (nowRes.status === 204 || nowRes.status === 202) {
-    const recentRes = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=1', {
-      headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store',
-    })
+    const recentRes = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=1', bearerOpts(access_token))
     let lastTrack: any = null
     if (recentRes.ok) {
       const data = await recentRes.json() as any
