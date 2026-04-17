@@ -96,18 +96,11 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
     const titleBar = el.querySelector<HTMLDivElement>('[data-window-titlebar]')
     if (!titleBar) return
 
-    let dragging = false
-    let started = false
-    let startClientX = 0
-    let startClientY = 0
+    let dragging = false, started = false
+    let startClientX = 0, startClientY = 0
     let containerRect = { left: 0, top: 0, width: 0, height: 0 }
-    let startLeftPx = 0
-    let startTopPx = 0
-    let elWidthPx = 0
-    let elHeightPx = 0
-    let rafId = 0
-    let pendingTx = 0
-    let pendingTy = 0
+    let startLeftPx = 0, startTopPx = 0, elWidthPx = 0, elHeightPx = 0
+    let rafId = 0, pendingTx = 0, pendingTy = 0
 
     const applyTransform = () => {
       rafId = 0
@@ -117,18 +110,12 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
     const onDown = (e: MouseEvent) => {
       if (e.button !== 0) return
       const target = e.target as HTMLElement
-      if (target.closest('[data-window-close]')) return
-      if (target.closest('[data-window-fullscreen]')) return
+      if (target.closest('[data-window-close]') || target.closest('[data-window-fullscreen]')) return
       const container = containerRef.current
       if (!container) return
       const cRect = container.getBoundingClientRect()
       const eRect = el.getBoundingClientRect()
-      containerRect = {
-        left: cRect.left,
-        top: cRect.top,
-        width: cRect.width,
-        height: cRect.height,
-      }
+      containerRect = { left: cRect.left, top: cRect.top, width: cRect.width, height: cRect.height }
       startLeftPx = eRect.left - cRect.left
       startTopPx = eRect.top - cRect.top
       elWidthPx = eRect.width
@@ -206,17 +193,10 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
 
     let resizing = false
     let edge: ResizeEdge = 's'
-    let startClientX = 0
-    let startClientY = 0
+    let startClientX = 0, startClientY = 0
     let containerRect = { left: 0, top: 0, width: 0, height: 0 }
-    let startLeftPx = 0
-    let startTopPx = 0
-    let startWidthPx = 0
-    let startHeightPx = 0
-    let currentWidthPx = 0
-    let currentHeightPx = 0
-    let currentLeftPx = 0
-    let currentTopPx = 0
+    let startLeftPx = 0, startTopPx = 0, startWidthPx = 0, startHeightPx = 0
+    let currentWidthPx = 0, currentHeightPx = 0, currentLeftPx = 0, currentTopPx = 0
     let rafId = 0
 
     const minW = app?.minSize?.width ?? 150
@@ -246,12 +226,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       const eRect = el.getBoundingClientRect()
 
       edge = edgeAttr
-      containerRect = {
-        left: cRect.left,
-        top: cRect.top,
-        width: cRect.width,
-        height: cRect.height,
-      }
+      containerRect = { left: cRect.left, top: cRect.top, width: cRect.width, height: cRect.height }
       startLeftPx = eRect.left - cRect.left
       startTopPx = eRect.top - cRect.top
       startWidthPx = eRect.width
@@ -275,10 +250,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       const dx = e.clientX - startClientX
       const dy = e.clientY - startClientY
 
-      let newW = startWidthPx
-      let newH = startHeightPx
-      let newLeft = startLeftPx
-      let newTop = startTopPx
+      let newW = startWidthPx, newH = startHeightPx, newLeft = startLeftPx, newTop = startTopPx
 
       // Compute new dimensions based on which edge/corner is being dragged
       if (edge.includes('e')) {
