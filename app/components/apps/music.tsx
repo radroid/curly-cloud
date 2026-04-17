@@ -329,10 +329,6 @@ export function MusicApp() {
   const { isPlaying, artists } = data
   const track = data.track!
 
-  // Sort genres descending by count so the bar chart renders largest-first
-  // and GenreList's maxCount (genres[0].count) is always the true maximum.
-  const sortedGenres = [...(data.genres ?? [])].sort((a, b) => b.count - a.count)
-
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', background: '#fff', minHeight: 0 }}>
         {/* ── Left column: Vinyl ────────────────────────────────────────── */}
@@ -386,7 +382,7 @@ export function MusicApp() {
           <div style={{ ...sectionHeader, borderBottom: '1px solid #000' }}>
             Top Genres
           </div>
-          <GenreList genres={sortedGenres} />
+          <GenreList genres={data.genres ?? []} />
 
           {/* Top Artists */}
           <div style={{ ...sectionHeader, borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
