@@ -13,6 +13,12 @@ interface TrashItem {
   deletedAt: number;
 }
 
+const chicago: React.CSSProperties = {
+  fontFamily: 'var(--font-chicago)',
+  WebkitFontSmoothing: 'none',
+  MozOsxFontSmoothing: 'unset',
+};
+
 function loadPages(): string[] {
   if (typeof window === 'undefined') return [''];
 
@@ -162,16 +168,14 @@ export function NotePadApp() {
   }, []);
 
   const navButtonStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-chicago)',
+    ...chicago,
     fontSize: '11px',
     background: '#fff',
     border: '1px solid #000',
     padding: '1px 6px',
     cursor: 'pointer',
     lineHeight: '14px',
-    WebkitFontSmoothing: 'none',
-    MozOsxFontSmoothing: 'unset',
-  } as React.CSSProperties;
+  };
 
   const disabledButtonStyle: React.CSSProperties = {
     ...navButtonStyle,
@@ -223,6 +227,7 @@ export function NotePadApp() {
           onChange={handleChange}
           spellCheck={false}
           style={{
+            ...chicago,
             display: 'block',
             width: '100%',
             height: '100%',
@@ -230,7 +235,6 @@ export function NotePadApp() {
             outline: 'none',
             resize: 'none',
             background: 'transparent',
-            fontFamily: 'var(--font-chicago)',
             fontSize: '14px',
             lineHeight: '22px',
             paddingLeft: '14px',
@@ -239,9 +243,7 @@ export function NotePadApp() {
             paddingBottom: '0px',
             color: '#000',
             boxSizing: 'border-box',
-            WebkitFontSmoothing: 'none',
-            MozOsxFontSmoothing: 'unset',
-          } as React.CSSProperties}
+          }}
           onFocus={(e) => {
             e.currentTarget.style.outline = 'none';
           }}
@@ -251,6 +253,7 @@ export function NotePadApp() {
       {/* Footer navigation bar */}
       <div
         style={{
+          ...chicago,
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
@@ -259,12 +262,9 @@ export function NotePadApp() {
           background: '#fff',
           padding: '3px 7px',
           flexShrink: 0,
-          fontFamily: 'var(--font-chicago)',
           fontSize: '11px',
-          WebkitFontSmoothing: 'none',
-          MozOsxFontSmoothing: 'unset',
           gap: '4px',
-        } as React.CSSProperties}
+        }}
       >
         {/* Left group: page navigation */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -278,7 +278,6 @@ export function NotePadApp() {
           </button>
           <span
             style={{
-              fontFamily: 'var(--font-chicago)',
               fontSize: '11px',
               minWidth: '36px',
               textAlign: 'center',
