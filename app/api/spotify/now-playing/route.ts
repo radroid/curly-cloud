@@ -118,22 +118,16 @@ export async function GET() {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': 'Basic ' + btoa(`${clientId}:${clientSecret}`),
     },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: refreshToken,
-    }),
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }),
   })
 
-  if (!tokenRes.ok) {
-    return json({ error: 'Spotify token refresh failed', isPlaying: false, track: null })
-  }
+  if (!tokenRes.ok) return json({ error: 'Spotify token refresh failed', isPlaying: false, track: null })
 
   const { access_token } = await tokenRes.json() as { access_token: string }
 
   // 2. Fetch currently playing
   const nowRes = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-    headers: { Authorization: `Bearer ${access_token}` },
-    cache: 'no-store',
+    headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store',
   })
 
   // Fetch top genres in parallel with the currently-playing check
@@ -142,8 +136,7 @@ export async function GET() {
   // 204 = nothing playing, 202 = processing
   if (nowRes.status === 204 || nowRes.status === 202) {
     const recentRes = await fetch('https://api.spotify.com/v1/me/player/recently-played?limit=1', {
-      headers: { Authorization: `Bearer ${access_token}` },
-      cache: 'no-store',
+      headers: { Authorization: `Bearer ${access_token}` }, cache: 'no-store',
     })
     let lastTrack: any = null
     if (recentRes.ok) {
@@ -151,11 +144,7 @@ export async function GET() {
       const first = (data.items ?? [])[0]
       if (first?.track) lastTrack = makeTrack(first.track)
     }
-    return json({
-      isPlaying: false,
-      track: lastTrack,
-      ...await topPromise,
-    })
+    return json({ isPlaying: false, track: lastTrack, ...await topPromise })
   }
 
   if (!nowRes.ok) {
