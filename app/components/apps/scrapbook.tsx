@@ -113,28 +113,12 @@ function IndexRow({
         transition: 'none',
       }}
     >
-      {/* Title */}
-      <div
-        style={{
-          fontSize: 13,
-          fontWeight: 'bold',
-          lineHeight: 1.3,
-          marginBottom: 2,
-        }}
-      >
+      <div style={{ fontSize: 13, fontWeight: 'bold', lineHeight: 1.3, marginBottom: 2 }}>
         {post.title}
       </div>
-      {/* Date */}
-      <div
-        style={{
-          fontSize: 11,
-          color: hovered ? '#ccc' : '#555',
-          marginBottom: 2,
-        }}
-      >
+      <div style={{ fontSize: 11, color: hovered ? '#ccc' : '#555', marginBottom: 2 }}>
         {post.publishedAt}
       </div>
-      {/* Summary truncated */}
       <div
         style={{
           fontSize: 11,
