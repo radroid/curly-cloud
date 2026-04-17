@@ -55,9 +55,6 @@ There is only one theme. CSS variables use standard hex values (not RGB triplets
 ### Chicago Bitmap Font
 The site uses ChicagoFLF (`public/fonts/ChicagoFLF.woff`) for the Mac OS look. `--font-chicago` falls back to VT323 then monospace. Anti-aliasing is disabled (`-webkit-font-smoothing: none`) to preserve the bitmap aesthetic.
 
-### Two Wrangler Configs
-Both `wrangler.toml` and `wrangler.jsonc` exist at the root with identical settings. Edit both or consolidate.
-
 ### No Test Framework
 There are no tests, no test runner, no test dependencies. Do not assume you can validate changes with automated tests.
 
