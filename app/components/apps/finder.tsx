@@ -240,14 +240,7 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
 }
 
 // Wrap a GridItem with a context menu based on type
-type ContextGridItemProps = {
-  entry: FSEntry
-  selected: boolean
-  onSelect: () => void
-  onOpen: () => void
-}
-
-function ContextGridItem({ entry, selected, onSelect, onOpen }: ContextGridItemProps) {
+function ContextGridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
   const isFolder = entry.kind === 'folder'
 
   const handleDownload = () => {
