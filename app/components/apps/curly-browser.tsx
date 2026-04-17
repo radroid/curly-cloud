@@ -392,26 +392,12 @@ export function CurlyBrowserApp() {
   }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        background: '#fff',
-        minHeight: 0,
-      }}
-    >
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#fff', minHeight: 0 }}>
       {/* ── Toolbar ──────────────────────────────────────────────────────── */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 4,
-          padding: '4px 8px',
-          borderBottom: '1px solid #000',
-          background: '#fff',
-          flexShrink: 0,
+          display: 'flex', alignItems: 'center', gap: 4, padding: '4px 8px',
+          borderBottom: '1px solid #000', background: '#fff', flexShrink: 0,
         }}
       >
         {[
@@ -429,15 +415,9 @@ export function CurlyBrowserApp() {
           onChange={(e) => setUrlInput(e.target.value)}
           onKeyDown={handleUrlKeyDown}
           style={{
-            ...chicago,
-            fontSize: 11,
-            color: '#000',
-            background: '#fff',
-            border: '1px solid #000',
-            outline: 'none',
-            padding: '2px 8px',
-            flex: 1,
-            minWidth: 0,
+            ...chicago, fontSize: 11, color: '#000',
+            background: '#fff', border: '1px solid #000', outline: 'none',
+            padding: '2px 8px', flex: 1, minWidth: 0,
           }}
           spellCheck={false}
           autoComplete="off"
