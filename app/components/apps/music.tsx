@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useReducedMotion } from '@/app/lib/use-reduced-motion'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -83,16 +84,7 @@ function VinylRecord({
   isPlaying: boolean
   isOffline: boolean
 }) {
-  // Check for reduced motion preference
-  const [reduceMotion, setReduceMotion] = useState(false)
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReduceMotion(mq.matches)
-    const handler = () => setReduceMotion(mq.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
+  const reduceMotion = useReducedMotion()
   const shouldSpin = isPlaying && !isOffline && !reduceMotion
 
   const outerSize = 210
