@@ -516,6 +516,11 @@ const resizeCornerBase: React.CSSProperties = {
   background: 'transparent',
 }
 
+const chromeButtonStyle: React.CSSProperties = {
+  appearance: 'none', width: 11, height: 11, border: '1px solid #000',
+  padding: 0, cursor: 'pointer', flexShrink: 0,
+}
+
 function CloseButton({ onClose }: { onClose: () => void }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -525,70 +530,26 @@ function CloseButton({ onClose }: { onClose: () => void }) {
       aria-label="Close"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      onClick={(e) => {
-        e.stopPropagation()
-        onClose()
-      }}
-      style={{
-        appearance: 'none',
-        width: 11,
-        height: 11,
-        background: '#fff',
-        border: '1px solid #000',
-        padding: 0,
-        cursor: 'pointer',
-        flexShrink: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
+      onClick={(e) => { e.stopPropagation(); onClose() }}
+      style={{ ...chromeButtonStyle, background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
     >
       {hovered && (
-        <svg
-          width="9"
-          height="9"
-          viewBox="0 0 9 9"
-          aria-hidden="true"
-          style={{ display: 'block' }}
-        >
-          <path
-            d="M2 2 L7 7 M7 2 L2 7"
-            stroke="#000"
-            strokeWidth="1"
-            strokeLinecap="square"
-          />
+        <svg width="9" height="9" viewBox="0 0 9 9" aria-hidden="true" style={{ display: 'block' }}>
+          <path d="M2 2 L7 7 M7 2 L2 7" stroke="#000" strokeWidth="1" strokeLinecap="square" />
         </svg>
       )}
     </button>
   )
 }
 
-function FullscreenButton({
-  isFullscreen,
-  onToggle,
-}: {
-  isFullscreen: boolean
-  onToggle: () => void
-}) {
+function FullscreenButton({ isFullscreen, onToggle }: { isFullscreen: boolean; onToggle: () => void }) {
   return (
     <button
       type="button"
       data-window-fullscreen
       aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
-      onClick={(e) => {
-        e.stopPropagation()
-        onToggle()
-      }}
-      style={{
-        appearance: 'none',
-        width: 11,
-        height: 11,
-        background: isFullscreen ? '#000' : '#fff',
-        border: '1px solid #000',
-        padding: 0,
-        cursor: 'pointer',
-        flexShrink: 0,
-      }}
+      onClick={(e) => { e.stopPropagation(); onToggle() }}
+      style={{ ...chromeButtonStyle, background: isFullscreen ? '#000' : '#fff' }}
     />
   )
 }
