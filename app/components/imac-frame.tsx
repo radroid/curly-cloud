@@ -25,10 +25,7 @@ export function IMacG3Frame({
         width: isMaximized ? '100vw' : isLarge ? '88%' : '100%',
         maxWidth: isMaximized ? 'none' : maxWidth,
         height: isMaximized ? '100vh' : undefined,
-        position: isMaximized ? 'fixed' : undefined,
-        top: isMaximized ? 0 : undefined,
-        left: isMaximized ? 0 : undefined,
-        zIndex: isMaximized ? 50 : undefined,
+        ...(isMaximized && { position: 'fixed', top: 0, left: 0, zIndex: 50 }),
       }}
     >
       {/* Main body */}
