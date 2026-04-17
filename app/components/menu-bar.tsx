@@ -123,14 +123,8 @@ function MenuDropdown({ items, onClose }: { items: MenuItem[]; onClose: () => vo
               padding: '3px 16px', fontFamily: 'var(--font-chicago)', fontSize: FONT_SIZE, textAlign: 'left',
               color: item.disabled ? '#999' : '#000', cursor: item.disabled ? 'default' : 'pointer',
             }}
-            onMouseEnter={(e) => {
-              if (item.disabled) return
-              Object.assign(e.currentTarget.style, { background: '#000', color: '#fff' })
-            }}
-            onMouseLeave={(e) => {
-              if (item.disabled) return
-              Object.assign(e.currentTarget.style, { background: 'transparent', color: '#000' })
-            }}
+            onMouseEnter={(e) => { if (!item.disabled) Object.assign(e.currentTarget.style, { background: '#000', color: '#fff' }) }}
+            onMouseLeave={(e) => { if (!item.disabled) Object.assign(e.currentTarget.style, { background: 'transparent', color: '#000' }) }}
           >
             <span>{item.label}</span>
             {item.shortcut && <span style={{ marginLeft: 16, opacity: 0.6 }}>{item.shortcut}</span>}
