@@ -427,23 +427,17 @@ export function CurlyBrowserApp() {
     [historyIndex],
   )
 
-  function goBack() {
-    if (!canGoBack) return
-    const newIndex = historyIndex - 1
+  function step(delta: -1 | 1) {
+    if (delta < 0 && !canGoBack) return
+    if (delta > 0 && !canGoForward) return
+    const newIndex = historyIndex + delta
     setHistoryIndex(newIndex)
     setUrlInput(viewToUrl(history[newIndex]))
   }
 
-  function goForward() {
-    if (!canGoForward) return
-    const newIndex = historyIndex + 1
-    setHistoryIndex(newIndex)
-    setUrlInput(viewToUrl(history[newIndex]))
-  }
-
-  function goHome() {
-    navigate({ mode: 'home' })
-  }
+  const goBack = () => step(-1)
+  const goForward = () => step(1)
+  const goHome = () => navigate({ mode: 'home' })
 
   function openBookmark(bm: Bookmark) {
     if (bm.openMode === 'tab') {
