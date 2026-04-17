@@ -68,6 +68,15 @@ const tileSubValueStyle: React.CSSProperties = {
   marginTop: 2,
 }
 
+const linkBadgeStyle: React.CSSProperties = {
+  ...chicago,
+  fontSize: 11,
+  color: '#000',
+  textDecoration: 'none',
+  border: '1px solid #000',
+  padding: '1px 4px',
+}
+
 // ── Browser detection ─────────────────────────────────────────────────────────
 
 function detectBrowser(ua: string): string {
@@ -340,64 +349,21 @@ export function ControlPanelApp() {
 
           {/* Links */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            <a
-              href="https://cal.com/createclub/problem-ranter"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                ...chicago,
-                fontSize: 11,
-                color: '#000',
-                textDecoration: 'none',
-                border: '1px solid #000',
-                padding: '1px 4px',
-              }}
-            >
-              Cal
-            </a>
-            <a
-              href="https://github.com/radroid"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                ...chicago,
-                fontSize: 11,
-                color: '#000',
-                textDecoration: 'none',
-                border: '1px solid #000',
-                padding: '1px 4px',
-              }}
-            >
-              GitHub
-            </a>
-            <a
-              href="mailto:raj9dholakia@gmail.com"
-              style={{
-                ...chicago,
-                fontSize: 11,
-                color: '#000',
-                textDecoration: 'none',
-                border: '1px solid #000',
-                padding: '1px 4px',
-              }}
-            >
-              Email
-            </a>
-            <a
-              href="https://maps.app.goo.gl/eWDPAqVgfkHyWv4T9"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                ...chicago,
-                fontSize: 11,
-                color: '#000',
-                textDecoration: 'none',
-                border: '1px solid #000',
-                padding: '1px 4px',
-              }}
-            >
-              Maps
-            </a>
+            {[
+              { href: 'https://cal.com/createclub/problem-ranter', label: 'Cal', external: true },
+              { href: 'https://github.com/radroid', label: 'GitHub', external: true },
+              { href: 'mailto:raj9dholakia@gmail.com', label: 'Email', external: false },
+              { href: 'https://maps.app.goo.gl/eWDPAqVgfkHyWv4T9', label: 'Maps', external: true },
+            ].map((l) => (
+              <a
+                key={l.label}
+                href={l.href}
+                {...(l.external && { target: '_blank', rel: 'noopener noreferrer' })}
+                style={linkBadgeStyle}
+              >
+                {l.label}
+              </a>
+            ))}
           </div>
         </div>
       </div>
