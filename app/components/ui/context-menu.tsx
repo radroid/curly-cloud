@@ -3,16 +3,8 @@
 import * as React from 'react'
 import * as ContextMenuPrimitive from '@radix-ui/react-context-menu'
 
-// Mac OS System 1 themed context menu — same API surface as the stock
-// shadcn/ui component, restyled with inline styles (Chicago font, white
-// background, 1px black border, hover = inverted).
-
 const ContextMenu = ContextMenuPrimitive.Root
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger
-const ContextMenuGroup = ContextMenuPrimitive.Group
-const ContextMenuPortal = ContextMenuPrimitive.Portal
-const ContextMenuSub = ContextMenuPrimitive.Sub
-const ContextMenuRadioGroup = ContextMenuPrimitive.RadioGroup
 
 const contentStyle: React.CSSProperties = {
   minWidth: 160,
@@ -38,36 +30,6 @@ const itemBaseStyle: React.CSSProperties = {
   fontSize: 12,
   lineHeight: 1.25,
 }
-
-const ContextMenuSubTrigger = React.forwardRef<
-  React.ElementRef<typeof ContextMenuPrimitive.SubTrigger>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubTrigger> & {
-    inset?: boolean
-  }
->(({ inset, children, style, ...props }, ref) => (
-  <ContextMenuPrimitive.SubTrigger
-    ref={ref}
-    data-mac-item
-    style={{ ...itemBaseStyle, paddingLeft: inset ? 28 : 16, ...style }}
-    {...props}
-  >
-    {children}
-    <span style={{ marginLeft: 'auto', paddingLeft: 16 }}>▶</span>
-  </ContextMenuPrimitive.SubTrigger>
-))
-ContextMenuSubTrigger.displayName = ContextMenuPrimitive.SubTrigger.displayName
-
-const ContextMenuSubContent = React.forwardRef<
-  React.ElementRef<typeof ContextMenuPrimitive.SubContent>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.SubContent>
->(({ style, ...props }, ref) => (
-  <ContextMenuPrimitive.SubContent
-    ref={ref}
-    style={{ ...contentStyle, ...style }}
-    {...props}
-  />
-))
-ContextMenuSubContent.displayName = ContextMenuPrimitive.SubContent.displayName
 
 const ContextMenuContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Content>,
@@ -97,65 +59,6 @@ const ContextMenuItem = React.forwardRef<
   />
 ))
 ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName
-
-const ContextMenuCheckboxItem = React.forwardRef<
-  React.ElementRef<typeof ContextMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.CheckboxItem>
->(({ children, checked, style, ...props }, ref) => (
-  <ContextMenuPrimitive.CheckboxItem
-    ref={ref}
-    data-mac-item
-    style={{ ...itemBaseStyle, paddingLeft: 28, paddingRight: 8, ...style }}
-    checked={checked}
-    {...props}
-  >
-    <span
-      style={{
-        position: 'absolute',
-        left: 8,
-        width: 12,
-        height: 12,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 10,
-      }}
-    >
-      <ContextMenuPrimitive.ItemIndicator>✓</ContextMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </ContextMenuPrimitive.CheckboxItem>
-))
-ContextMenuCheckboxItem.displayName = ContextMenuPrimitive.CheckboxItem.displayName
-
-const ContextMenuRadioItem = React.forwardRef<
-  React.ElementRef<typeof ContextMenuPrimitive.RadioItem>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.RadioItem>
->(({ children, style, ...props }, ref) => (
-  <ContextMenuPrimitive.RadioItem
-    ref={ref}
-    data-mac-item
-    style={{ ...itemBaseStyle, paddingLeft: 28, paddingRight: 8, ...style }}
-    {...props}
-  >
-    <span
-      style={{
-        position: 'absolute',
-        left: 8,
-        width: 12,
-        height: 12,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: 10,
-      }}
-    >
-      <ContextMenuPrimitive.ItemIndicator>●</ContextMenuPrimitive.ItemIndicator>
-    </span>
-    {children}
-  </ContextMenuPrimitive.RadioItem>
-))
-ContextMenuRadioItem.displayName = ContextMenuPrimitive.RadioItem.displayName
 
 const ContextMenuLabel = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Label>,
@@ -191,39 +94,11 @@ const ContextMenuSeparator = React.forwardRef<
 ))
 ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName
 
-const ContextMenuShortcut = ({
-  style,
-  ...props
-}: React.HTMLAttributes<HTMLSpanElement>) => {
-  return (
-    <span
-      style={{
-        marginLeft: 'auto',
-        paddingLeft: 24,
-        fontSize: 11,
-        opacity: 0.6,
-        ...style,
-      }}
-      {...props}
-    />
-  )
-}
-ContextMenuShortcut.displayName = 'ContextMenuShortcut'
-
 export {
   ContextMenu,
   ContextMenuTrigger,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuCheckboxItem,
-  ContextMenuRadioItem,
   ContextMenuLabel,
   ContextMenuSeparator,
-  ContextMenuShortcut,
-  ContextMenuGroup,
-  ContextMenuPortal,
-  ContextMenuSub,
-  ContextMenuSubContent,
-  ContextMenuSubTrigger,
-  ContextMenuRadioGroup,
 }
