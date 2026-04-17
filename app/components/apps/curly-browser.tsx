@@ -351,13 +351,7 @@ function EmbedView({ url, label, onNavigate }: { url: string; label: string; onN
         src={url}
         title={label}
         onLoad={handleLoad}
-        style={{
-          flex: 1,
-          width: '100%',
-          border: 'none',
-          minHeight: 0,
-          background: '#fff',
-        }}
+        style={{ flex: 1, width: '100%', border: 'none', minHeight: 0, background: '#fff' }}
         sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       />
       {/* Always-visible fallback: most sites set frame-ancestors and the
