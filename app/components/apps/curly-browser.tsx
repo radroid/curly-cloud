@@ -48,11 +48,8 @@ const TOOLS: Bookmark[] = [
 
 const HOME_URL = 'file:///Curly OS/Home.html'
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function viewToUrl(view: View): string {
-  return view.mode === 'home' ? HOME_URL : view.url
-}
+const viewToUrl = (view: View): string =>
+  view.mode === 'home' ? HOME_URL : view.url
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
 

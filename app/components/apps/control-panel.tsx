@@ -208,80 +208,31 @@ function BatteryTile() {
   )
 }
 
-function DisplayTile() {
-  const [resolution, setResolution] = useState<string | null>(null)
-
-  useEffect(() => {
-    setResolution(`${window.screen.width} \u00D7 ${window.screen.height}`)
-  }, [])
-
-  return (
-    <div style={tileStyle}>
-      <span style={tileLabelStyle}>DISPLAY</span>
-      <span style={tileValueStyle}>{resolution ?? '...'}</span>
-    </div>
-  )
+function detectNetwork(): string {
+  const nav = navigator as NavWithBattery
+  const t = nav.connection?.effectiveType
+  if (!t) return navigator.onLine ? 'Online' : 'Offline'
+  if (t === '4g') return '4G'
+  if (t === '3g') return '3G'
+  if (t === '2g') return '2G'
+  if (t === 'slow-2g') return 'Slow 2G'
+  if (t === 'wifi') return 'WiFi'
+  return t.toUpperCase()
 }
 
-function BrowserTile() {
-  const [browser, setBrowser] = useState<string | null>(null)
-
-  useEffect(() => {
-    setBrowser(detectBrowser(navigator.userAgent))
-  }, [])
-
-  return (
-    <div style={tileStyle}>
-      <span style={tileLabelStyle}>BROWSER</span>
-      <span style={tileValueStyle}>{browser ?? '...'}</span>
-    </div>
-  )
+function detectLocation(): string {
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const parts = tz.split('/')
+  return parts.length >= 2 ? parts[parts.length - 1].replace(/_/g, ' ') : tz
 }
 
-function NetworkTile() {
-  const [connection, setConnection] = useState<string | null>(null)
-
-  useEffect(() => {
-    const nav = navigator as NavWithBattery
-    const effectiveType = nav.connection?.effectiveType
-    if (effectiveType) {
-      const label = effectiveType === '4g' ? '4G'
-        : effectiveType === '3g' ? '3G'
-        : effectiveType === '2g' ? '2G'
-        : effectiveType === 'slow-2g' ? 'Slow 2G'
-        : effectiveType === 'wifi' ? 'WiFi'
-        : effectiveType.toUpperCase()
-      setConnection(label)
-    } else {
-      setConnection(navigator.onLine ? 'Online' : 'Offline')
-    }
-  }, [])
-
+function SimpleTile({ label, detect }: { label: string; detect: () => string }) {
+  const [value, setValue] = useState<string | null>(null)
+  useEffect(() => { setValue(detect()) }, [detect])
   return (
     <div style={tileStyle}>
-      <span style={tileLabelStyle}>NETWORK</span>
-      <span style={tileValueStyle}>{connection ?? '...'}</span>
-    </div>
-  )
-}
-
-function LocationTile() {
-  const [location, setLocation] = useState<string | null>(null)
-
-  useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
-    const parts = tz.split('/')
-    // Use the city part (last segment), replacing underscores with spaces
-    const city = parts.length >= 2
-      ? parts[parts.length - 1].replace(/_/g, ' ')
-      : tz
-    setLocation(city)
-  }, [])
-
-  return (
-    <div style={tileStyle}>
-      <span style={tileLabelStyle}>LOCATION</span>
-      <span style={tileValueStyle}>{location ?? '...'}</span>
+      <span style={tileLabelStyle}>{label}</span>
+      <span style={tileValueStyle}>{value ?? '...'}</span>
     </div>
   )
 }
@@ -380,10 +331,10 @@ export function ControlPanelApp() {
       >
         <ClockTile now={now} />
         <BatteryTile />
-        <DisplayTile />
-        <BrowserTile />
-        <NetworkTile />
-        <LocationTile />
+        <SimpleTile label="DISPLAY" detect={() => `${window.screen.width} \u00D7 ${window.screen.height}`} />
+        <SimpleTile label="BROWSER" detect={() => detectBrowser(navigator.userAgent)} />
+        <SimpleTile label="NETWORK" detect={detectNetwork} />
+        <SimpleTile label="LOCATION" detect={detectLocation} />
       </div>
     </div>
   )
