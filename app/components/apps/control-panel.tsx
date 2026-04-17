@@ -68,16 +68,8 @@ function detectBrowser(ua: string): string {
 function ClockTile({ now }: { now: Date | null }) {
   if (!now) return <div style={tileStyle}><span style={tileLabelStyle}>TIME</span><span style={tileValueStyle}>--:--</span></div>
 
-  const time = now.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-  const date = now.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
+  const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+  const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 
   return (
     <div style={tileStyle}>
@@ -94,16 +86,11 @@ function BatteryTile() {
 
   useEffect(() => {
     const nav = navigator as NavWithBattery
-    if (!nav.getBattery) {
-      setUnavailable(true)
-      return
-    }
+    if (!nav.getBattery) { setUnavailable(true); return }
 
     let battery: BatteryManager | null = null
-
     const update = () => {
-      if (!battery) return
-      setBatteryState({ level: battery.level, charging: battery.charging })
+      if (battery) setBatteryState({ level: battery.level, charging: battery.charging })
     }
 
     nav.getBattery().then((b) => {
@@ -111,9 +98,7 @@ function BatteryTile() {
       update()
       b.addEventListener('levelchange', update)
       b.addEventListener('chargingchange', update)
-    }).catch(() => {
-      setUnavailable(true)
-    })
+    }).catch(() => setUnavailable(true))
 
     return () => {
       if (battery) {
