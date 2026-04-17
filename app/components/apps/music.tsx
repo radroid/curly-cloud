@@ -54,6 +54,24 @@ const VINYL_KEYFRAMES = `
   }
 `
 
+const ellipsisLine: React.CSSProperties = {
+  ...chicago,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  lineHeight: 1.4,
+}
+
+const sectionHeader: React.CSSProperties = {
+  ...chicago,
+  fontSize: 12,
+  fontWeight: 'bold',
+  textTransform: 'uppercase',
+  letterSpacing: 1.2,
+  padding: '8px 10px 7px',
+  flexShrink: 0,
+}
+
 // ── Vinyl Record ───────────────────────────────────────────────────────────────
 
 function VinylRecord({
@@ -586,32 +604,10 @@ export function MusicApp() {
 
           {/* Track info */}
           <div style={{ width: '100%', textAlign: 'center', minWidth: 0, padding: '0 6px' }}>
-            <div
-              style={{
-                ...chicago,
-                fontSize: 15,
-                fontWeight: 'bold',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                lineHeight: 1.4,
-              }}
-              title={track.name}
-            >
+            <div style={{ ...ellipsisLine, fontSize: 15, fontWeight: 'bold' }} title={track.name}>
               {track.name}
             </div>
-            <div
-              style={{
-                ...chicago,
-                fontSize: 13,
-                color: '#555',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                lineHeight: 1.4,
-              }}
-              title={track.artist}
-            >
+            <div style={{ ...ellipsisLine, fontSize: 13, color: '#555' }} title={track.artist}>
               {track.artist}
             </div>
           </div>
@@ -638,36 +634,13 @@ export function MusicApp() {
           }}
         >
           {/* Top Genres */}
-          <div
-            style={{
-              ...chicago,
-              fontSize: 12,
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: 1.2,
-              padding: '8px 10px 7px',
-              borderBottom: '1px solid #000',
-              flexShrink: 0,
-            }}
-          >
+          <div style={{ ...sectionHeader, borderBottom: '1px solid #000' }}>
             Top Genres
           </div>
           <GenreList genres={sortedGenres} />
 
           {/* Top Artists */}
-          <div
-            style={{
-              ...chicago,
-              fontSize: 12,
-              fontWeight: 'bold',
-              textTransform: 'uppercase',
-              letterSpacing: 1.2,
-              padding: '8px 10px 7px',
-              borderTop: '1px solid #000',
-              borderBottom: '1px solid #000',
-              flexShrink: 0,
-            }}
-          >
+          <div style={{ ...sectionHeader, borderTop: '1px solid #000', borderBottom: '1px solid #000' }}>
             Top Artists
           </div>
           <ArtistList artists={artists ?? []} />
