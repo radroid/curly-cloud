@@ -150,21 +150,17 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
     const onUp = () => {
       if (!dragging) return
       dragging = false
-      if (rafId) {
-        cancelAnimationFrame(rafId)
-        rafId = 0
-      }
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0 }
       // Clear the inline transform so the next render isn't offset by it.
       el.style.transform = ''
       if (started && containerRect.width > 0 && containerRect.height > 0) {
-        const newX = (startLeftPx + pendingTx) / containerRect.width
-        const newY = (startTopPx + pendingTy) / containerRect.height
-        // Skip transition for one render so the commit is atomic with the
-        // DOM's current visual position — no snap-back or ghost animation.
+        // Skip transition for one render so the commit is atomic with the DOM's current visual position.
         setSkipTransition(true)
-        moveWindow(windowId, { x: newX, y: newY })
+        moveWindow(windowId, {
+          x: (startLeftPx + pendingTx) / containerRect.width,
+          y: (startTopPx + pendingTy) / containerRect.height,
+        })
       } else {
-        // Click without movement — restore transitions for any future changes.
         el.style.transition = ''
       }
       started = false
