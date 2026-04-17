@@ -35,10 +35,7 @@ export function MaximizeNudge({
 
   // Auto-hide when user enters maximize mode
   useEffect(() => {
-    if (isMaximized && visible) {
-      setVisible(false)
-      handleDismiss()
-    }
+    if (isMaximized && visible) handleDismiss()
   }, [isMaximized, visible])
 
   const handleDismiss = () => {
