@@ -227,18 +227,7 @@ function GenreList({ genres }: { genres: Genre[] }) {
               borderBottom: i < genres.length - 1 ? '1px solid #e0e0e0' : 'none',
             }}
           >
-            <div
-              style={{
-                ...chicago,
-                fontSize: 12,
-                fontWeight: 'bold',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                lineHeight: 1.4,
-                marginBottom: 3,
-              }}
-            >
+            <div style={{ ...ellipsisLine, fontSize: 12, fontWeight: 'bold', marginBottom: 3 }}>
               {genre.name}
             </div>
             <div
