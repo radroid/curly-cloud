@@ -269,10 +269,7 @@ let _cacheTime = 0
 let _prefetchPromise: Promise<void> | null = null
 
 async function fetchSpotify(): Promise<SpotifyData> {
-  const res = await fetch(`/api/spotify/now-playing?t=${Date.now()}`, {
-    cache: 'no-store',
-    headers: { 'Cache-Control': 'no-cache' },
-  })
+  const res = await fetch(`/api/spotify/now-playing?t=${Date.now()}`, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } })
   if (!res.ok) throw new Error('bad status')
   return res.json()
 }
