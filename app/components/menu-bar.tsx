@@ -134,12 +134,7 @@ function MenuDropdown({
     >
       {items.map((item, i) => {
         if (item.type === 'divider') {
-          return (
-            <div
-              key={`d-${i}`}
-              style={{ height: 1, background: '#000', margin: '2px 0', opacity: 0.6 }}
-            />
-          )
+          return <div key={`d-${i}`} style={{ height: 1, background: '#000', margin: '2px 0', opacity: 0.6 }} />
         }
         return (
           <button
@@ -177,13 +172,7 @@ function MenuDropdown({
 
 function AppleGlyph({ size, inverted }: { size: number; inverted: boolean }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 14 16"
-      aria-hidden="true"
-      style={{ display: 'block' }}
-    >
+    <svg width={size} height={size} viewBox="0 0 14 16" aria-hidden="true" style={{ display: 'block' }}>
       <path
         fill={inverted ? '#fff' : '#000'}
         d="M9.5 2.3c.6-.7 1-1.6.9-2.3-.8 0-1.8.5-2.4 1.2-.6.6-1.1 1.6-.9 2.4.9.1 1.8-.5 2.4-1.3zM10.4 4.5c-1.3-.1-2.4.7-3 .7-.6 0-1.6-.7-2.6-.7-1.4 0-2.6.8-3.3 2-1.4 2.4-.4 6 1 8 .7 1 1.4 2.1 2.5 2 .9-.1 1.3-.6 2.4-.6s1.5.6 2.5.6c1.1 0 1.8-1 2.5-2 .6-.9 1-1.7 1.3-2.8-3.2-1.2-3.6-5.4-.3-7.2z"
