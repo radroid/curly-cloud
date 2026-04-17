@@ -298,28 +298,16 @@ export function FinderApp() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { openWindow } = useWindowManager()
 
-  // Resolve current folder entries
-  const currentEntries: FSEntry[] = (() => {
-    if (pathStack.length === 0) return FILE_TREE
-    // drill into nested folders — for now we have only one level of depth
-    const topId = pathStack[0]
-    const folder = FILE_TREE.find(
-      (e): e is FolderEntry => e.kind === 'folder' && e.id === topId,
-    )
-    if (!folder) return FILE_TREE
-    if (pathStack.length === 1) return folder.children
-    // Deeper levels (not needed right now, but handle gracefully)
-    return folder.children
-  })()
-
-  // Breadcrumb label
-  const breadcrumb = (() => {
-    if (pathStack.length === 0) return ROOT_LABEL
-    const folder = FILE_TREE.find(
-      (e): e is FolderEntry => e.kind === 'folder' && e.id === pathStack[0],
-    )
-    return `${ROOT_LABEL} > ${folder?.label ?? pathStack[0]}`
-  })()
+  // Current folder — only one level of depth exists in FILE_TREE
+  const topFolder = pathStack.length
+    ? FILE_TREE.find((e): e is FolderEntry => e.kind === 'folder' && e.id === pathStack[0])
+    : null
+  const currentEntries: FSEntry[] = topFolder?.children ?? FILE_TREE
+  const breadcrumb = topFolder
+    ? `${ROOT_LABEL} > ${topFolder.label}`
+    : pathStack.length
+      ? `${ROOT_LABEL} > ${pathStack[0]}`
+      : ROOT_LABEL
 
   const handleOpen = useCallback((entry: FSEntry) => {
     if (entry.kind === 'folder') {
