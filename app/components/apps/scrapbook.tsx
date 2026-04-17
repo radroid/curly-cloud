@@ -9,6 +9,11 @@ type Post = {
   body: string
 }
 
+const chicago: React.CSSProperties = {
+  fontFamily: 'var(--font-chicago)',
+  WebkitFontSmoothing: 'none',
+}
+
 const POSTS: Post[] = [
   {
     title: 'Building Product for Humans, Not Metrics',
@@ -99,14 +104,12 @@ function IndexRow({
         width: '100%',
         textAlign: 'left',
         padding: '8px 10px',
-        borderBottom: '1px solid #000',
         background: hovered ? '#000' : 'transparent',
         color: hovered ? '#fff' : '#000',
         cursor: 'pointer',
         border: 'none',
         borderBlockEnd: '1px solid #000',
-        fontFamily: 'var(--font-chicago)',
-        WebkitFontSmoothing: 'none' as const,
+        ...chicago,
         transition: 'none',
       }}
     >
@@ -173,14 +176,13 @@ export function ScrapbookApp() {
   }
 
   const navBtnBase: React.CSSProperties = {
-    fontFamily: 'var(--font-chicago)',
+    ...chicago,
     fontSize: 14,
     background: '#fff',
     color: '#000',
     border: '1px solid #000',
     padding: '1px 8px',
     cursor: 'pointer',
-    WebkitFontSmoothing: 'none',
     userSelect: 'none',
     lineHeight: 1.4,
   }
@@ -199,7 +201,7 @@ export function ScrapbookApp() {
         flexDirection: 'column',
         background: '#fff',
         overflow: 'hidden',
-        fontFamily: 'var(--font-chicago)',
+        ...chicago,
       }}
     >
       {/* Paper area */}
@@ -236,10 +238,9 @@ export function ScrapbookApp() {
               >
                 <div
                   style={{
-                    fontFamily: 'var(--font-chicago)',
+                    ...chicago,
                     fontSize: 16,
                     fontWeight: 'bold',
-                    WebkitFontSmoothing: 'none',
                     lineHeight: 1.3,
                   }}
                 >
@@ -265,11 +266,10 @@ export function ScrapbookApp() {
               {/* Title */}
               <div
                 style={{
-                  fontFamily: 'var(--font-chicago)',
+                  ...chicago,
                   fontSize: 16,
                   fontWeight: 'bold',
                   marginBottom: 4,
-                  WebkitFontSmoothing: 'none',
                   lineHeight: 1.3,
                 }}
               >
@@ -279,11 +279,10 @@ export function ScrapbookApp() {
               {/* Date */}
               <div
                 style={{
-                  fontFamily: 'var(--font-chicago)',
+                  ...chicago,
                   fontSize: 11,
                   color: '#555',
                   marginBottom: 8,
-                  WebkitFontSmoothing: 'none',
                 }}
               >
                 {post.publishedAt}
@@ -292,13 +291,12 @@ export function ScrapbookApp() {
               {/* Summary */}
               <div
                 style={{
-                  fontFamily: 'var(--font-chicago)',
+                  ...chicago,
                   fontSize: 12,
                   fontStyle: 'italic',
                   marginBottom: 10,
                   paddingBottom: 8,
                   borderBottom: '1px solid #ccc',
-                  WebkitFontSmoothing: 'none',
                   lineHeight: 1.5,
                 }}
               >
@@ -308,11 +306,10 @@ export function ScrapbookApp() {
               {/* Body */}
               <pre
                 style={{
-                  fontFamily: 'var(--font-chicago)',
+                  ...chicago,
                   fontSize: 12,
                   whiteSpace: 'pre-wrap',
                   margin: 0,
-                  WebkitFontSmoothing: 'none',
                   lineHeight: 1.6,
                   color: '#000',
                 }}
@@ -359,13 +356,7 @@ export function ScrapbookApp() {
               </button>
             </div>
 
-            <span
-              style={{
-                fontFamily: 'var(--font-chicago)',
-                fontSize: 12,
-                WebkitFontSmoothing: 'none',
-              }}
-            >
+            <span style={{ ...chicago, fontSize: 12 }}>
               {page + 1} / {total}
             </span>
 
@@ -380,14 +371,7 @@ export function ScrapbookApp() {
             </button>
           </>
         ) : (
-          <span
-            style={{
-              fontFamily: 'var(--font-chicago)',
-              fontSize: 12,
-              WebkitFontSmoothing: 'none',
-              color: '#555',
-            }}
-          >
+          <span style={{ ...chicago, fontSize: 12, color: '#555' }}>
             {total} {total === 1 ? 'entry' : 'entries'}
           </span>
         )}
