@@ -142,14 +142,9 @@ export function NotePadApp() {
   // Keyboard navigation — only when textarea is not focused
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Skip if textarea is focused
-      if (
-        document.activeElement === textareaRef.current ||
-        document.activeElement?.tagName === 'TEXTAREA' ||
-        document.activeElement?.tagName === 'INPUT'
-      ) {
-        return;
-      }
+      // Skip if a text field is focused
+      const tag = document.activeElement?.tagName
+      if (tag === 'TEXTAREA' || tag === 'INPUT') return
 
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
