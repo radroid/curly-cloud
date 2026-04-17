@@ -34,9 +34,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
   const atOrigin = !!state?.fromOrigin && !openAnimPlayed && !prefersReduced
   useLayoutEffect(() => {
     if (!atOrigin) return
-    const raf1 = requestAnimationFrame(() => {
-      requestAnimationFrame(() => setOpenAnimPlayed(true))
-    })
+    const raf1 = requestAnimationFrame(() => requestAnimationFrame(() => setOpenAnimPlayed(true)))
     return () => cancelAnimationFrame(raf1)
   }, [atOrigin])
 
@@ -49,10 +47,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
 
   // Lazy content mount after entry animation completes
   useEffect(() => {
-    if (prefersReduced) {
-      setContentReady(true)
-      return
-    }
+    if (prefersReduced) { setContentReady(true); return }
     const t = setTimeout(() => setContentReady(true), OPEN_ANIM_MS + 20)
     return () => clearTimeout(t)
   }, [prefersReduced])
