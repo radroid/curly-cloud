@@ -199,15 +199,10 @@ function BatteryTile() {
 }
 
 function detectNetwork(): string {
-  const nav = navigator as NavWithBattery
-  const t = nav.connection?.effectiveType
+  const t = (navigator as NavWithBattery).connection?.effectiveType
   if (!t) return navigator.onLine ? 'Online' : 'Offline'
-  if (t === '4g') return '4G'
-  if (t === '3g') return '3G'
-  if (t === '2g') return '2G'
-  if (t === 'slow-2g') return 'Slow 2G'
-  if (t === 'wifi') return 'WiFi'
-  return t.toUpperCase()
+  const map: Record<string, string> = { '4g': '4G', '3g': '3G', '2g': '2G', 'slow-2g': 'Slow 2G', wifi: 'WiFi' }
+  return map[t] ?? t.toUpperCase()
 }
 
 function detectLocation(): string {
