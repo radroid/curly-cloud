@@ -41,6 +41,19 @@ const chicago: React.CSSProperties = {
   MozOsxFontSmoothing: 'grayscale',
 }
 
+const VINYL_KEYFRAMES = `
+  @keyframes curly-vinyl-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .curly-vinyl {
+    animation-name: curly-vinyl-spin;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .curly-vinyl { animation: none !important; }
+  }
+`
+
 // ── Vinyl Record ───────────────────────────────────────────────────────────────
 
 function VinylRecord({
@@ -434,14 +447,8 @@ export function MusicApp() {
       }
     }
 
-    // If we already have fresh cache, skip the initial fetch and just start polling
-    if (hasFreshCache) {
-      const interval = setInterval(load, 10_000)
-      return () => { cancelled = true; clearInterval(interval) }
-    }
-
-    // No cache — fetch immediately then poll
-    load()
+    // Skip initial fetch when we already have fresh cache; poll either way
+    if (!hasFreshCache) load()
     const interval = setInterval(load, 10_000)
     return () => {
       cancelled = true
@@ -454,18 +461,7 @@ export function MusicApp() {
   if (isLoading) {
     return (
       <>
-        <style>{`
-          @keyframes curly-vinyl-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .curly-vinyl {
-            animation-name: curly-vinyl-spin;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .curly-vinyl { animation: none !important; }
-          }
-        `}</style>
+        <style>{VINYL_KEYFRAMES}</style>
         <div
           style={{
             flex: 1,
@@ -489,18 +485,7 @@ export function MusicApp() {
   if (isOffline) {
     return (
       <>
-        <style>{`
-          @keyframes curly-vinyl-spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          .curly-vinyl {
-            animation-name: curly-vinyl-spin;
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .curly-vinyl { animation: none !important; }
-          }
-        `}</style>
+        <style>{VINYL_KEYFRAMES}</style>
         <div
           style={{
             flex: 1,
@@ -537,18 +522,7 @@ export function MusicApp() {
 
   return (
     <>
-      <style>{`
-        @keyframes curly-vinyl-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .curly-vinyl {
-          animation-name: curly-vinyl-spin;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .curly-vinyl { animation: none !important; }
-        }
-      `}</style>
+      <style>{VINYL_KEYFRAMES}</style>
 
       <div
         style={{
