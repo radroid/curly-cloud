@@ -174,10 +174,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     fullscreenable: false,
     defaultSize: { width: 'clamp(120px, 25cqw, 200px)', height: 'clamp(180px, 45cqh, 280px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
+      { label: 'File', items: [{ label: 'Close', disabled: true }] },
       {
         label: 'Edit',
         items: [
@@ -195,10 +192,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/control-panel.svg',
     defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(200px, 55cqh, 350px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
+      { label: 'File', items: [{ label: 'Close', disabled: true }] },
     ],
     component: ControlPanelApp,
     showScrollbar: true,
@@ -209,10 +203,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/journal.svg',
     defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(220px, 60cqh, 380px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
+      { label: 'File', items: [{ label: 'Close', disabled: true }] },
       {
         label: 'View',
         items: [
@@ -229,10 +220,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/world-map.svg',
     defaultSize: { width: 'clamp(560px, 90cqw, 1080px)', height: 'clamp(301px, calc(45cqw + 21px), 561px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
+      { label: 'File', items: [{ label: 'Close', disabled: true }] },
       {
         label: 'View',
         items: [
@@ -249,10 +237,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/music.svg',
     defaultSize: { width: 'clamp(440px, 78cqw, 640px)', height: 'clamp(300px, 72cqh, 440px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [{ label: 'Close', disabled: true }],
-      },
+      { label: 'File', items: [{ label: 'Close', disabled: true }] },
       {
         label: 'View',
         items: [
