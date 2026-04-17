@@ -115,12 +115,7 @@ function ClockTile({ now }: { now: Date | null }) {
 }
 
 function BatteryTile() {
-  const [batteryState, setBatteryState] = useState<{
-    level: number
-    charging: boolean
-    chargingTime: number
-    dischargingTime: number
-  } | null>(null)
+  const [batteryState, setBatteryState] = useState<{ level: number; charging: boolean } | null>(null)
   const [unavailable, setUnavailable] = useState(false)
 
   useEffect(() => {
@@ -134,12 +129,7 @@ function BatteryTile() {
 
     const update = () => {
       if (!battery) return
-      setBatteryState({
-        level: battery.level,
-        charging: battery.charging,
-        chargingTime: battery.chargingTime,
-        dischargingTime: battery.dischargingTime,
-      })
+      setBatteryState({ level: battery.level, charging: battery.charging })
     }
 
     nav.getBattery().then((b) => {
