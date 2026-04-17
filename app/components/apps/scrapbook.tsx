@@ -160,74 +160,35 @@ export function ScrapbookApp() {
   }
 
   const navBtnBase: React.CSSProperties = {
-    ...chicago,
-    fontSize: 14,
-    background: '#fff',
-    color: '#000',
-    border: '1px solid #000',
-    padding: '1px 8px',
-    cursor: 'pointer',
-    userSelect: 'none',
-    lineHeight: 1.4,
+    ...chicago, fontSize: 14, background: '#fff', color: '#000',
+    border: '1px solid #000', padding: '1px 8px', cursor: 'pointer',
+    userSelect: 'none', lineHeight: 1.4,
   }
-
-  const navBtnDisabled: React.CSSProperties = {
-    ...navBtnBase,
-    color: '#aaa',
-    cursor: 'default',
-  }
+  const navBtnDisabled: React.CSSProperties = { ...navBtnBase, color: '#aaa', cursor: 'default' }
 
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#fff',
-        overflow: 'hidden',
-        ...chicago,
+        flex: 1, display: 'flex', flexDirection: 'column',
+        background: '#fff', overflow: 'hidden', ...chicago,
       }}
     >
       {/* Paper area */}
       <div
         style={{
-          flex: 1,
-          minHeight: 0,
-          margin: '6px 6px 0 6px',
-          border: '1px solid #000',
-          boxShadow: '1px 1px 0 #000',
-          background: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
+          flex: 1, minHeight: 0, margin: '6px 6px 0 6px',
+          border: '1px solid #000', boxShadow: '1px 1px 0 #000',
+          background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}
       >
         {/* Scrollable content */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: 'auto',
-            padding: viewMode === 'index' ? 0 : '10px 12px',
-          }}
-        >
+        <div style={{ flex: 1, overflowY: 'auto', padding: viewMode === 'index' ? 0 : '10px 12px' }}>
           {viewMode === 'index' ? (
             /* ---- Index / Table of Contents ---- */
             <div>
               {/* Index header */}
-              <div
-                style={{
-                  padding: '12px 12px 8px 12px',
-                  borderBottom: '1px solid #000',
-                }}
-              >
-                <div
-                  style={{
-                    ...chicago,
-                    fontSize: 16,
-                    fontWeight: 'bold',
-                    lineHeight: 1.3,
-                  }}
-                >
+              <div style={{ padding: '12px 12px 8px 12px', borderBottom: '1px solid #000' }}>
+                <div style={{ ...chicago, fontSize: 16, fontWeight: 'bold', lineHeight: 1.3 }}>
                   Journal
                 </div>
               </div>
