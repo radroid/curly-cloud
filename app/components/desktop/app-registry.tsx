@@ -68,8 +68,6 @@ function ComingSoon({ name }: { name: string }) {
 
 const makePlaceholder = (name: string) => () => <ComingSoon name={name} />
 
-const defaultMenus: MenuConfig[] = []
-
 export const FINDER_DEFAULT_MENUS: MenuConfig[] = [
   {
     label: 'File',
@@ -302,7 +300,7 @@ export const APP_REGISTRY: AppDefinition[] = [
       width: 'clamp(200px, 45cqw, 340px)',
       height: 'clamp(140px, 40cqh, 220px)',
     },
-    menuItems: defaultMenus,
+    menuItems: [],
     component: makePlaceholder('Trash'),
     statusBar: <span>0 items, 0K in trash, 0K available</span>,
   },

@@ -22,6 +22,13 @@ export type WindowState = {
 
 type WindowsRecord = Record<string, WindowState>
 
+type OpenWindowConfig = {
+  title: string
+  size: { width: number; height: number }
+  resizable?: boolean
+  content: React.ReactNode
+}
+
 type WindowManagerContextType = {
   windows: WindowsRecord
   activeWindowId: string | null
@@ -34,12 +41,7 @@ type WindowManagerContextType = {
   moveWindow: (appId: string, pos: { x: number; y: number }) => void
   resizeWindow: (appId: string, size: { width: number; height: number }) => void
   toggleFullscreen: (appId: string) => void
-  openWindow: (windowId: string, config: {
-    title: string
-    size: { width: number; height: number }
-    resizable?: boolean
-    content: React.ReactNode
-  }) => void
+  openWindow: (windowId: string, config: OpenWindowConfig) => void
 }
 
 const WindowManagerContext = createContext<WindowManagerContextType | null>(null)
@@ -159,12 +161,7 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     })
   }, [])
 
-  const openWindow = useCallback((windowId: string, config: {
-    title: string
-    size: { width: number; height: number }
-    resizable?: boolean
-    content: React.ReactNode
-  }) => {
+  const openWindow = useCallback((windowId: string, config: OpenWindowConfig) => {
     setWindows((prev) => {
       const existing = prev[windowId]
       if (existing && existing.isOpen) {
