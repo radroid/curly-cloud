@@ -74,18 +74,15 @@ export function NotePadApp() {
 
   const currentContent = hydrated ? pages[currentPage] ?? '' : '';
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const value = e.target.value;
-      setPages((prev) => {
-        const next = [...prev];
-        next[currentPage] = value;
-        savePages(next);
-        return next;
-      });
-    },
-    [currentPage],
-  );
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setPages((prev) => {
+      const next = [...prev];
+      next[currentPage] = value;
+      savePages(next);
+      return next;
+    });
+  }, [currentPage]);
 
   const goToPrevPage = useCallback(() => {
     if (currentPage > 0) setCurrentPage((p) => p - 1);
