@@ -7,16 +7,9 @@ import type { AppDefinition } from './app-registry'
 const DRAG_THRESHOLD_PX = 5
 const OPEN_ANIM_MS = 220
 
-type WindowProps = {
-  app?: AppDefinition
-  windowId: string
-  containerRef: RefObject<HTMLDivElement | null>
-  prefersReduced: boolean
-}
-
 type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
-export function Window({ app, windowId, containerRef, prefersReduced }: WindowProps) {
+export function Window({ app, windowId, containerRef, prefersReduced }: { app?: AppDefinition; windowId: string; containerRef: RefObject<HTMLDivElement | null>; prefersReduced: boolean }) {
   const { windows, activeWindowId, closeApp, focusApp, moveWindow, resizeWindow, toggleFullscreen } = useWindowManager()
   const state = windows[windowId]
   const windowRef = useRef<HTMLDivElement>(null)
