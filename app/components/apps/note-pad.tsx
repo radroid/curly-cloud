@@ -27,12 +27,8 @@ function loadPages(): string[] {
   if (pagesJson !== null) {
     try {
       const parsed = JSON.parse(pagesJson);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
-      }
-    } catch {
-      // Fall through to migration / default
-    }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch { /* fall through to migration/default */ }
   }
 
   // Migrate from old single-key storage
@@ -51,9 +47,7 @@ function loadPages(): string[] {
 }
 
 function savePages(pages: string[]) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(PAGES_STORAGE_KEY, JSON.stringify(pages));
-  }
+  if (typeof window !== 'undefined') localStorage.setItem(PAGES_STORAGE_KEY, JSON.stringify(pages));
 }
 
 function pushToTrash(content: string) {
@@ -62,9 +56,7 @@ function pushToTrash(content: string) {
   try {
     const raw = localStorage.getItem(TRASH_STORAGE_KEY);
     if (raw) trash = JSON.parse(raw);
-  } catch {
-    // ignore
-  }
+  } catch { /* ignore */ }
   trash.push({ content, deletedAt: Date.now() });
   localStorage.setItem(TRASH_STORAGE_KEY, JSON.stringify(trash));
 }
