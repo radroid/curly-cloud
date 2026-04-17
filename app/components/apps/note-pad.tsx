@@ -163,31 +163,16 @@ export function NotePadApp() {
   }, []);
 
   const navButtonStyle: React.CSSProperties = {
-    ...chicago,
-    fontSize: '11px',
-    background: '#fff',
-    border: '1px solid #000',
-    padding: '1px 6px',
-    cursor: 'pointer',
-    lineHeight: '14px',
+    ...chicago, fontSize: '11px', background: '#fff', border: '1px solid #000',
+    padding: '1px 6px', cursor: 'pointer', lineHeight: '14px',
   };
-
-  const disabledButtonStyle: React.CSSProperties = {
-    ...navButtonStyle,
-    color: '#999',
-    border: '1px solid #999',
-    cursor: 'default',
-  };
+  const disabledButtonStyle: React.CSSProperties = { ...navButtonStyle, color: '#999', border: '1px solid #999', cursor: 'default' };
 
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        background: '#fff',
-        overflow: 'hidden',
+        display: 'flex', flexDirection: 'column', width: '100%', height: '100%',
+        background: '#fff', overflow: 'hidden',
       }}
     >
       {/* Torn top edge */}
@@ -209,11 +194,8 @@ export function NotePadApp() {
       {/* Lined paper textarea area */}
       <div
         style={{
-          flex: 1,
-          backgroundImage:
-            'repeating-linear-gradient(to bottom, transparent 0, transparent 21px, #c8d4e6 21px, #c8d4e6 22px)',
-          overflow: 'hidden',
-          position: 'relative',
+          flex: 1, overflow: 'hidden', position: 'relative',
+          backgroundImage: 'repeating-linear-gradient(to bottom, transparent 0, transparent 21px, #c8d4e6 21px, #c8d4e6 22px)',
         }}
       >
         <textarea
@@ -222,20 +204,10 @@ export function NotePadApp() {
           onChange={handleChange}
           spellCheck={false}
           style={{
-            ...chicago,
-            display: 'block',
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            outline: 'none',
-            resize: 'none',
-            background: 'transparent',
-            fontSize: '14px',
-            lineHeight: '22px',
-            paddingLeft: '14px',
-            paddingRight: '8px',
-            paddingTop: '0px',
-            paddingBottom: '0px',
+            ...chicago, display: 'block', width: '100%', height: '100%',
+            border: 'none', outline: 'none', resize: 'none', background: 'transparent',
+            fontSize: '14px', lineHeight: '22px',
+            paddingLeft: '14px', paddingRight: '8px', paddingTop: '0px', paddingBottom: '0px',
             color: '#000',
             boxSizing: 'border-box',
           }}
