@@ -159,38 +159,16 @@ function BatteryTile() {
   return (
     <div style={tileStyle}>
       <span style={tileLabelStyle}>BATTERY</span>
-      {/* Battery bar */}
       <div
         style={{
-          width: 48,
-          height: 18,
-          border: '1px solid #000',
-          position: 'relative',
-          marginBottom: 4,
-          display: 'flex',
-          alignItems: 'stretch',
+          width: 48, height: 18, border: '1px solid #000', position: 'relative',
+          marginBottom: 4, display: 'flex', alignItems: 'stretch',
         }}
       >
         {/* Nub on right side */}
-        <div
-          style={{
-            position: 'absolute',
-            right: -4,
-            top: 4,
-            width: 3,
-            height: 8,
-            background: '#000',
-          }}
-        />
-        {/* Fill */}
+        <div style={{ position: 'absolute', right: -4, top: 4, width: 3, height: 8, background: '#000' }} />
         {!unavailable && batteryState && (
-          <div
-            style={{
-              width: `${pct}%`,
-              background: '#000',
-              height: '100%',
-            }}
-          />
+          <div style={{ width: `${pct}%`, background: '#000', height: '100%' }} />
         )}
       </div>
       <span style={tileSubValueStyle}>{label}</span>
