@@ -96,11 +96,7 @@ export function WorldMapApp() {
               const name: string = geo.properties?.name ?? ''
               const visited = VISITED.has(name)
 
-              const base = {
-                fill: visited ? 'url(#visitedPattern)' : '#fff',
-                stroke: '#000',
-                outline: 'none',
-              }
+              const base = { fill: visited ? 'url(#visitedPattern)' : '#fff', stroke: '#000', outline: 'none' }
               const setPos = (e: React.MouseEvent) =>
                 setTooltip({ name, x: e.clientX, y: e.clientY })
               return (
