@@ -6,11 +6,7 @@ import { APP_MAP, FINDER_DEFAULT_MENUS, type MenuConfig, type MenuItem } from '.
 
 const APPLE_MENU: MenuConfig = {
   label: '',
-  items: [
-    { label: 'About Curly OS…', disabled: true },
-    { type: 'divider' },
-    { label: 'v0.1 (1984 Edition)', disabled: true },
-  ],
+  items: [{ label: 'About Curly OS…', disabled: true }, { type: 'divider' }, { label: 'v0.1 (1984 Edition)', disabled: true }],
 }
 
 const FONT_SIZE = 13
@@ -61,16 +57,7 @@ export function MenuBar() {
 
   const menuItemStyle = (key: string): React.CSSProperties => {
     const highlighted = openMenu === key || hoveredMenu === key
-    return {
-      cursor: 'default',
-      padding: '0 6px',
-      background: highlighted ? '#000' : 'transparent',
-      color: highlighted ? '#fff' : '#000',
-      fontWeight: 'bold',
-      display: 'flex',
-      alignItems: 'center',
-      height: '100%',
-    }
+    return { cursor: 'default', padding: '0 6px', background: highlighted ? '#000' : 'transparent', color: highlighted ? '#fff' : '#000', fontWeight: 'bold', display: 'flex', alignItems: 'center', height: '100%' }
   }
 
   return (
@@ -99,25 +86,14 @@ export function MenuBar() {
           >
             {key === 'apple' ? <AppleGlyph size={FONT_SIZE + 2} inverted={openMenu === 'apple' || hoveredMenu === 'apple'} /> : config.label}
           </span>
-          {openMenu === key && (
-            <MenuDropdown
-              items={config.items}
-              onClose={() => setOpenMenu(null)}
-            />
-          )}
+          {openMenu === key && <MenuDropdown items={config.items} onClose={() => setOpenMenu(null)} />}
         </div>
       ))}
     </div>
   )
 }
 
-function MenuDropdown({
-  items,
-  onClose,
-}: {
-  items: MenuItem[]
-  onClose: () => void
-}) {
+function MenuDropdown({ items, onClose }: { items: MenuItem[]; onClose: () => void }) {
   return (
     <div
       role="menu"
