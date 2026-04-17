@@ -291,16 +291,9 @@ async function fetchSpotify(): Promise<SpotifyData> {
 export function prefetchSpotify() {
   if (_prefetchPromise) return _prefetchPromise
   _prefetchPromise = fetchSpotify()
-    .then((json) => {
-      _cachedData = json
-      _cacheTime = Date.now()
-    })
-    .catch(() => {
-      // silently fail — Music app will retry on open
-    })
-    .finally(() => {
-      _prefetchPromise = null
-    })
+    .then((json) => { _cachedData = json; _cacheTime = Date.now() })
+    .catch(() => {}) // silently fail — Music app will retry on open
+    .finally(() => { _prefetchPromise = null })
   return _prefetchPromise
 }
 
