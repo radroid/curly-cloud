@@ -27,7 +27,6 @@ This is a minimal "coming soon" portfolio site themed after **Mac OS System 1 (1
 - `app/global.css` — Mac OS 1984 theme (Chicago font, crosshatch pattern, dialog/menu styles)
 - `app/layout.tsx` — Minimal root layout with JetBrains Mono font
 - `app/lib/use-reduced-motion.ts` — Accessibility hook for animation preferences
-- `app/lib/utils.ts` — `cn()` utility (clsx + tailwind-merge)
 - `app/not-found.tsx` — Mac-style "system error" 404 page
 
 ### Content Archive
