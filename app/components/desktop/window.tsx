@@ -395,33 +395,18 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       aria-label={state.title ?? app?.name ?? windowId}
       onMouseDown={() => focusApp(windowId)}
       style={{
-        position: 'absolute',
-        boxSizing: 'border-box',
-        background: '#fff',
-        border: '1px solid #000',
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'var(--font-chicago)',
-        color: '#000',
-        zIndex: state.zIndex + 1,
-        opacity: atOrigin ? 0.15 : 1,
-        transition:
-          skipTransition || prefersReduced
-            ? 'none'
-            : `left ${OPEN_ANIM_MS}ms ease, top ${OPEN_ANIM_MS}ms ease, width ${OPEN_ANIM_MS}ms ease, height ${OPEN_ANIM_MS}ms ease, opacity ${OPEN_ANIM_MS}ms ease`,
+        position: 'absolute', boxSizing: 'border-box', background: '#fff', border: '1px solid #000',
+        display: 'flex', flexDirection: 'column', fontFamily: 'var(--font-chicago)', color: '#000',
+        zIndex: state.zIndex + 1, opacity: atOrigin ? 0.15 : 1,
         boxShadow: isActive ? '2px 2px 0 #000' : '1px 1px 0 #000',
+        transition: skipTransition || prefersReduced ? 'none'
+          : ['left', 'top', 'width', 'height', 'opacity'].map(p => `${p} ${OPEN_ANIM_MS}ms ease`).join(', '),
         ...zoomStyle,
       }}
     >
       {/* Title bar */}
       <div
-        style={{
-          background: '#fff',
-          borderBottom: '1px solid #000',
-          padding: '3px 0',
-          flexShrink: 0,
-          userSelect: 'none',
-        }}
+        style={{ background: '#fff', borderBottom: '1px solid #000', padding: '3px 0', flexShrink: 0, userSelect: 'none' }}
       >
         <div
           data-window-titlebar
