@@ -104,10 +104,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'finder',
     name: 'Documents',
     iconSrc: '/app-icons/finder.svg',
-    defaultSize: {
-      width: 'clamp(300px, 58cqw, 480px)',
-      height: 'clamp(240px, 58cqh, 400px)',
-    },
+    defaultSize: { width: 'clamp(300px, 58cqw, 480px)', height: 'clamp(240px, 58cqh, 400px)' },
     menuItems: FINDER_DEFAULT_MENUS,
     component: FinderApp,
   },
@@ -115,10 +112,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'browser',
     name: 'Curly Browser',
     iconSrc: '/app-icons/browser.svg',
-    defaultSize: {
-      width: 'clamp(400px, 85cqw, 720px)',
-      height: 'clamp(320px, 82cqh, 540px)',
-    },
+    defaultSize: { width: 'clamp(400px, 85cqw, 720px)', height: 'clamp(320px, 82cqh, 540px)' },
     menuItems: [
       {
         label: 'File',
@@ -150,10 +144,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'notepad',
     name: 'Note Pad',
     iconSrc: '/app-icons/notepad.svg',
-    defaultSize: {
-      width: 'clamp(180px, 40cqw, 300px)',
-      height: 'clamp(220px, 60cqh, 380px)',
-    },
+    defaultSize: { width: 'clamp(180px, 40cqw, 300px)', height: 'clamp(220px, 60cqh, 380px)' },
     menuItems: [
       {
         label: 'File',
@@ -181,10 +172,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     name: 'Calculator',
     iconSrc: '/app-icons/calculator.svg',
     fullscreenable: false,
-    defaultSize: {
-      width: 'clamp(120px, 25cqw, 200px)',
-      height: 'clamp(180px, 45cqh, 280px)',
-    },
+    defaultSize: { width: 'clamp(120px, 25cqw, 200px)', height: 'clamp(180px, 45cqh, 280px)' },
     menuItems: [
       {
         label: 'File',
@@ -205,10 +193,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'control-panel',
     name: 'Control Panel',
     iconSrc: '/app-icons/control-panel.svg',
-    defaultSize: {
-      width: 'clamp(250px, 55cqw, 420px)',
-      height: 'clamp(200px, 55cqh, 350px)',
-    },
+    defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(200px, 55cqh, 350px)' },
     menuItems: [
       {
         label: 'File',
@@ -222,10 +207,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'scrapbook',
     name: 'Journal',
     iconSrc: '/app-icons/journal.svg',
-    defaultSize: {
-      width: 'clamp(250px, 55cqw, 420px)',
-      height: 'clamp(220px, 60cqh, 380px)',
-    },
+    defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(220px, 60cqh, 380px)' },
     menuItems: [
       {
         label: 'File',
@@ -245,10 +227,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'world-map',
     name: 'World Map',
     iconSrc: '/app-icons/world-map.svg',
-    defaultSize: {
-      width: 'clamp(560px, 90cqw, 1080px)',
-      height: 'clamp(301px, calc(45cqw + 21px), 561px)',
-    },
+    defaultSize: { width: 'clamp(560px, 90cqw, 1080px)', height: 'clamp(301px, calc(45cqw + 21px), 561px)' },
     menuItems: [
       {
         label: 'File',
@@ -268,10 +247,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'music',
     name: 'Music',
     iconSrc: '/app-icons/music.svg',
-    defaultSize: {
-      width: 'clamp(440px, 78cqw, 640px)',
-      height: 'clamp(300px, 72cqh, 440px)',
-    },
+    defaultSize: { width: 'clamp(440px, 78cqw, 640px)', height: 'clamp(300px, 72cqh, 440px)' },
     menuItems: [
       {
         label: 'File',
@@ -291,10 +267,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     id: 'trash',
     name: 'Trash',
     iconSrc: '/app-icons/trash.svg',
-    defaultSize: {
-      width: 'clamp(200px, 45cqw, 340px)',
-      height: 'clamp(140px, 40cqh, 220px)',
-    },
+    defaultSize: { width: 'clamp(200px, 45cqw, 340px)', height: 'clamp(140px, 40cqh, 220px)' },
     menuItems: [],
     component: makePlaceholder('Trash'),
     statusBar: <span>0 items, 0K in trash, 0K available</span>,
