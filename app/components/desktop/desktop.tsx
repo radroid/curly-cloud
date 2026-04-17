@@ -8,14 +8,7 @@ import { Window } from './window'
 import { APP_MAP, APP_REGISTRY } from './app-registry'
 import { MaximizeNudge } from './maximize-nudge'
 import { prefetchSpotify } from '../apps/music'
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from '@/app/components/ui/context-menu'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuSeparator, ContextMenuTrigger } from '@/app/components/ui/context-menu'
 
 type DesktopProps = {
   prefersReduced: boolean

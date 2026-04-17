@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useWindowManager } from './desktop/window-manager'
-import {
-  APP_MAP,
-  FINDER_DEFAULT_MENUS,
-  type MenuConfig,
-  type MenuItem,
-} from './desktop/app-registry'
+import { APP_MAP, FINDER_DEFAULT_MENUS, type MenuConfig, type MenuItem } from './desktop/app-registry'
 
 const APPLE_MENU: MenuConfig = {
   label: '',

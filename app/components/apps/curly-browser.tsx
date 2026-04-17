@@ -1,13 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef } from 'react'
-import {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-} from '@/app/components/ui/context-menu'
+import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/app/components/ui/context-menu'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
