@@ -105,8 +105,6 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
     let startTopPx = 0
     let elWidthPx = 0
     let elHeightPx = 0
-    let lastTx = 0
-    let lastTy = 0
     let rafId = 0
     let pendingTx = 0
     let pendingTy = 0
@@ -137,8 +135,8 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       elHeightPx = eRect.height
       startClientX = e.clientX
       startClientY = e.clientY
-      lastTx = 0
-      lastTy = 0
+      pendingTx = 0
+      pendingTy = 0
       dragging = true
       started = false
       // Disable CSS transitions while dragging so tracking is 1:1
@@ -159,8 +157,6 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       const minDy = -startTopPx
       pendingTx = Math.min(Math.max(dx, minDx), maxDx)
       pendingTy = Math.min(Math.max(dy, minDy), maxDy)
-      lastTx = pendingTx
-      lastTy = pendingTy
       if (!rafId) rafId = requestAnimationFrame(applyTransform)
     }
 
@@ -174,8 +170,8 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       // Clear the inline transform so the next render isn't offset by it.
       el.style.transform = ''
       if (started && containerRect.width > 0 && containerRect.height > 0) {
-        const newX = (startLeftPx + lastTx) / containerRect.width
-        const newY = (startTopPx + lastTy) / containerRect.height
+        const newX = (startLeftPx + pendingTx) / containerRect.width
+        const newY = (startTopPx + pendingTy) / containerRect.height
         // Skip transition for one render so the commit is atomic with the
         // DOM's current visual position — no snap-back or ghost animation.
         setSkipTransition(true)
