@@ -26,17 +26,12 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
   const openFromIcon = () => {
     const icon = iconRef.current
     const container = containerRef.current
-    if (!icon || !container) {
-      openApp(app.id)
-      return
-    }
-    const iconRect = icon.getBoundingClientRect()
-    const containerRect = container.getBoundingClientRect()
+    if (!icon || !container) return openApp(app.id)
+    const iRect = icon.getBoundingClientRect()
+    const cRect = container.getBoundingClientRect()
     openApp(app.id, {
-      x: iconRect.left - containerRect.left,
-      y: iconRect.top - containerRect.top,
-      width: iconRect.width,
-      height: iconRect.height,
+      x: iRect.left - cRect.left, y: iRect.top - cRect.top,
+      width: iRect.width, height: iRect.height,
     })
   }
 
@@ -82,14 +77,8 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
       ref={ref}
       {...rest}
       type="button"
-      onClick={(e) => {
-        e.stopPropagation()
-        onSelect()
-      }}
-      onDoubleClick={(e) => {
-        e.stopPropagation()
-        onOpen()
-      }}
+      onClick={(e) => { e.stopPropagation(); onSelect() }}
+      onDoubleClick={(e) => { e.stopPropagation(); onOpen() }}
       style={{
         appearance: 'none', background: 'transparent', border: 'none', outline: 'none',
         padding: large ? '7px 4px' : '5px 2px',
