@@ -208,57 +208,21 @@ export function ScrapbookApp() {
           ) : (
             /* ---- Article view (unchanged) ---- */
             <>
-              {/* Title */}
-              <div
-                style={{
-                  ...chicago,
-                  fontSize: 16,
-                  fontWeight: 'bold',
-                  marginBottom: 4,
-                  lineHeight: 1.3,
-                }}
-              >
+              <div style={{ ...chicago, fontSize: 16, fontWeight: 'bold', marginBottom: 4, lineHeight: 1.3 }}>
                 {post.title}
               </div>
-
-              {/* Date */}
-              <div
-                style={{
-                  ...chicago,
-                  fontSize: 11,
-                  color: '#555',
-                  marginBottom: 8,
-                }}
-              >
+              <div style={{ ...chicago, fontSize: 11, color: '#555', marginBottom: 8 }}>
                 {post.publishedAt}
               </div>
-
-              {/* Summary */}
               <div
                 style={{
-                  ...chicago,
-                  fontSize: 12,
-                  fontStyle: 'italic',
-                  marginBottom: 10,
-                  paddingBottom: 8,
-                  borderBottom: '1px solid #ccc',
-                  lineHeight: 1.5,
+                  ...chicago, fontSize: 12, fontStyle: 'italic', lineHeight: 1.5,
+                  marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid #ccc',
                 }}
               >
                 {post.summary}
               </div>
-
-              {/* Body */}
-              <pre
-                style={{
-                  ...chicago,
-                  fontSize: 12,
-                  whiteSpace: 'pre-wrap',
-                  margin: 0,
-                  lineHeight: 1.6,
-                  color: '#000',
-                }}
-              >
+              <pre style={{ ...chicago, fontSize: 12, whiteSpace: 'pre-wrap', margin: 0, lineHeight: 1.6, color: '#000' }}>
                 {post.body}
               </pre>
             </>
@@ -269,14 +233,10 @@ export function ScrapbookApp() {
       {/* Footer nav bar */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
+          display: 'flex', alignItems: 'center',
           justifyContent: viewMode === 'article' ? 'space-between' : 'center',
-          padding: '4px 6px',
-          borderTop: '1px solid #000',
-          background: '#fff',
-          flexShrink: 0,
-          marginTop: 6,
+          padding: '4px 6px', borderTop: '1px solid #000', background: '#fff',
+          flexShrink: 0, marginTop: 6,
         }}
       >
         {viewMode === 'article' ? (
