@@ -79,15 +79,10 @@ export function IMacG3Frame({
             aria-hidden={!onToggleMaximize}
             tabIndex={onToggleMaximize ? 0 : -1}
             style={{
-              appearance: 'none',
-              border: 'none',
-              padding: 0,
-              width: '45%',
-              height: isLarge ? 5 : 4,
-              background: 'rgba(0,0,0,0.22)',
-              borderRadius: 3,
-              boxShadow:
-                'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)',
+              appearance: 'none', border: 'none', padding: 0,
+              width: '45%', height: isLarge ? 5 : 4,
+              background: 'rgba(0,0,0,0.22)', borderRadius: 3,
+              boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)',
               cursor: onToggleMaximize ? 'pointer' : 'default',
               opacity: onToggleMaximize ? 1 : 0.55,
               transition: 'opacity 150ms ease, height 150ms ease, box-shadow 150ms ease',
@@ -123,35 +118,14 @@ export function IMacG3Frame({
           onClick={onToggleMaximize}
           aria-label="Restore screen"
           style={{
-            position: 'fixed',
-            bottom: 12,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            appearance: 'none',
-            background: 'rgba(0,0,0,0.55)',
-            border: '1px solid rgba(255,255,255,0.35)',
-            borderRadius: 3,
-            padding: '6px 10px',
-            cursor: 'pointer',
-            zIndex: 60,
-            color: '#fff',
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 11,
-            letterSpacing: 0.5,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
+            position: 'fixed', bottom: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 60,
+            appearance: 'none', background: 'rgba(0,0,0,0.55)', border: '1px solid rgba(255,255,255,0.35)',
+            borderRadius: 3, padding: '6px 10px', cursor: 'pointer',
+            color: '#fff', fontFamily: 'var(--font-chicago)', fontSize: 11, letterSpacing: 0.5,
+            display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
-          <span
-            style={{
-              display: 'block',
-              width: 10,
-              height: 6,
-              border: '1px solid rgba(255,255,255,0.9)',
-              borderRadius: 1,
-            }}
-          />
+          <span style={{ display: 'block', width: 10, height: 6, border: '1px solid rgba(255,255,255,0.9)', borderRadius: 1 }} />
           Restore
         </button>
       )}
