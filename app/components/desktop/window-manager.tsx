@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState } from 'react
 import type { Rect } from './app-registry'
 import { APP_MAP } from './app-registry'
 
-export type WindowState = {
+type WindowState = {
   appId: string
   position: { x: number; y: number } // percentage of container (0–1)
   zIndex: number
