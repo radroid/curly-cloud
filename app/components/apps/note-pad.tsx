@@ -117,25 +117,14 @@ export function NotePadApp() {
   const clearCurrentPage = useCallback(() => {
     setPages((prev) => {
       const content = prev[currentPage] ?? '';
+      if (content.length > 0) pushToTrash(content);
 
-      // Save to trash if there's content
-      if (content.length > 0) {
-        pushToTrash(content);
-      }
-
+      const next = prev.length > 1 ? prev.filter((_, i) => i !== currentPage) : [''];
+      savePages(next);
       if (prev.length > 1) {
-        // Remove the page
-        const next = prev.filter((_, i) => i !== currentPage);
-        savePages(next);
-        // Navigate to previous page, or stay at 0
         setCurrentPage((p) => Math.min(p, next.length - 1) === 0 ? 0 : p - 1);
-        return next;
-      } else {
-        // Last page — just clear content
-        const next = [''];
-        savePages(next);
-        return next;
       }
+      return next;
     });
   }, [currentPage]);
 
