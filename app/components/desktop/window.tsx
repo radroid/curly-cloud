@@ -253,30 +253,17 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       let newW = startWidthPx, newH = startHeightPx, newLeft = startLeftPx, newTop = startTopPx
 
       // Compute new dimensions based on which edge/corner is being dragged
-      if (edge.includes('e')) {
-        newW = Math.max(minW, startWidthPx + dx)
-        // Clamp to container right edge
-        const maxW = containerRect.width - startLeftPx
-        newW = Math.min(newW, maxW)
-      }
+      if (edge.includes('e')) newW = Math.min(Math.max(minW, startWidthPx + dx), containerRect.width - startLeftPx)
       if (edge.includes('w')) {
-        const rawDx = Math.min(dx, startWidthPx - minW)
-        newLeft = Math.max(0, startLeftPx + rawDx)
+        newLeft = Math.max(0, startLeftPx + Math.min(dx, startWidthPx - minW))
         newW = startWidthPx + (startLeftPx - newLeft)
       }
-      if (edge.includes('s')) {
-        newH = Math.max(minH, startHeightPx + dy)
-        // Clamp to container bottom edge
-        const maxH = containerRect.height - startTopPx
-        newH = Math.min(newH, maxH)
-      }
+      if (edge.includes('s')) newH = Math.min(Math.max(minH, startHeightPx + dy), containerRect.height - startTopPx)
       if (edge.includes('n')) {
-        const rawDy = Math.min(dy, startHeightPx - minH)
-        newTop = Math.max(0, startTopPx + rawDy)
+        newTop = Math.max(0, startTopPx + Math.min(dy, startHeightPx - minH))
         newH = startHeightPx + (startTopPx - newTop)
       }
 
-      // Apply max constraints if defined
       if (app?.maxSize) {
         newW = Math.min(newW, app.maxSize.width)
         newH = Math.min(newH, app.maxSize.height)
@@ -286,18 +273,13 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       currentHeightPx = newH
       currentLeftPx = newLeft
       currentTopPx = newTop
-
       if (!rafId) rafId = requestAnimationFrame(applyResize)
     }
 
     const onUp = () => {
       if (!resizing) return
       resizing = false
-      if (rafId) {
-        cancelAnimationFrame(rafId)
-        rafId = 0
-      }
-      // Clear inline styles so React takes over
+      if (rafId) { cancelAnimationFrame(rafId); rafId = 0 }
       el.style.transform = ''
       el.style.width = ''
       el.style.height = ''
@@ -305,11 +287,8 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       if (containerRect.width > 0 && containerRect.height > 0) {
         setSkipTransition(true)
         resizeWindow(windowId, { width: currentWidthPx, height: currentHeightPx })
-        // If the left or top edge moved, update position too
         if (currentLeftPx !== startLeftPx || currentTopPx !== startTopPx) {
-          const newX = currentLeftPx / containerRect.width
-          const newY = currentTopPx / containerRect.height
-          moveWindow(windowId, { x: newX, y: newY })
+          moveWindow(windowId, { x: currentLeftPx / containerRect.width, y: currentTopPx / containerRect.height })
         }
       } else {
         el.style.transition = ''
