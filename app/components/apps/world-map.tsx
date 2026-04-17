@@ -41,37 +41,17 @@ interface TooltipState {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export function WorldMapApp() {
-  const [tooltip, setTooltip] = useState<TooltipState>({
-    name: null,
-    x: 0,
-    y: 0,
-  })
+  const [tooltip, setTooltip] = useState<TooltipState>({ name: null, x: 0, y: 0 })
 
   return (
-    <div
-      style={{
-        flex: 1,
-        position: 'relative',
-        overflow: 'hidden',
-        background: '#fafafa',
-        ...chicago,
-      }}
-    >
+    <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#fafafa', ...chicago }}>
       {/* ── Visited count — bottom-left ───────────────────────────────────── */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 8,
-          left: 8,
-          zIndex: 10,
-          ...chicago,
-          fontSize: 12,
-          lineHeight: 1,
-          background: '#fff',
-          border: '1px solid #000',
-          padding: '4px 7px',
-          pointerEvents: 'none',
-          userSelect: 'none',
+          position: 'absolute', bottom: 8, left: 8, zIndex: 10,
+          ...chicago, fontSize: 12, lineHeight: 1,
+          background: '#fff', border: '1px solid #000', padding: '4px 7px',
+          pointerEvents: 'none', userSelect: 'none',
         }}
       >
         {VISITED_COUNT} countries visited
@@ -148,20 +128,11 @@ export function WorldMapApp() {
         return (
           <div
             style={{
-              position: 'fixed',
-              left: tooltip.x + 12,
-              top: tooltip.y + 12,
-              zIndex: 9999,
-              background: visited ? '#000' : '#fff',
-              color: visited ? '#fff' : '#000',
-              border: '1px solid #000',
-              padding: '5px 7px',
-              ...chicago,
-              fontSize: 12,
-              lineHeight: 1,
-              pointerEvents: 'none',
-              userSelect: 'none',
-              whiteSpace: 'nowrap',
+              position: 'fixed', left: tooltip.x + 12, top: tooltip.y + 12, zIndex: 9999,
+              background: visited ? '#000' : '#fff', color: visited ? '#fff' : '#000',
+              border: '1px solid #000', padding: '5px 7px',
+              ...chicago, fontSize: 12, lineHeight: 1,
+              pointerEvents: 'none', userSelect: 'none', whiteSpace: 'nowrap',
             }}
           >
             {visited ? `✓ ${tooltip.name}` : tooltip.name}
