@@ -26,55 +26,29 @@ const chicago: React.CSSProperties = {
   MozOsxFontSmoothing: 'grayscale',
 }
 
-const sectionStyle: React.CSSProperties = {
-  borderBottom: '1px solid #000',
-  padding: '6px 8px',
-}
+const sectionStyle: React.CSSProperties = { borderBottom: '1px solid #000', padding: '6px 8px' }
 
 const tileStyle: React.CSSProperties = {
-  border: '1px solid #000',
-  padding: '6px 8px',
-  background: '#fff',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: 72,
+  border: '1px solid #000', padding: '6px 8px', background: '#fff', minHeight: 72,
+  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
 }
 
 const tileLabelStyle: React.CSSProperties = {
-  ...chicago,
-  fontSize: 9,
-  fontWeight: 'bold',
-  textTransform: 'uppercase',
-  letterSpacing: 1,
-  marginBottom: 4,
-  color: '#000',
+  ...chicago, fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase',
+  letterSpacing: 1, marginBottom: 4, color: '#000',
 }
 
 const tileValueStyle: React.CSSProperties = {
-  ...chicago,
-  fontSize: 13,
-  color: '#000',
-  textAlign: 'center',
-  lineHeight: 1.3,
+  ...chicago, fontSize: 13, color: '#000', textAlign: 'center', lineHeight: 1.3,
 }
 
 const tileSubValueStyle: React.CSSProperties = {
-  ...chicago,
-  fontSize: 10,
-  color: '#000',
-  textAlign: 'center',
-  marginTop: 2,
+  ...chicago, fontSize: 10, color: '#000', textAlign: 'center', marginTop: 2,
 }
 
 const linkBadgeStyle: React.CSSProperties = {
-  ...chicago,
-  fontSize: 11,
-  color: '#000',
-  textDecoration: 'none',
-  border: '1px solid #000',
-  padding: '1px 4px',
+  ...chicago, fontSize: 11, color: '#000', textDecoration: 'none',
+  border: '1px solid #000', padding: '1px 4px',
 }
 
 // ── Browser detection ─────────────────────────────────────────────────────────
@@ -215,12 +189,8 @@ export function ControlPanelApp() {
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        background: '#fff',
+        flex: 1, display: 'flex', flexDirection: 'column',
+        overflowY: 'auto', overflowX: 'hidden', background: '#fff',
       }}
     >
       {/* ── Section 1: User ──────────────────────────────────────────────── */}
@@ -231,25 +201,12 @@ export function ControlPanelApp() {
           alt="Raj Dholakia"
           width={84}
           height={84}
-          style={{
-            border: '2px solid #000',
-            borderRadius: 2,
-            imageRendering: 'pixelated',
-            flexShrink: 0,
-            display: 'block',
-          }}
+          style={{ border: '2px solid #000', borderRadius: 2, imageRendering: 'pixelated', flexShrink: 0, display: 'block' }}
         />
 
         {/* Info */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              ...chicago,
-              fontSize: 14,
-              fontWeight: 'bold',
-              marginBottom: 2,
-            }}
-          >
+          <div style={{ ...chicago, fontSize: 14, fontWeight: 'bold', marginBottom: 2 }}>
             Raj Dholakia
           </div>
           <div style={{ ...chicago, fontSize: 12, marginBottom: 2 }}>
@@ -281,15 +238,7 @@ export function ControlPanelApp() {
       </div>
 
       {/* ── Section 2: Dashboard Tiles ──────────────────────────────────── */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: 6,
-          padding: 8,
-          overflowY: 'auto',
-        }}
-      >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6, padding: 8, overflowY: 'auto' }}>
         <ClockTile now={now} />
         <BatteryTile />
         <SimpleTile label="DISPLAY" detect={() => `${window.screen.width} \u00D7 ${window.screen.height}`} />
