@@ -167,14 +167,8 @@ function BookmarkTile({
           {/* Label */}
           <span
             style={{
-              ...chicago,
-              fontSize: 12,
-              textAlign: 'center',
-              width: '100%',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-              lineHeight: 1.2,
+              ...chicago, fontSize: 12, textAlign: 'center', width: '100%',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.2,
             }}
           >
             {bookmark.label}
@@ -183,19 +177,11 @@ function BookmarkTile({
       </ContextMenuTrigger>
 
       <ContextMenuContent>
-        <ContextMenuItem onSelect={openInNewTab}>
-          Open in New Tab
-        </ContextMenuItem>
-        <ContextMenuItem onSelect={copyLink}>
-          Copy Link
-        </ContextMenuItem>
-        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>
-          Get Info
-        </ContextMenuItem>
+        <ContextMenuItem onSelect={openInNewTab}>Open in New Tab</ContextMenuItem>
+        <ContextMenuItem onSelect={copyLink}>Copy Link</ContextMenuItem>
+        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>Get Info</ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>
-          Bookmark This
-        </ContextMenuItem>
+        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>Bookmark This</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )
