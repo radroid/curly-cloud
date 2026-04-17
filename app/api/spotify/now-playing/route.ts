@@ -12,8 +12,8 @@ const NO_CACHE_HEADERS = {
   'Cloudflare-CDN-Cache-Control': 'no-store',
 } as const
 
-function json(body: unknown, status = 200) {
-  return Response.json(body, { status, headers: NO_CACHE_HEADERS })
+function json(body: unknown) {
+  return Response.json(body, { headers: NO_CACHE_HEADERS })
 }
 
 interface TopData {
