@@ -204,16 +204,11 @@ function GridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
 // Wrap a GridItem with a context menu based on type
 function ContextGridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
   const isFolder = entry.kind === 'folder'
-
   const handleDownload = () => {
     const file = entry as FileEntry
     triggerDownload(file.path, getFilename(file.path))
   }
-
-  const handleOpen = () => {
-    onSelect()
-    onOpen()
-  }
+  const handleOpen = () => { onSelect(); onOpen() }
 
   return (
     <ContextMenu>
