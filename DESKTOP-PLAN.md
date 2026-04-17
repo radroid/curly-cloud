@@ -382,35 +382,12 @@ OpenNext/Cloudflare Pages passes `process.env.*` through to the runtime for both
 ### Branch Structure
 ```
 main
- └── feat/mac-os-1984-desktop  (long-lived integration branch — final merge target for everything)
+ └── feat/mac-os-1984-desktop  (long-lived integration branch — final merge target)
       ├── feat/pre-app-foundation  (PR #1 — MERGED 2026-04-15)
-      └── feat/desktop-apps        (PR #3 — all 8 apps + Spotify integration, per-app commits)
+      └── feat/desktop-apps        (PR #3 — all 8 apps + Spotify, per-app commits)
 ```
 
-One PR per major chunk. Pre-app-foundation shipped as PR #1/#2 (window system, desktop shell, context menus). All 8 apps ship together as **PR #3** off a single `feat/desktop-apps` branch, with **one commit per app** for reviewability.
-
-### PR #3 Workflow — `feat/desktop-apps` → `feat/mac-os-1984-desktop`
-1. **Branch off** `feat/mac-os-1984-desktop` (the merged foundation).
-2. **One commit per app** — even though everything rides one PR, each app lands as its own commit (subject line: `App: <Name> — <one-line summary>`). Keeps `git log` / bisect / review legible.
-3. **Commit plan (in order)**:
-   1. DESKTOP-PLAN refinements
-   2. Spotify OAuth helper script (`scripts/spotify-oauth.mjs`) — user runs locally to get refresh token
-   3. Calculator
-   4. Note Pad
-   5. Control Panel
-   6. Finder (Documents)
-   7. Scrapbook (Journal)
-   8. Curly Browser
-   9. World Map
-   10. Music (Spotify API route + vinyl UI) — last, gated on refresh token
-4. **Subagents** write individual component files (`app/components/apps/<name>.tsx`) into this one branch. Main agent handles every other step (registry wiring, `tsc --noEmit`, commits, push). **No isolated worktrees** — they break in this session's subagent sandbox. Subagents only Read + Write files inside the repo.
-5. **Final merge** — `feat/desktop-apps` → `feat/mac-os-1984-desktop`, then `feat/mac-os-1984-desktop` → `main` after final integration pass.
-
-### Why This Strategy (revised)
-- **One PR, per-app commits**: reviewable without creating 8 parallel PRs. Each commit is a logical unit; bisect and blame still work.
-- **Matches subagent sandbox**: the earlier plan assumed subagents could run `git`/`gh`/`tsc` inside worktrees. In practice the sandbox denies Bash for subagents, so the main agent drives all git operations. Subagents are reduced to file writers.
-- **Conflict-free registry**: a single branch means the one shared file (`app-registry.tsx`) grows cleanly with each commit — no merge conflicts between app branches.
-- **Multi-session friendly**: still resumable — mid-PR state is just "N of M commits done" on a single branch.
+Final merge: `feat/desktop-apps` → `feat/mac-os-1984-desktop` → `main`.
 
 ---
 
