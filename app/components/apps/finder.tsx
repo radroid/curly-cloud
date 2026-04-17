@@ -384,25 +384,16 @@ export function FinderApp() {
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: 'var(--font-chicago)',
-        background: '#fff',
-        position: 'relative',
-        overflow: 'hidden',
+        flex: 1, display: 'flex', flexDirection: 'column',
+        fontFamily: 'var(--font-chicago)', background: '#fff',
+        position: 'relative', overflow: 'hidden',
       }}
     >
       {/* Toolbar / path bar */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '3px 6px',
-          borderBottom: '1px solid #000',
-          flexShrink: 0,
-          background: '#fff',
+          display: 'flex', alignItems: 'center', gap: 6, padding: '3px 6px',
+          borderBottom: '1px solid #000', flexShrink: 0, background: '#fff',
         }}
       >
         <button
@@ -411,28 +402,14 @@ export function FinderApp() {
           disabled={!canGoBack}
           onClick={handleBack}
           style={{
-            appearance: 'none',
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 11,
-            background: '#fff',
-            border: '1px solid #000',
-            padding: '1px 6px',
-            cursor: canGoBack ? 'pointer' : 'default',
-            color: canGoBack ? '#000' : '#aaa',
-            flexShrink: 0,
+            appearance: 'none', fontFamily: 'var(--font-chicago)', fontSize: 11,
+            background: '#fff', border: '1px solid #000', padding: '1px 6px', flexShrink: 0,
+            cursor: canGoBack ? 'pointer' : 'default', color: canGoBack ? '#000' : '#aaa',
           }}
         >
           ◀ Back
         </button>
-        <span
-          style={{
-            fontSize: 11,
-            color: '#000',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <span style={{ fontSize: 11, color: '#000', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {breadcrumb}
         </span>
       </div>
@@ -440,15 +417,9 @@ export function FinderApp() {
       {/* Icon grid */}
       <div
         style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          padding: 8,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-          gap: '4px',
-          justifyItems: 'center',
-          alignContent: 'start',
+          flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: 8,
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+          gap: '4px', justifyItems: 'center', alignContent: 'start',
         }}
         onClick={(e) => {
           // Deselect when clicking the container background
@@ -472,12 +443,8 @@ export function FinderApp() {
       {/* Internal status bar (stays in sync with navigation) */}
       <div
         style={{
-          borderTop: '1px solid #000',
-          padding: '2px 6px',
-          fontSize: 11,
-          background: '#f0f0f0',
-          flexShrink: 0,
-          fontFamily: 'var(--font-chicago)',
+          borderTop: '1px solid #000', padding: '2px 6px', fontSize: 11,
+          background: '#f0f0f0', flexShrink: 0, fontFamily: 'var(--font-chicago)',
         }}
       >
         {statusText}
