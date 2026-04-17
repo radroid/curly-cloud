@@ -175,8 +175,6 @@ function BookmarkTile({
             width={48}
             height={48}
             style={{
-              width: 48,
-              height: 48,
               imageRendering: 'pixelated',
               display: 'block',
               filter: hovered ? 'invert(1)' : 'none',

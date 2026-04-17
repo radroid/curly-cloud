@@ -254,8 +254,6 @@ export function ControlPanelApp() {
           width={84}
           height={84}
           style={{
-            width: 84,
-            height: 84,
             border: '2px solid #000',
             borderRadius: 2,
             imageRendering: 'pixelated',
