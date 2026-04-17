@@ -88,14 +88,10 @@ export function IMacG3Frame({
               transition: 'opacity 150ms ease, height 150ms ease, box-shadow 150ms ease',
             }}
             onMouseEnter={(e) => {
-              if (!onToggleMaximize) return
-              e.currentTarget.style.boxShadow =
-                'inset 0 1px 1px rgba(0,0,0,0.5), 0 0 6px rgba(255,255,255,0.35)'
+              if (onToggleMaximize) e.currentTarget.style.boxShadow = 'inset 0 1px 1px rgba(0,0,0,0.5), 0 0 6px rgba(255,255,255,0.35)'
             }}
             onMouseLeave={(e) => {
-              if (!onToggleMaximize) return
-              e.currentTarget.style.boxShadow =
-                'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)'
+              if (onToggleMaximize) e.currentTarget.style.boxShadow = 'inset 0 1px 1px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.12)'
             }}
           />
         </div>
