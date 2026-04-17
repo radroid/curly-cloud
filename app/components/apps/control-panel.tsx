@@ -31,10 +31,23 @@ const tileStyle: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
 }
 
-const tileLabelStyle: React.CSSProperties = { ...chicago, fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4, color: '#000' }
-const tileValueStyle: React.CSSProperties = { ...chicago, fontSize: 13, color: '#000', textAlign: 'center', lineHeight: 1.3 }
-const tileSubValueStyle: React.CSSProperties = { ...chicago, fontSize: 10, color: '#000', textAlign: 'center', marginTop: 2 }
-const linkBadgeStyle: React.CSSProperties = { ...chicago, fontSize: 11, color: '#000', textDecoration: 'none', border: '1px solid #000', padding: '1px 4px' }
+const tileLabelStyle: React.CSSProperties = {
+  ...chicago, fontSize: 9, fontWeight: 'bold', textTransform: 'uppercase',
+  letterSpacing: 1, marginBottom: 4, color: '#000',
+}
+
+const tileValueStyle: React.CSSProperties = {
+  ...chicago, fontSize: 13, color: '#000', textAlign: 'center', lineHeight: 1.3,
+}
+
+const tileSubValueStyle: React.CSSProperties = {
+  ...chicago, fontSize: 10, color: '#000', textAlign: 'center', marginTop: 2,
+}
+
+const linkBadgeStyle: React.CSSProperties = {
+  ...chicago, fontSize: 11, color: '#000', textDecoration: 'none',
+  border: '1px solid #000', padding: '1px 4px',
+}
 
 // ── Browser detection ─────────────────────────────────────────────────────────
 
