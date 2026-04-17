@@ -114,22 +114,7 @@ function BookmarkTile({
 
   const faviconSrc = `https://www.google.com/s2/favicons?domain=${host}&sz=128`
 
-  function handleOpen() {
-    onOpen(bookmark)
-  }
-
-  function openInNewTab() {
-    // Always opens externally regardless of the bookmark's default openMode.
-    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
-  }
-
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(bookmark.url)
-    } catch {
-      // silently fail — clipboard may be unavailable
-    }
-  }
+  const handleOpen = () => onOpen(bookmark)
 
   const tileStyle: React.CSSProperties = {
     border: hovered ? '1px solid #fff' : '1px solid #000',
@@ -173,11 +158,11 @@ function BookmarkTile({
       </ContextMenuTrigger>
 
       <ContextMenuContent>
-        <ContextMenuItem onSelect={openInNewTab}>Open in New Tab</ContextMenuItem>
-        <ContextMenuItem onSelect={copyLink}>Copy Link</ContextMenuItem>
-        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>Get Info</ContextMenuItem>
+        <ContextMenuItem onSelect={() => window.open(bookmark.url, '_blank', 'noopener,noreferrer')}>Open in New Tab</ContextMenuItem>
+        <ContextMenuItem onSelect={() => navigator.clipboard?.writeText(bookmark.url).catch(() => {})}>Copy Link</ContextMenuItem>
+        <ContextMenuItem disabled>Get Info</ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem disabled style={{ opacity: 0.4, cursor: 'default' }}>Bookmark This</ContextMenuItem>
+        <ContextMenuItem disabled>Bookmark This</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )
