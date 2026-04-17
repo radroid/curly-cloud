@@ -2,17 +2,7 @@ import type { ScreenPhase } from './types'
 
 const DITHERED_BG = `url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3C/svg%3E")`
 
-export function CRTScreen({
-  phase,
-  isMaximized = false,
-  animateMaximize = true,
-  children,
-}: {
-  phase: ScreenPhase
-  isMaximized?: boolean
-  animateMaximize?: boolean
-  children: React.ReactNode
-}) {
+export function CRTScreen({ phase, isMaximized = false, animateMaximize = true, children }: { phase: ScreenPhase; isMaximized?: boolean; animateMaximize?: boolean; children: React.ReactNode }) {
   const showOverlay = phase === 'off' || phase === 'flicker'
 
   return (

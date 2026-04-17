@@ -79,15 +79,7 @@ That's where the real innovation happens--not in pixels, but in the moments betw
 
 type ViewMode = 'index' | 'article'
 
-function IndexRow({
-  post,
-  index,
-  onSelect,
-}: {
-  post: Post
-  index: number
-  onSelect: (index: number) => void
-}) {
+function IndexRow({ post, index, onSelect }: { post: Post; index: number; onSelect: (index: number) => void }) {
   const [hovered, setHovered] = useState(false)
 
   return (
