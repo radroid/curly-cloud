@@ -53,21 +53,10 @@ export function MaximizeNudge({
       role="dialog"
       aria-label="Use full screen"
       style={{
-        position: 'absolute',
-        bottom: 20,
-        left: 20,
-        background: '#fff',
-        border: '1px solid #000',
-        boxShadow: '2px 2px 0 #000',
-        padding: '10px 12px',
-        fontFamily: 'var(--font-chicago)',
-        fontSize: 11,
-        color: '#000',
-        maxWidth: 220,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-        zIndex: 9998,
+        position: 'absolute', bottom: 20, left: 20, maxWidth: 220, zIndex: 9998,
+        background: '#fff', border: '1px solid #000', boxShadow: '2px 2px 0 #000',
+        padding: '10px 12px', fontFamily: 'var(--font-chicago)', fontSize: 11, color: '#000',
+        display: 'flex', flexDirection: 'column', gap: 8,
         animation: prefersReduced ? undefined : 'fadeIn 0.3s ease',
       }}
     >
