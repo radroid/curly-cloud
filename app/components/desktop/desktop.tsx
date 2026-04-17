@@ -96,9 +96,7 @@ function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: Desktop
         <ContextMenuContent>
           <ContextMenuLabel>Curly OS</ContextMenuLabel>
           <ContextMenuSeparator />
-          <ContextMenuItem onSelect={onToggleMaximize}>
-            {isMaximized ? 'Restore Screen' : 'Go Full Screen'}
-          </ContextMenuItem>
+          <ContextMenuItem onSelect={onToggleMaximize}>{isMaximized ? 'Restore Screen' : 'Go Full Screen'}</ContextMenuItem>
           <ContextMenuSeparator />
           <ContextMenuItem disabled>Clean Up Desktop</ContextMenuItem>
           <ContextMenuItem disabled>Change Wallpaper</ContextMenuItem>
