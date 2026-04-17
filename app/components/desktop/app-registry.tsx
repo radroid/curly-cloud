@@ -44,15 +44,9 @@ function ComingSoon({ name }: { name: string }) {
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
-        padding: 20,
-        fontFamily: 'var(--font-chicago)',
-        textAlign: 'center',
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20,
+        fontFamily: 'var(--font-chicago)', textAlign: 'center',
       }}
     >
       <div style={{ fontSize: 13, fontWeight: 'bold' }}>{name}</div>
@@ -63,40 +57,14 @@ function ComingSoon({ name }: { name: string }) {
 
 const makePlaceholder = (name: string) => () => <ComingSoon name={name} />
 
+const D = { type: 'divider' as const }
+const d = (label: string): MenuItem => ({ label, disabled: true })
+
 export const FINDER_DEFAULT_MENUS: MenuConfig[] = [
-  {
-    label: 'File',
-    items: [
-      { label: 'New Folder', disabled: true },
-      { label: 'Open', disabled: true },
-      { type: 'divider' },
-      { label: 'Close', disabled: true },
-    ],
-  },
-  {
-    label: 'Edit',
-    items: [
-      { label: 'Undo', disabled: true },
-      { type: 'divider' },
-      { label: 'Cut', disabled: true },
-      { label: 'Copy', disabled: true },
-      { label: 'Paste', disabled: true },
-    ],
-  },
-  {
-    label: 'View',
-    items: [
-      { label: 'by Icon', disabled: true },
-      { label: 'by Name', disabled: true },
-    ],
-  },
-  {
-    label: 'Special',
-    items: [
-      { label: 'Clean Up', disabled: true },
-      { label: 'Empty Trash', disabled: true },
-    ],
-  },
+  { label: 'File', items: [d('New Folder'), d('Open'), D, d('Close')] },
+  { label: 'Edit', items: [d('Undo'), D, d('Cut'), d('Copy'), d('Paste')] },
+  { label: 'View', items: [d('by Icon'), d('by Name')] },
+  { label: 'Special', items: [d('Clean Up'), d('Empty Trash')] },
 ]
 
 export const APP_REGISTRY: AppDefinition[] = [
@@ -114,28 +82,9 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/browser.svg',
     defaultSize: { width: 'clamp(400px, 85cqw, 720px)', height: 'clamp(320px, 82cqh, 540px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [
-          { label: 'New Window', disabled: true },
-          { type: 'divider' },
-          { label: 'Close', disabled: true },
-        ],
-      },
-      {
-        label: 'View',
-        items: [
-          { label: 'Show Bookmarks Bar', disabled: true },
-          { label: 'Reload', disabled: true },
-        ],
-      },
-      {
-        label: 'History',
-        items: [
-          { label: 'Back', disabled: true },
-          { label: 'Forward', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('New Window'), D, d('Close')] },
+      { label: 'View', items: [d('Show Bookmarks Bar'), d('Reload')] },
+      { label: 'History', items: [d('Back'), d('Forward')] },
     ],
     component: CurlyBrowserApp,
     showScrollbar: true,
@@ -146,24 +95,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/notepad.svg',
     defaultSize: { width: 'clamp(180px, 40cqw, 300px)', height: 'clamp(220px, 60cqh, 380px)' },
     menuItems: [
-      {
-        label: 'File',
-        items: [
-          { label: 'Clear Note', disabled: true },
-          { type: 'divider' },
-          { label: 'Close', disabled: true },
-        ],
-      },
-      {
-        label: 'Edit',
-        items: [
-          { label: 'Undo', disabled: true },
-          { type: 'divider' },
-          { label: 'Cut', disabled: true },
-          { label: 'Copy', disabled: true },
-          { label: 'Paste', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('Clear Note'), D, d('Close')] },
+      { label: 'Edit', items: [d('Undo'), D, d('Cut'), d('Copy'), d('Paste')] },
     ],
     component: NotePadApp,
   },
@@ -174,15 +107,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     fullscreenable: false,
     defaultSize: { width: 'clamp(120px, 25cqw, 200px)', height: 'clamp(180px, 45cqh, 280px)' },
     menuItems: [
-      { label: 'File', items: [{ label: 'Close', disabled: true }] },
-      {
-        label: 'Edit',
-        items: [
-          { label: 'Copy Display', disabled: true },
-          { type: 'divider' },
-          { label: 'Clear', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('Close')] },
+      { label: 'Edit', items: [d('Copy Display'), D, d('Clear')] },
     ],
     component: CalculatorApp,
   },
@@ -191,9 +117,7 @@ export const APP_REGISTRY: AppDefinition[] = [
     name: 'Control Panel',
     iconSrc: '/app-icons/control-panel.svg',
     defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(200px, 55cqh, 350px)' },
-    menuItems: [
-      { label: 'File', items: [{ label: 'Close', disabled: true }] },
-    ],
+    menuItems: [{ label: 'File', items: [d('Close')] }],
     component: ControlPanelApp,
     showScrollbar: true,
   },
@@ -203,14 +127,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/journal.svg',
     defaultSize: { width: 'clamp(250px, 55cqw, 420px)', height: 'clamp(220px, 60cqh, 380px)' },
     menuItems: [
-      { label: 'File', items: [{ label: 'Close', disabled: true }] },
-      {
-        label: 'View',
-        items: [
-          { label: 'Previous Page', disabled: true },
-          { label: 'Next Page', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('Close')] },
+      { label: 'View', items: [d('Previous Page'), d('Next Page')] },
     ],
     component: ScrapbookApp,
   },
@@ -220,14 +138,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/world-map.svg',
     defaultSize: { width: 'clamp(560px, 90cqw, 1080px)', height: 'clamp(301px, calc(45cqw + 21px), 561px)' },
     menuItems: [
-      { label: 'File', items: [{ label: 'Close', disabled: true }] },
-      {
-        label: 'View',
-        items: [
-          { label: 'Show Legend', disabled: true },
-          { label: 'Show Country Names', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('Close')] },
+      { label: 'View', items: [d('Show Legend'), d('Show Country Names')] },
     ],
     component: WorldMapApp,
   },
@@ -237,14 +149,8 @@ export const APP_REGISTRY: AppDefinition[] = [
     iconSrc: '/app-icons/music.svg',
     defaultSize: { width: 'clamp(440px, 78cqw, 640px)', height: 'clamp(300px, 72cqh, 440px)' },
     menuItems: [
-      { label: 'File', items: [{ label: 'Close', disabled: true }] },
-      {
-        label: 'View',
-        items: [
-          { label: 'Now Playing', disabled: true },
-          { label: 'Recently Played', disabled: true },
-        ],
-      },
+      { label: 'File', items: [d('Close')] },
+      { label: 'View', items: [d('Now Playing'), d('Recently Played')] },
     ],
     component: MusicApp,
   },
