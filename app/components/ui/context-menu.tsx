@@ -7,28 +7,15 @@ const ContextMenu = ContextMenuPrimitive.Root
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger
 
 const contentStyle: React.CSSProperties = {
-  minWidth: 160,
-  background: '#fff',
-  border: '1px solid #000',
-  boxShadow: '2px 2px 0 #000',
-  padding: '2px 0',
-  fontFamily: 'var(--font-chicago)',
-  fontSize: 12,
-  color: '#000',
-  zIndex: 10000,
+  minWidth: 160, zIndex: 10000,
+  background: '#fff', border: '1px solid #000', boxShadow: '2px 2px 0 #000',
+  padding: '2px 0', fontFamily: 'var(--font-chicago)', fontSize: 12, color: '#000',
 }
 
 const itemBaseStyle: React.CSSProperties = {
-  position: 'relative',
-  display: 'flex',
-  alignItems: 'center',
-  padding: '3px 16px',
-  outline: 'none',
-  userSelect: 'none',
-  cursor: 'default',
-  fontFamily: 'var(--font-chicago)',
-  fontSize: 12,
-  lineHeight: 1.25,
+  position: 'relative', display: 'flex', alignItems: 'center',
+  padding: '3px 16px', outline: 'none', userSelect: 'none', cursor: 'default',
+  fontFamily: 'var(--font-chicago)', fontSize: 12, lineHeight: 1.25,
 }
 
 const ContextMenuContent = React.forwardRef<
@@ -47,9 +34,7 @@ ContextMenuContent.displayName = ContextMenuPrimitive.Content.displayName
 
 const ContextMenuItem = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & {
-    inset?: boolean
-  }
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Item> & { inset?: boolean }
 >(({ inset, style, ...props }, ref) => (
   <ContextMenuPrimitive.Item
     ref={ref}
@@ -62,19 +47,13 @@ ContextMenuItem.displayName = ContextMenuPrimitive.Item.displayName
 
 const ContextMenuLabel = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Label>,
-  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Label> & {
-    inset?: boolean
-  }
+  React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Label> & { inset?: boolean }
 >(({ inset, style, ...props }, ref) => (
   <ContextMenuPrimitive.Label
     ref={ref}
     style={{
-      padding: '3px 16px',
-      paddingLeft: inset ? 28 : 16,
-      fontFamily: 'var(--font-chicago)',
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: '#000',
+      padding: '3px 16px', paddingLeft: inset ? 28 : 16,
+      fontFamily: 'var(--font-chicago)', fontSize: 12, fontWeight: 'bold', color: '#000',
       ...style,
     }}
     {...props}
@@ -94,11 +73,4 @@ const ContextMenuSeparator = React.forwardRef<
 ))
 ContextMenuSeparator.displayName = ContextMenuPrimitive.Separator.displayName
 
-export {
-  ContextMenu,
-  ContextMenuTrigger,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuLabel,
-  ContextMenuSeparator,
-}
+export { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuSeparator }
