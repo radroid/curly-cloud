@@ -144,70 +144,28 @@ export function CalculatorApp() {
   // Keyboard support
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key >= '0' && e.key <= '9') {
-        handleDigit(e.key)
-      } else if (e.key === '.') {
-        handleDecimal()
-      } else if (e.key === '+') {
-        handleOperator('+')
-      } else if (e.key === '-') {
-        handleOperator('-')
-      } else if (e.key === '*') {
-        handleOperator('*')
-      } else if (e.key === '/') {
-        e.preventDefault()
-        handleOperator('/')
-      } else if (e.key === '=' || e.key === 'Enter') {
-        handleEquals()
-      } else if (e.key === 'Escape' || e.key === 'c' || e.key === 'C') {
-        handleClear()
-      }
+      const k = e.key
+      if (k >= '0' && k <= '9') handleDigit(k)
+      else if (k === '.') handleDecimal()
+      else if (k === '+' || k === '-' || k === '*') handleOperator(k)
+      else if (k === '/') { e.preventDefault(); handleOperator('/') }
+      else if (k === '=' || k === 'Enter') handleEquals()
+      else if (k === 'Escape' || k === 'c' || k === 'C') handleClear()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [handleDigit, handleDecimal, handleOperator, handleEquals, handleClear])
 
   const btnBase: React.CSSProperties = {
-    fontFamily: 'var(--font-chicago)',
-    fontSize: 14,
-    background: '#fff',
-    color: '#000',
-    border: '1px solid #000',
-    padding: 0,
-    margin: 0,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    WebkitFontSmoothing: 'none',
-    userSelect: 'none',
-    // Active invert handled via CSS class
+    fontFamily: 'var(--font-chicago)', fontSize: 14, background: '#fff', color: '#000',
+    border: '1px solid #000', padding: 0, margin: 0, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    WebkitFontSmoothing: 'none', userSelect: 'none',
   }
-
-  const opBtnBase: React.CSSProperties = {
-    ...btnBase,
-    border: '2px solid #000',
-  }
-
-  // Button row layout: 4 columns, 5 rows
-  // Row 1: C  /  *  +
-  // Row 2: 7  8  9  -
-  // Row 3: 4  5  6  =
-  // Row 4: 1  2  3  .
-  // Row 5: 0 (span 2)  [empty]  [empty] — but we do 0 span-2, then blank
-  // Actually: 0 spans cols 1-2, then col3=empty, col4=empty (or adjust)
-  // Mac OS 1 reference: 0 spans full bottom left two columns
+  const opBtnBase: React.CSSProperties = { ...btnBase, border: '2px solid #000' }
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#fff',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', overflow: 'hidden' }}>
       {/* Inline style block for active state */}
       <style>{`
         .calc-btn:active,
