@@ -277,7 +277,6 @@ Mobile:
   - "Applications" ← `public/app-icons/`
   - "Documents" ← `public/cv/` (contains Resume.pdf)
   - "Fonts" ← `public/fonts/`
-  - "Developer" ← `public/tech-icons/`
   - Loose files at root (Apple Logo.svg ← apple-icon.svg, Startup Sound.wav ← StartupMacI.wav, Avatar.webp ← raj-avatar.webp, etc.)
 - **Interactions**:
   - Single-click: selects the item (text-inverted label highlight, matching desktop icons)

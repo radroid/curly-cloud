@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const OLD_STORAGE_KEY = 'curly-os-notepad';
 const PAGES_STORAGE_KEY = 'curly-os-notepad-pages';
@@ -63,7 +63,6 @@ export function NotePadApp() {
   const [pages, setPages] = useState<string[]>(['']);
   const [currentPage, setCurrentPage] = useState(0);
   const [hydrated, setHydrated] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     const loaded = loadPages();
@@ -175,7 +174,6 @@ export function NotePadApp() {
         }}
       >
         <textarea
-          ref={textareaRef}
           value={currentContent}
           onChange={handleChange}
           spellCheck={false}
@@ -186,9 +184,6 @@ export function NotePadApp() {
             paddingLeft: '14px', paddingRight: '8px', paddingTop: '0px', paddingBottom: '0px',
             color: '#000',
             boxSizing: 'border-box',
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.outline = 'none';
           }}
         />
       </div>
