@@ -25,16 +25,11 @@ export type MenuConfig = {
   items: MenuItem[]
 }
 
-export type WindowSize = {
-  width: string
-  height: string
-}
-
 export type AppDefinition = {
   id: string
   name: string
   iconSrc: string
-  defaultSize: WindowSize
+  defaultSize: { width: string; height: string }
   menuItems: MenuConfig[]
   component: React.FC
   showScrollbar?: boolean
