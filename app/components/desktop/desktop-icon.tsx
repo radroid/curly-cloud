@@ -53,9 +53,18 @@ export function DesktopIcon({ app, containerRef, large = false }: DesktopIconPro
   )
 }
 
-type IconButtonProps = { app: AppDefinition; large: boolean; selected: boolean; onSelect: () => void; onOpen: () => void }
+type IconButtonProps = {
+  app: AppDefinition
+  large: boolean
+  selected: boolean
+  onSelect: () => void
+  onOpen: () => void
+}
 
-const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton({ app, large, selected, onSelect, onOpen, ...rest }, ref) {
+const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { app, large, selected, onSelect, onOpen, ...rest },
+  ref,
+) {
   return (
     <button
       ref={ref}

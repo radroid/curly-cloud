@@ -1,7 +1,8 @@
 'use client'
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
-import { APP_MAP, type Rect } from './app-registry'
+import type { Rect } from './app-registry'
+import { APP_MAP } from './app-registry'
 
 export type WindowState = {
   appId: string
