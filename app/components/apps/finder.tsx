@@ -85,12 +85,7 @@ function FileThumbnail({ entry, size = 36 }: { entry: FileEntry; size?: number }
         alt={entry.label}
         width={size}
         height={size}
-        style={{
-          objectFit: 'contain',
-          imageRendering: 'pixelated',
-          display: 'block',
-          border: '1px solid #000',
-        }}
+        style={{ objectFit: 'contain', imageRendering: 'pixelated', display: 'block', border: '1px solid #000' }}
       />
     )
   }
