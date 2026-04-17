@@ -78,15 +78,9 @@ function IconButton({
       aria-label={label}
       title={label}
       style={{
-        appearance: 'none',
-        background: 'none',
-        border: 'none',
-        padding: '2px 3px',
-        cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.3 : 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        appearance: 'none', background: 'none', border: 'none', padding: '2px 3px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1,
       }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -141,16 +135,9 @@ function BookmarkTile({
 
   const tileStyle: React.CSSProperties = {
     border: hovered ? '1px solid #fff' : '1px solid #000',
-    background: hovered ? '#000' : '#fff',
-    color: hovered ? '#fff' : '#000',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '8px 6px 6px',
-    cursor: 'pointer',
-    userSelect: 'none',
-    gap: 6,
-    minWidth: 0,
+    background: hovered ? '#000' : '#fff', color: hovered ? '#fff' : '#000',
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    padding: '8px 6px 6px', cursor: 'pointer', userSelect: 'none', gap: 6, minWidth: 0,
   }
 
   return (
@@ -229,25 +216,13 @@ function BookmarkSection({
     <div style={{ marginBottom: 20 }}>
       <div
         style={{
-          ...chicago,
-          fontSize: 13,
-          fontWeight: 'bold',
-          marginBottom: 10,
-          textTransform: 'uppercase',
-          letterSpacing: 1,
-          borderBottom: '1px solid #000',
-          paddingBottom: 4,
+          ...chicago, fontSize: 13, fontWeight: 'bold', textTransform: 'uppercase',
+          letterSpacing: 1, borderBottom: '1px solid #000', paddingBottom: 4, marginBottom: 10,
         }}
       >
         {title}
       </div>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
-          gap: 12,
-        }}
-      >
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 12 }}>
         {bookmarks.map((bm) => (
           <BookmarkTile key={bm.url} bookmark={bm} onOpen={onOpen} />
         ))}
@@ -262,22 +237,8 @@ function HomeView({ onOpen }: { onOpen: (bm: Bookmark) => void }) {
   return (
     <>
       {/* Info banner — only visible on the home page */}
-      <div
-        style={{
-          background: '#FFF8DC',
-          borderBottom: '1px solid #000',
-          padding: '6px 10px',
-          flexShrink: 0,
-        }}
-      >
-        <span
-          style={{
-            ...chicago,
-            fontSize: 12,
-            color: '#000',
-            display: 'block',
-          }}
-        >
+      <div style={{ background: '#FFF8DC', borderBottom: '1px solid #000', padding: '6px 10px', flexShrink: 0 }}>
+        <span style={{ ...chicago, fontSize: 12, color: '#000', display: 'block' }}>
           ⓘ Curly Browser uses iframes, which most sites block for security.
           Project links open in your real browser instead.
         </span>
@@ -293,15 +254,7 @@ function HomeView({ onOpen }: { onOpen: (bm: Bookmark) => void }) {
           minHeight: 0,
         }}
       >
-        <div
-          style={{
-            ...chicago,
-            fontSize: 18,
-            fontWeight: 'bold',
-            textAlign: 'center',
-            marginBottom: 20,
-          }}
-        >
+        <div style={{ ...chicago, fontSize: 18, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>
           Bookmarks
         </div>
 
@@ -333,12 +286,8 @@ function EmbedView({ url, label, onNavigate }: { url: string; label: string; onN
   return (
     <div
       style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-        minHeight: 0,
-        background: '#fff',
+        flex: 1, display: 'flex', flexDirection: 'column',
+        overflow: 'hidden', minHeight: 0, background: '#fff',
       }}
     >
       <iframe
@@ -349,18 +298,11 @@ function EmbedView({ url, label, onNavigate }: { url: string; label: string; onN
         style={{ flex: 1, width: '100%', border: 'none', minHeight: 0, background: '#fff' }}
         sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
       />
-      {/* Always-visible fallback: most sites set frame-ancestors and the
-         iframe above will come up blank. Give the user a direct escape hatch. */}
+      {/* Always-visible fallback: most sites set frame-ancestors; give the user an escape hatch. */}
       <div
         style={{
-          background: '#FFF8DC',
-          borderTop: '1px solid #000',
-          padding: '6px 10px',
-          flexShrink: 0,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          justifyContent: 'space-between',
+          background: '#FFF8DC', borderTop: '1px solid #000', padding: '6px 10px', flexShrink: 0,
+          display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'space-between',
         }}
       >
         <span style={{ ...chicago, fontSize: 11, color: '#000' }}>
@@ -370,12 +312,8 @@ function EmbedView({ url, label, onNavigate }: { url: string; label: string; onN
           type="button"
           onClick={() => window.open(url, '_blank', 'noopener,noreferrer')}
           style={{
-            ...chicago,
-            fontSize: 11,
-            border: '1px solid #000',
-            background: '#fff',
-            padding: '2px 8px',
-            cursor: 'pointer',
+            ...chicago, fontSize: 11, border: '1px solid #000', background: '#fff',
+            padding: '2px 8px', cursor: 'pointer',
             flexShrink: 0,
           }}
         >
