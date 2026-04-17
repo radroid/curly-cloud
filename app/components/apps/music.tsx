@@ -375,17 +375,7 @@ export function MusicApp() {
     return (
       <>
         <style>{VINYL_KEYFRAMES}</style>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            ...chicago,
-            fontSize: 12,
-            color: '#555',
-          }}
-        >
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...chicago, fontSize: 12, color: '#555' }}>
           Loading...
         </div>
       </>
@@ -401,14 +391,9 @@ export function MusicApp() {
         <style>{VINYL_KEYFRAMES}</style>
         <div
           style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10,
-            padding: 16,
-            background: '#fff',
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 10, padding: 16, background: '#fff',
           }}
         >
           <div style={{ ...chicago, fontSize: 10, letterSpacing: 1, color: '#555' }}>
@@ -437,40 +422,16 @@ export function MusicApp() {
     <>
       <style>{VINYL_KEYFRAMES}</style>
 
-      <div
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'row',
-          overflow: 'hidden',
-          background: '#fff',
-          minHeight: 0,
-        }}
-      >
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', background: '#fff', minHeight: 0 }}>
         {/* ── Left column: Vinyl ────────────────────────────────────────── */}
         <div
           style={{
-            flex: '0 0 55%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 10,
-            padding: '18px 14px',
-            borderRight: '1px solid #000',
-            overflow: 'hidden',
+            flex: '0 0 55%', display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 10,
+            padding: '18px 14px', borderRight: '1px solid #000', overflow: 'hidden',
           }}
         >
-          {/* Status label */}
-          <div
-            style={{
-              ...chicago,
-              fontSize: 11,
-              letterSpacing: 1.8,
-              color: '#555',
-              textTransform: 'uppercase',
-            }}
-          >
+          <div style={{ ...chicago, fontSize: 11, letterSpacing: 1.8, color: '#555', textTransform: 'uppercase' }}>
             {isPlaying ? 'Now Playing' : 'Last Played'}
           </div>
 
@@ -483,18 +444,10 @@ export function MusicApp() {
               style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}
               title={`Open "${track.name}" on Spotify`}
             >
-              <VinylRecord
-                albumArt={track.albumArt}
-                isPlaying={isPlaying}
-                isOffline={false}
-              />
+              <VinylRecord albumArt={track.albumArt} isPlaying={isPlaying} isOffline={false} />
             </a>
           ) : (
-            <VinylRecord
-              albumArt={track.albumArt}
-              isPlaying={isPlaying}
-              isOffline={false}
-            />
+            <VinylRecord albumArt={track.albumArt} isPlaying={isPlaying} isOffline={false} />
           )}
 
           {/* Track info */}
