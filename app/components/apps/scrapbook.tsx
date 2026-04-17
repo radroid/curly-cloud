@@ -9,10 +9,7 @@ type Post = {
   body: string
 }
 
-const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)',
-  WebkitFontSmoothing: 'none',
-}
+const chicago: React.CSSProperties = { fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none' }
 
 const POSTS: Post[] = [
   {

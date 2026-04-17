@@ -52,9 +52,7 @@ const viewToUrl = (view: View): string =>
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)',
-  WebkitFontSmoothing: 'none',
-  MozOsxFontSmoothing: 'grayscale',
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
 }
 
 // ── Icon button (SVG from public/browser-icons/) ──────────────────────────────

@@ -14,9 +14,7 @@ interface TrashItem {
 }
 
 const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)',
-  WebkitFontSmoothing: 'none',
-  MozOsxFontSmoothing: 'unset',
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'unset',
 };
 
 function loadPages(): string[] {

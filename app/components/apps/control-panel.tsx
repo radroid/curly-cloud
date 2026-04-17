@@ -21,9 +21,7 @@ interface NavWithBattery extends Navigator {
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
 const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)',
-  WebkitFontSmoothing: 'none',
-  MozOsxFontSmoothing: 'grayscale',
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
 }
 
 const sectionStyle: React.CSSProperties = { borderBottom: '1px solid #000', padding: '6px 8px' }
