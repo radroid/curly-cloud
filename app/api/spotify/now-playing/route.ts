@@ -34,9 +34,7 @@ function makeTrack(item: any, nowPlaying?: { progressMs: number }) {
 
 async function fetchTopData(accessToken: string): Promise<TopData> {
   try {
-    const headers = { Authorization: `Bearer ${accessToken}` }
-    const opts = { headers, cache: 'no-store' as const }
-
+    const opts = { headers: { Authorization: `Bearer ${accessToken}` }, cache: 'no-store' as const }
     // Two separate calls: short_term for genres (recent listening), long_term for artists (all time)
     const [genreRes, artistRes] = await Promise.all([
       fetch('https://api.spotify.com/v1/me/top/artists?limit=50&time_range=short_term', opts),
