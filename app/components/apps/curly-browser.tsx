@@ -496,24 +496,13 @@ export function CurlyBrowserApp() {
           flexShrink: 0,
         }}
       >
-        <IconButton
-          src="/browser-icons/back.svg"
-          label="Back"
-          disabled={!canGoBack}
-          onClick={goBack}
-        />
-        <IconButton
-          src="/browser-icons/forward.svg"
-          label="Forward"
-          disabled={!canGoForward}
-          onClick={goForward}
-        />
-        <IconButton
-          src="/browser-icons/home.svg"
-          label="Home"
-          disabled={isHome}
-          onClick={goHome}
-        />
+        {[
+          { src: 'back', label: 'Back', disabled: !canGoBack, onClick: goBack },
+          { src: 'forward', label: 'Forward', disabled: !canGoForward, onClick: goForward },
+          { src: 'home', label: 'Home', disabled: isHome, onClick: goHome },
+        ].map((b) => (
+          <IconButton key={b.label} {...b} src={`/browser-icons/${b.src}.svg`} />
+        ))}
 
         {/* Address bar — editable, navigates on Enter */}
         <input
