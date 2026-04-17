@@ -31,19 +31,13 @@ export function IMacG3Frame({
       {/* Main body */}
       <div
         style={{
-          background: isMaximized
-            ? '#000'
-            : 'linear-gradient(165deg, #7EE8DB 0%, #3FC8BC 25%, #2AADA3 50%, #1E9B91 75%, #178E85 100%)',
+          background: isMaximized ? '#000' : 'linear-gradient(165deg, #7EE8DB 0%, #3FC8BC 25%, #2AADA3 50%, #1E9B91 75%, #178E85 100%)',
           borderRadius: isMaximized ? 0 : isLarge ? '28px 28px 12px 12px' : '24px 24px 10px 10px',
           padding: isMaximized ? 0 : isLarge ? '20px 20px 0' : '10px 10px 0',
-          boxShadow: isMaximized
-            ? 'none'
-            : '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
+          boxShadow: isMaximized ? 'none' : '0 8px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)',
           border: isMaximized ? 'none' : '1px solid rgba(0,0,0,0.12)',
-          height: isMaximized ? '100%' : undefined,
-          display: isMaximized ? 'flex' : undefined,
-          flexDirection: isMaximized ? 'column' : undefined,
           transition: bodyTransition,
+          ...(isMaximized && { height: '100%', display: 'flex', flexDirection: 'column' }),
         }}
       >
         {/* Screen bezel */}
