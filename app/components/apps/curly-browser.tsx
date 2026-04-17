@@ -150,9 +150,7 @@ function BookmarkTile({
           onClick={handleOpen}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') handleOpen()
-          }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpen() }}
         >
           {/* Favicon */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
