@@ -18,12 +18,10 @@ const APPLE_MENU: MenuConfig = {
   ],
 }
 
-type MenuBarProps = {
-  fontSize?: number
-  height?: number
-}
+const FONT_SIZE = 13
+const HEIGHT = 24
 
-export function MenuBar({ fontSize = 13, height = 24 }: MenuBarProps) {
+export function MenuBar() {
   const { activeWindowId } = useWindowManager()
   const activeApp = activeWindowId ? APP_MAP[activeWindowId] : null
   const appMenus =
@@ -85,14 +83,14 @@ export function MenuBar({ fontSize = 13, height = 24 }: MenuBarProps) {
       ref={menuRef}
       role="menubar"
       style={{
-        height,
+        height: HEIGHT,
         background: '#fff',
         borderBottom: '2px solid #000',
         display: 'flex',
         alignItems: 'center',
         padding: '0 6px',
         fontFamily: 'var(--font-chicago)',
-        fontSize,
+        fontSize: FONT_SIZE,
         gap: 16,
         userSelect: 'none',
         flexShrink: 0,
@@ -113,12 +111,11 @@ export function MenuBar({ fontSize = 13, height = 24 }: MenuBarProps) {
             onMouseLeave={() => setHoveredMenu(null)}
             style={menuItemStyle(key)}
           >
-            {key === 'apple' ? <AppleGlyph size={fontSize + 2} inverted={openMenu === 'apple' || hoveredMenu === 'apple'} /> : config.label}
+            {key === 'apple' ? <AppleGlyph size={FONT_SIZE + 2} inverted={openMenu === 'apple' || hoveredMenu === 'apple'} /> : config.label}
           </span>
           {openMenu === key && (
             <MenuDropdown
               items={config.items}
-              fontSize={fontSize}
               onClose={() => setOpenMenu(null)}
             />
           )}
@@ -130,11 +127,9 @@ export function MenuBar({ fontSize = 13, height = 24 }: MenuBarProps) {
 
 function MenuDropdown({
   items,
-  fontSize,
   onClose,
 }: {
   items: MenuItem[]
-  fontSize: number
   onClose: () => void
 }) {
   return (
@@ -150,7 +145,7 @@ function MenuDropdown({
         minWidth: 160,
         zIndex: 10000,
         fontFamily: 'var(--font-chicago)',
-        fontSize,
+        fontSize: FONT_SIZE,
         padding: '2px 0',
       }}
     >
@@ -183,7 +178,7 @@ function MenuDropdown({
               border: 'none',
               padding: '3px 16px',
               fontFamily: 'var(--font-chicago)',
-              fontSize,
+              fontSize: FONT_SIZE,
               textAlign: 'left',
               color: item.disabled ? '#999' : '#000',
               cursor: item.disabled ? 'default' : 'pointer',
