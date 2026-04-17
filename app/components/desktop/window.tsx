@@ -397,15 +397,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
           </span>
 
           {/* Title text cuts a white hole in the stripes */}
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 'bold',
-              letterSpacing: 0.3,
-              background: '#fff',
-              padding: '0 10px',
-            }}
-          >
+          <span style={{ fontSize: 12, fontWeight: 'bold', letterSpacing: 0.3, background: '#fff', padding: '0 10px' }}>
             {state.title ?? app?.name ?? windowId}
           </span>
 
@@ -421,10 +413,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       {/* Content */}
       <div
         style={{
-          flex: 1,
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
+          flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
           overflow: app?.showScrollbar || state.content ? 'auto' : 'hidden',
         }}
       >
@@ -433,15 +422,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
 
       {/* Optional status bar */}
       {app?.statusBar && (
-        <div
-          style={{
-            borderTop: '1px solid #000',
-            padding: '3px 7px',
-            fontSize: 11,
-            background: '#f0f0f0',
-            flexShrink: 0,
-          }}
-        >
+        <div style={{ borderTop: '1px solid #000', padding: '3px 7px', fontSize: 11, background: '#f0f0f0', flexShrink: 0 }}>
           {app.statusBar}
         </div>
       )}
