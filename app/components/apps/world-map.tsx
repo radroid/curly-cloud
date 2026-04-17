@@ -116,43 +116,24 @@ export function WorldMapApp() {
               const name: string = geo.properties?.name ?? ''
               const visited = VISITED.has(name)
 
+              const base = {
+                fill: visited ? 'url(#visitedPattern)' : '#fff',
+                stroke: '#000',
+                outline: 'none',
+              }
+              const setPos = (e: React.MouseEvent) =>
+                setTooltip({ name, x: e.clientX, y: e.clientY })
               return (
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}
-                  onMouseEnter={(e: React.MouseEvent) =>
-                    setTooltip({ name, x: e.clientX, y: e.clientY })
-                  }
-                  onMouseMove={(e: React.MouseEvent) =>
-                    setTooltip((prev) =>
-                      prev.name === name
-                        ? { name, x: e.clientX, y: e.clientY }
-                        : { name, x: e.clientX, y: e.clientY }
-                    )
-                  }
-                  onMouseLeave={() =>
-                    setTooltip({ name: null, x: 0, y: 0 })
-                  }
+                  onMouseEnter={setPos}
+                  onMouseMove={setPos}
+                  onMouseLeave={() => setTooltip({ name: null, x: 0, y: 0 })}
                   style={{
-                    default: {
-                      fill: visited ? 'url(#visitedPattern)' : '#fff',
-                      stroke: '#000',
-                      strokeWidth: 0.5,
-                      outline: 'none',
-                    },
-                    hover: {
-                      fill: visited ? 'url(#visitedPattern)' : '#fff',
-                      stroke: '#000',
-                      strokeWidth: 1.75,
-                      outline: 'none',
-                      cursor: 'default',
-                    },
-                    pressed: {
-                      fill: visited ? 'url(#visitedPattern)' : '#fff',
-                      stroke: '#000',
-                      strokeWidth: 1.75,
-                      outline: 'none',
-                    },
+                    default: { ...base, strokeWidth: 0.5 },
+                    hover: { ...base, strokeWidth: 1.75, cursor: 'default' },
+                    pressed: { ...base, strokeWidth: 1.75 },
                   }}
                 />
               )
