@@ -51,30 +51,25 @@ const CASCADE_STEP = 0.03
 
 function nextCascadePosition(topmost: WindowState | null) {
   if (!topmost) return { ...BASE_POS }
-  let x = topmost.position.x + CASCADE_STEP
-  let y = topmost.position.y + CASCADE_STEP
-  // Clamp: if cascade goes too far right or too far down, wrap back
-  if (x > 0.55 || y > 0.50) {
-    x = BASE_POS.x
-    y = BASE_POS.y
-  }
-  return { x, y }
+  const x = topmost.position.x + CASCADE_STEP
+  const y = topmost.position.y + CASCADE_STEP
+  // Wrap back to BASE if cascade goes too far right or down
+  return x > 0.55 || y > 0.50 ? { ...BASE_POS } : { x, y }
+}
+
+function openWindowsList(windows: WindowsRecord) {
+  return Object.values(windows).filter((w) => w.isOpen)
 }
 
 function countOpen(windows: WindowsRecord) {
-  let n = 0
-  for (const id in windows) if (windows[id].isOpen) n++
-  return n
+  return openWindowsList(windows).length
 }
 
 function topmost(windows: WindowsRecord): WindowState | null {
-  let top: WindowState | null = null
-  for (const id in windows) {
-    const w = windows[id]
-    if (!w.isOpen) continue
-    if (!top || w.zIndex > top.zIndex) top = w
-  }
-  return top
+  return openWindowsList(windows).reduce<WindowState | null>(
+    (top, w) => (!top || w.zIndex > top.zIndex ? w : top),
+    null,
+  )
 }
 
 export function WindowManagerProvider({ children }: { children: React.ReactNode }) {
