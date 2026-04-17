@@ -69,18 +69,12 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       const cRect = container.getBoundingClientRect()
       const wRect = el.getBoundingClientRect()
       if (cRect.width === 0 || cRect.height === 0) return
-      const currentX = state.position.x
-      const currentY = state.position.y
-      const wRatioX = wRect.width / cRect.width
-      const wRatioY = wRect.height / cRect.height
-      const maxX = Math.max(0, 1 - wRatioX)
-      const maxY = Math.max(0, 1 - wRatioY)
-      if (currentX > maxX || currentY > maxY) {
+      const { x, y } = state.position
+      const maxX = Math.max(0, 1 - wRect.width / cRect.width)
+      const maxY = Math.max(0, 1 - wRect.height / cRect.height)
+      if (x > maxX || y > maxY) {
         setSkipTransition(true)
-        moveWindow(windowId, {
-          x: Math.min(currentX, maxX),
-          y: Math.min(currentY, maxY),
-        })
+        moveWindow(windowId, { x: Math.min(x, maxX), y: Math.min(y, maxY) })
       }
     })
     return () => cancelAnimationFrame(raf)
