@@ -412,19 +412,8 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
 
 const titleBarActiveBg = 'repeating-linear-gradient(to bottom, #000 0 1px, #fff 1px 2px)'
 
-const resizeEdgeBase: React.CSSProperties = {
-  position: 'absolute',
-  zIndex: 10,
-  background: 'transparent',
-}
-
-const resizeCornerBase: React.CSSProperties = {
-  position: 'absolute',
-  width: 8,
-  height: 8,
-  zIndex: 11,
-  background: 'transparent',
-}
+const resizeEdgeBase: React.CSSProperties = { position: 'absolute', zIndex: 10, background: 'transparent' }
+const resizeCornerBase: React.CSSProperties = { position: 'absolute', width: 8, height: 8, zIndex: 11, background: 'transparent' }
 
 const chromeButtonStyle: React.CSSProperties = {
   appearance: 'none', width: 11, height: 11, border: '1px solid #000',
