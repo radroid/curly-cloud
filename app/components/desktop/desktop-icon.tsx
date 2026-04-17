@@ -91,30 +91,18 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
         onOpen()
       }}
       style={{
-        appearance: 'none',
-        background: 'transparent',
-        border: 'none',
-        outline: 'none',
+        appearance: 'none', background: 'transparent', border: 'none', outline: 'none',
         padding: large ? '7px 4px' : '5px 2px',
-        cursor: 'default',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: large ? 5 : 3,
-        width: large ? 106 : 90,
-        fontFamily: 'var(--font-chicago)',
-        color: '#000',
-        userSelect: 'none',
+        cursor: 'default', userSelect: 'none',
+        display: 'flex', flexDirection: 'column', alignItems: 'center',
+        gap: large ? 5 : 3, width: large ? 106 : 90,
+        fontFamily: 'var(--font-chicago)', color: '#000',
       }}
     >
       <div
         style={{
-          width: large ? 48 : 33,
-          height: large ? 48 : 33,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          overflow: 'visible',
+          width: large ? 48 : 33, height: large ? 48 : 33,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'visible',
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -122,25 +110,14 @@ const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(function IconB
           src={app.iconSrc}
           alt=""
           draggable={false}
-          style={{
-            height: '100%',
-            width: 'auto',
-            imageRendering: 'pixelated',
-          }}
+          style={{ height: '100%', width: 'auto', imageRendering: 'pixelated' }}
         />
       </div>
       <span
         style={{
-          fontSize: large ? 13 : 11,
-          lineHeight: 1.2,
-          textAlign: 'center',
-          padding: '1px 4px',
-          background: selected ? '#000' : 'transparent',
-          color: selected ? '#fff' : '#000',
-          maxWidth: '100%',
-          whiteSpace: 'normal',
-          wordSpacing: 'normal',
-          overflowWrap: 'normal',
+          fontSize: large ? 13 : 11, lineHeight: 1.2, textAlign: 'center', padding: '1px 4px',
+          background: selected ? '#000' : 'transparent', color: selected ? '#fff' : '#000',
+          maxWidth: '100%', whiteSpace: 'normal', wordSpacing: 'normal', overflowWrap: 'normal',
         }}
       >
         {app.name}
