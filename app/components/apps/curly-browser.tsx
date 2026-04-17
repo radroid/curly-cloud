@@ -11,12 +11,10 @@ import {
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type OpenMode = 'tab' | 'embed'
-
 interface Bookmark {
   label: string
   url: string
-  openMode: OpenMode
+  openMode: 'tab' | 'embed'
 }
 
 type View =
