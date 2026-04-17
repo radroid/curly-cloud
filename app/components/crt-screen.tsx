@@ -18,36 +18,21 @@ export function CRTScreen({
   return (
     <div
       style={{
-        borderRadius: isMaximized ? 0 : 3,
-        overflow: 'hidden',
-        position: 'relative',
+        borderRadius: isMaximized ? 0 : 3, overflow: 'hidden', position: 'relative',
         aspectRatio: isMaximized ? 'auto' : '4 / 3',
-        width: isMaximized ? '100%' : undefined,
-        height: isMaximized ? '100%' : undefined,
-        display: 'flex',
-        flexDirection: 'column',
-        background: '#a8a8a8',
-        backgroundImage: DITHERED_BG,
-        backgroundSize: '2px 2px',
-        imageRendering: 'pixelated' as const,
-        containerType: 'size',
+        width: isMaximized ? '100%' : undefined, height: isMaximized ? '100%' : undefined,
+        display: 'flex', flexDirection: 'column',
+        background: '#a8a8a8', backgroundImage: DITHERED_BG, backgroundSize: '2px 2px',
+        imageRendering: 'pixelated', containerType: 'size',
         transition: animateMaximize ? 'border-radius 300ms ease' : undefined,
       }}
     >
-      {/* Content (boot icon or welcome) */}
       {children}
-
-      {/* CRT black overlay — flickers away during turn-on */}
       {showOverlay && (
         <div
           style={{
-            position: 'absolute',
-            inset: 0,
-            background: '#0a0a0a',
-            zIndex: 1,
-            ...(phase === 'flicker'
-              ? { animation: 'crtTurnOn 700ms ease-out forwards' }
-              : {}),
+            position: 'absolute', inset: 0, background: '#0a0a0a', zIndex: 1,
+            ...(phase === 'flicker' && { animation: 'crtTurnOn 700ms ease-out forwards' }),
           }}
         />
       )}
