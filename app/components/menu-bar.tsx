@@ -83,19 +83,10 @@ export function MenuBar() {
       ref={menuRef}
       role="menubar"
       style={{
-        height: HEIGHT,
-        background: '#fff',
-        borderBottom: '2px solid #000',
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 6px',
-        fontFamily: 'var(--font-chicago)',
-        fontSize: FONT_SIZE,
-        gap: 16,
-        userSelect: 'none',
-        flexShrink: 0,
-        position: 'relative',
-        zIndex: 9999,
+        height: HEIGHT, background: '#fff', borderBottom: '2px solid #000',
+        display: 'flex', alignItems: 'center', padding: '0 6px', gap: 16,
+        fontFamily: 'var(--font-chicago)', fontSize: FONT_SIZE,
+        userSelect: 'none', flexShrink: 0, position: 'relative', zIndex: 9999,
       }}
     >
       {menus.map(({ key, config }) => (
@@ -136,17 +127,9 @@ function MenuDropdown({
     <div
       role="menu"
       style={{
-        position: 'absolute',
-        top: '100%',
-        left: 0,
-        background: '#fff',
-        border: '1px solid #000',
-        boxShadow: '2px 2px 0 #000',
-        minWidth: 160,
-        zIndex: 10000,
-        fontFamily: 'var(--font-chicago)',
-        fontSize: FONT_SIZE,
-        padding: '2px 0',
+        position: 'absolute', top: '100%', left: 0, zIndex: 10000, minWidth: 160,
+        background: '#fff', border: '1px solid #000', boxShadow: '2px 2px 0 #000',
+        padding: '2px 0', fontFamily: 'var(--font-chicago)', fontSize: FONT_SIZE,
       }}
     >
       {items.map((item, i) => {
@@ -169,29 +152,18 @@ function MenuDropdown({
               onClose()
             }}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              width: '100%',
-              appearance: 'none',
-              background: 'transparent',
-              border: 'none',
-              padding: '3px 16px',
-              fontFamily: 'var(--font-chicago)',
-              fontSize: FONT_SIZE,
-              textAlign: 'left',
-              color: item.disabled ? '#999' : '#000',
-              cursor: item.disabled ? 'default' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+              appearance: 'none', background: 'transparent', border: 'none',
+              padding: '3px 16px', fontFamily: 'var(--font-chicago)', fontSize: FONT_SIZE, textAlign: 'left',
+              color: item.disabled ? '#999' : '#000', cursor: item.disabled ? 'default' : 'pointer',
             }}
             onMouseEnter={(e) => {
               if (item.disabled) return
-              e.currentTarget.style.background = '#000'
-              e.currentTarget.style.color = '#fff'
+              Object.assign(e.currentTarget.style, { background: '#000', color: '#fff' })
             }}
             onMouseLeave={(e) => {
               if (item.disabled) return
-              e.currentTarget.style.background = 'transparent'
-              e.currentTarget.style.color = '#000'
+              Object.assign(e.currentTarget.style, { background: 'transparent', color: '#000' })
             }}
           >
             <span>{item.label}</span>
