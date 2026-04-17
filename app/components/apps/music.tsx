@@ -91,26 +91,21 @@ function VinylRecord({
   const labelSize = 96 // ~46% of outer
   const holeSize = 14
 
+  const grooveRings = isOffline
+    ? '0 0 0 3px #bbb inset, 0 0 0 6px #e8e8e8 inset, 0 0 0 9px #bbb inset'
+    : ['0 0 0 11px #222', '0 0 0 22px #1a1a1a', '0 0 0 33px #242424', '0 0 0 44px #1a1a1a',
+       '0 0 0 55px #222', '0 0 0 66px #1a1a1a', '0 0 0 77px #242424'].map(s => `${s} inset`).join(', ')
+
+  const centered: React.CSSProperties = {
+    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', borderRadius: '50%',
+  }
+
   return (
     <div
       style={{
-        position: 'relative',
-        width: outerSize,
-        height: outerSize,
-        borderRadius: '50%',
+        position: 'relative', width: outerSize, height: outerSize, borderRadius: '50%',
         background: isOffline ? '#e8e8e8' : '#1a1a1a',
-        // Groove rings via box-shadow
-        boxShadow: isOffline
-          ? '0 0 0 3px #bbb inset, 0 0 0 6px #e8e8e8 inset, 0 0 0 9px #bbb inset'
-          : [
-              '0 0 0 11px #222 inset',
-              '0 0 0 22px #1a1a1a inset',
-              '0 0 0 33px #242424 inset',
-              '0 0 0 44px #1a1a1a inset',
-              '0 0 0 55px #222 inset',
-              '0 0 0 66px #1a1a1a inset',
-              '0 0 0 77px #242424 inset',
-            ].join(', '),
+        boxShadow: grooveRings,
         flexShrink: 0,
         animation: shouldSpin ? 'curly-vinyl-spin 8s linear infinite' : 'none',
         animationPlayState: shouldSpin ? 'running' : 'paused',
@@ -120,14 +115,7 @@ function VinylRecord({
       {/* Album art label */}
       <div
         style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: labelSize,
-          height: labelSize,
-          borderRadius: '50%',
-          overflow: 'hidden',
+          ...centered, width: labelSize, height: labelSize, overflow: 'hidden',
           background: albumArt ? 'transparent' : '#888',
           border: isOffline ? '1px solid #aaa' : '1px solid #333',
         }}
@@ -139,28 +127,12 @@ function VinylRecord({
             alt="Album art"
             width={labelSize}
             height={labelSize}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : isOffline ? (
-          <div
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#ddd',
-            }}
-          >
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#ddd' }}>
             <span style={{ ...chicago, fontSize: 9, color: '#555', textAlign: 'center', lineHeight: 1.2 }}>
-              OFF
-              <br />
-              LINE
+              OFF<br />LINE
             </span>
           </div>
         ) : null}
@@ -169,16 +141,8 @@ function VinylRecord({
       {/* Center hole */}
       <div
         style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: holeSize,
-          height: holeSize,
-          borderRadius: '50%',
-          background: '#fff',
+          ...centered, width: holeSize, height: holeSize, background: '#fff', zIndex: 1,
           border: isOffline ? '1px solid #aaa' : '1px solid #000',
-          zIndex: 1,
         }}
       />
     </div>
