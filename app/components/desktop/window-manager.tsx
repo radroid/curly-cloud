@@ -83,36 +83,26 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     if (!APP_MAP[appId]) return
     setHasOpenedAnyApp(true)
     setWindows((prev) => {
-      const existing = prev[appId]
-      if (existing && existing.isOpen) {
-        // Already open → focus it
-        return focusReshuffle(prev, appId)
+      if (prev[appId]?.isOpen) return focusReshuffle(prev, appId)
+      return {
+        ...prev,
+        [appId]: {
+          appId, position: nextCascadePosition(topmost(prev)), zIndex: countOpen(prev),
+          isOpen: true, fromOrigin, openedAt: Date.now(),
+        },
       }
-      const count = countOpen(prev)
-      const position = nextCascadePosition(topmost(prev))
-      const next: WindowsRecord = { ...prev }
-      next[appId] = {
-        appId,
-        position,
-        zIndex: count,
-        isOpen: true,
-        fromOrigin,
-        openedAt: Date.now(),
-      }
-      return next
     })
   }, [])
 
   const closeApp = useCallback((appId: string) => {
     setWindows((prev) => {
       const target = prev[appId]
-      if (!target || !target.isOpen) return prev
-      const closedZ = target.zIndex
+      if (!target?.isOpen) return prev
       const next: WindowsRecord = {}
       for (const id in prev) {
         if (id === appId) continue
         const w = prev[id]
-        next[id] = w.zIndex > closedZ ? { ...w, zIndex: w.zIndex - 1 } : w
+        next[id] = w.zIndex > target.zIndex ? { ...w, zIndex: w.zIndex - 1 } : w
       }
       return next
     })
@@ -126,74 +116,42 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
     setSelectedIconId(appId)
   }, [])
 
-  const moveWindow = useCallback(
-    (appId: string, pos: { x: number; y: number }) => {
-      setWindows((prev) => {
-        const w = prev[appId]
-        if (!w) return prev
-        return { ...prev, [appId]: { ...w, position: pos, fromOrigin: undefined } }
-      })
-    },
-    [],
-  )
+  const moveWindow = useCallback((appId: string, pos: { x: number; y: number }) => {
+    setWindows((prev) =>
+      prev[appId] ? { ...prev, [appId]: { ...prev[appId], position: pos, fromOrigin: undefined } } : prev
+    )
+  }, [])
 
-  const resizeWindow = useCallback(
-    (appId: string, size: { width: number; height: number }) => {
-      setWindows((prev) => {
-        const w = prev[appId]
-        if (!w) return prev
-        return { ...prev, [appId]: { ...w, size } }
-      })
-    },
-    [],
-  )
+  const resizeWindow = useCallback((appId: string, size: { width: number; height: number }) => {
+    setWindows((prev) => (prev[appId] ? { ...prev, [appId]: { ...prev[appId], size } } : prev))
+  }, [])
 
   const toggleFullscreen = useCallback((appId: string) => {
-    setWindows((prev) => {
-      const w = prev[appId]
-      if (!w) return prev
-      return { ...prev, [appId]: { ...w, isFullscreen: !w.isFullscreen } }
-    })
+    setWindows((prev) =>
+      prev[appId] ? { ...prev, [appId]: { ...prev[appId], isFullscreen: !prev[appId].isFullscreen } } : prev
+    )
   }, [])
 
   const openWindow = useCallback((windowId: string, config: OpenWindowConfig) => {
     setWindows((prev) => {
-      const existing = prev[windowId]
-      if (existing && existing.isOpen) {
-        return focusReshuffle(prev, windowId)
-      }
-      const count = countOpen(prev)
-      const position = nextCascadePosition(topmost(prev))
+      if (prev[windowId]?.isOpen) return focusReshuffle(prev, windowId)
       return {
         ...prev,
         [windowId]: {
           appId: windowId,
-          position,
-          zIndex: count,
-          isOpen: true,
-          openedAt: Date.now(),
-          title: config.title,
-          dynamicSize: config.size,
-          dynamicResizable: config.resizable ?? true,
-          content: config.content,
+          position: nextCascadePosition(topmost(prev)), zIndex: countOpen(prev),
+          isOpen: true, openedAt: Date.now(),
+          title: config.title, dynamicSize: config.size,
+          dynamicResizable: config.resizable ?? true, content: config.content,
         },
       }
     })
   }, [])
 
   const value: WindowManagerContextType = {
-    windows,
-    activeWindowId,
-    selectedIconId,
-    hasOpenedAnyApp,
-    openApp,
-    closeApp,
-    focusApp,
-    selectIcon,
-    moveWindow,
-    resizeWindow,
-    toggleFullscreen,
-    openWindow,
+    windows, activeWindowId, selectedIconId, hasOpenedAnyApp,
+    openApp, closeApp, focusApp, selectIcon,
+    moveWindow, resizeWindow, toggleFullscreen, openWindow,
   }
 
   return <WindowManagerContext.Provider value={value}>{children}</WindowManagerContext.Provider>
@@ -201,23 +159,16 @@ export function WindowManagerProvider({ children }: { children: React.ReactNode 
 
 function focusReshuffle(prev: WindowsRecord, appId: string): WindowsRecord {
   const target = prev[appId]
-  if (!target || !target.isOpen) return prev
-  const count = countOpen(prev)
-  if (target.zIndex === count - 1) return prev // already on top
+  if (!target?.isOpen) return prev
+  const topZ = countOpen(prev) - 1
+  if (target.zIndex === topZ) return prev
   const next: WindowsRecord = {}
   for (const id in prev) {
     const w = prev[id]
-    if (!w.isOpen) {
-      next[id] = w
-      continue
-    }
-    if (id === appId) {
-      next[id] = { ...w, zIndex: count - 1 }
-    } else if (w.zIndex > target.zIndex) {
-      next[id] = { ...w, zIndex: w.zIndex - 1 }
-    } else {
-      next[id] = w
-    }
+    if (!w.isOpen) next[id] = w
+    else if (id === appId) next[id] = { ...w, zIndex: topZ }
+    else if (w.zIndex > target.zIndex) next[id] = { ...w, zIndex: w.zIndex - 1 }
+    else next[id] = w
   }
   return next
 }
