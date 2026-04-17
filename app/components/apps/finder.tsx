@@ -128,10 +128,6 @@ function triggerDownload(path: string, filename: string) {
   document.body.removeChild(a)
 }
 
-function getFilename(path: string): string {
-  return path.split('/').pop() ?? path
-}
-
 // ─── Grid item components ────────────────────────────────────────────────────
 
 type GridItemProps = {
@@ -189,7 +185,7 @@ function ContextGridItem({ entry, selected, onSelect, onOpen }: GridItemProps) {
   const isFolder = entry.kind === 'folder'
   const handleDownload = () => {
     const file = entry as FileEntry
-    triggerDownload(file.path, getFilename(file.path))
+    triggerDownload(file.path, file.path.split('/').pop() ?? file.path)
   }
   const handleOpen = () => { onSelect(); onOpen() }
 
@@ -281,11 +277,7 @@ export function FinderApp() {
     ? FILE_TREE.find((e): e is FolderEntry => e.kind === 'folder' && e.id === pathStack[0])
     : null
   const currentEntries: FSEntry[] = topFolder?.children ?? FILE_TREE
-  const breadcrumb = topFolder
-    ? `${ROOT_LABEL} > ${topFolder.label}`
-    : pathStack.length
-      ? `${ROOT_LABEL} > ${pathStack[0]}`
-      : ROOT_LABEL
+  const breadcrumb = topFolder ? `${ROOT_LABEL} > ${topFolder.label}` : ROOT_LABEL
 
   const handleOpen = useCallback((entry: FSEntry) => {
     if (entry.kind === 'folder') {
