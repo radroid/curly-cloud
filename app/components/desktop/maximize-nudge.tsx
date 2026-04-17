@@ -5,17 +5,15 @@ import { useWindowManager } from './window-manager'
 
 const STORAGE_KEY = 'maximizeNudgeDismissed'
 
-type MaximizeNudgeProps = {
-  isMaximized: boolean
-  onToggleMaximize: () => void
-  prefersReduced: boolean
-}
-
 export function MaximizeNudge({
   isMaximized,
   onToggleMaximize,
   prefersReduced,
-}: MaximizeNudgeProps) {
+}: {
+  isMaximized: boolean
+  onToggleMaximize: () => void
+  prefersReduced: boolean
+}) {
   const { hasOpenedAnyApp } = useWindowManager()
   const [visible, setVisible] = useState(false)
   const [dismissed, setDismissed] = useState(false)
@@ -41,9 +39,7 @@ export function MaximizeNudge({
   const handleDismiss = () => {
     setDismissed(true)
     setVisible(false)
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(STORAGE_KEY, '1')
-    }
+    if (typeof window !== 'undefined') sessionStorage.setItem(STORAGE_KEY, '1')
   }
 
   if (!visible) return null
@@ -66,35 +62,19 @@ export function MaximizeNudge({
         iMac chin.
       </div>
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+        <button type="button" onClick={handleDismiss} style={pillBtnStyle}>Not now</button>
         <button
           type="button"
-          onClick={handleDismiss}
-          style={pillBtnStyle}
-        >
-          Not now
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            handleDismiss()
-            onToggleMaximize()
-          }}
+          onClick={() => { handleDismiss(); onToggleMaximize() }}
           style={{ ...pillBtnStyle, background: '#000', color: '#fff' }}
-        >
-          Go Full Screen
-        </button>
+        >Go Full Screen</button>
       </div>
     </div>
   )
 }
 
 const pillBtnStyle: React.CSSProperties = {
-  appearance: 'none',
-  fontFamily: 'var(--font-chicago)',
-  fontSize: 10,
-  border: '1px solid #000',
-  background: '#fff',
-  padding: '3px 8px',
-  cursor: 'pointer',
-  borderRadius: 10,
+  appearance: 'none', fontFamily: 'var(--font-chicago)', fontSize: 10,
+  border: '1px solid #000', background: '#fff', padding: '3px 8px',
+  cursor: 'pointer', borderRadius: 10,
 }
