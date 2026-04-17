@@ -534,7 +534,7 @@ Update the existing placeholder entry in `app/components/desktop/app-registry.ts
 
 ## Inspiration & Anti-patterns from PostHog
 
-Full notes in `POSTHOG-RESEARCH.md`. Summary of what we're copying and what we're deliberately not.
+Summary of what we're copying from PostHog.com's desktop-OS and what we're deliberately not.
 
 ### Patterns we're adopting
 1. **Derived focused window** — top of z-stack IS the focused window; no separate `activeWindowId` field. Eliminates sync bugs.
@@ -701,7 +701,6 @@ None currently. Design Decisions table covers all settled choices. If anything s
 |------|---------|
 | `CONTENT-ARCHIVE.md` | Projects, blog posts, skills, timeline — source content for apps |
 | `MOBILE-PLAN.md` | Separate plan for mobile iPhone OS 1 experience |
-| `POSTHOG-RESEARCH.md` | Reference research on PostHog.com's desktop-OS architecture — patterns borrowed and deliberately avoided |
 | `app/page.tsx` | Entry point — boot sequence + screen rendering |
 | `app/components/imac-frame.tsx` | iMac G3 frame — modify for maximize mode |
 | `app/components/welcome-screen.tsx` | Current welcome screen — replaced by Desktop on desktop viewports |
