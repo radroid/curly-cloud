@@ -87,9 +87,7 @@ function FileThumbnail({ entry, size = 36 }: { entry: FileEntry; size?: number }
 
 const FILE_TREE: FSEntry[] = [
   {
-    kind: 'folder',
-    label: 'Applications',
-    id: 'app-icons',
+    kind: 'folder', label: 'Applications', id: 'app-icons',
     children: [
       { kind: 'file', label: 'Browser',       path: '/app-icons/browser.svg',       ext: '.svg' },
       { kind: 'file', label: 'Calculator',    path: '/app-icons/calculator.svg',    ext: '.svg' },
@@ -103,25 +101,12 @@ const FILE_TREE: FSEntry[] = [
     ],
   },
   {
-    kind: 'folder',
-    label: 'Documents',
-    id: 'cv',
-    children: [
-      {
-        kind: 'file',
-        label: 'Resume',
-        path: '/cv/Raj_Dholakia_Resume_FullStack.pdf',
-        ext: '.pdf',
-      },
-    ],
+    kind: 'folder', label: 'Documents', id: 'cv',
+    children: [{ kind: 'file', label: 'Resume', path: '/cv/Raj_Dholakia_Resume_FullStack.pdf', ext: '.pdf' }],
   },
   {
-    kind: 'folder',
-    label: 'Fonts',
-    id: 'fonts',
-    children: [
-      { kind: 'file', label: 'Chicago', path: '/fonts/ChicagoFLF.woff', ext: '.woff' },
-    ],
+    kind: 'folder', label: 'Fonts', id: 'fonts',
+    children: [{ kind: 'file', label: 'Chicago', path: '/fonts/ChicagoFLF.woff', ext: '.woff' }],
   },
   { kind: 'file', label: 'Apple Logo',       path: '/apple-icon.svg',          ext: '.svg' },
   { kind: 'file', label: 'Mac Icon',         path: '/mac-icon.svg',            ext: '.svg' },
