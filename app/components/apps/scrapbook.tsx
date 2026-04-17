@@ -242,12 +242,7 @@ export function ScrapbookApp() {
         {viewMode === 'article' ? (
           <>
             <div style={{ display: 'flex', gap: 4 }}>
-              <button
-                type="button"
-                style={navBtnBase}
-                onClick={() => setViewMode('index')}
-                aria-label="Back to contents"
-              >
+              <button type="button" style={navBtnBase} onClick={() => setViewMode('index')} aria-label="Back to contents">
                 Contents
               </button>
               <button
@@ -256,24 +251,16 @@ export function ScrapbookApp() {
                 disabled={page === 0}
                 onClick={() => setPage((p) => Math.max(0, p - 1))}
                 aria-label="Previous page"
-              >
-                &#9664;
-              </button>
+              >&#9664;</button>
             </div>
-
-            <span style={{ ...chicago, fontSize: 12 }}>
-              {page + 1} / {total}
-            </span>
-
+            <span style={{ ...chicago, fontSize: 12 }}>{page + 1} / {total}</span>
             <button
               type="button"
               style={page === total - 1 ? navBtnDisabled : navBtnBase}
               disabled={page === total - 1}
               onClick={() => setPage((p) => Math.min(total - 1, p + 1))}
               aria-label="Next page"
-            >
-              &#9654;
-            </button>
+            >&#9654;</button>
           </>
         ) : (
           <span style={{ ...chicago, fontSize: 12, color: '#555' }}>
