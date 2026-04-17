@@ -220,17 +220,7 @@ function ArtistList({ artists }: { artists: TopArtist[] }) {
       {artists.map((artist, i) => {
         const row = (
           <>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: '50%',
-                flexShrink: 0,
-                overflow: 'hidden',
-                background: '#ccc',
-                border: '1px solid #000',
-              }}
-            >
+            <div style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, overflow: 'hidden', background: '#ccc', border: '1px solid #000' }}>
               {artist.image && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -244,14 +234,9 @@ function ArtistList({ artists }: { artists: TopArtist[] }) {
             </div>
             <span
               style={{
-                ...chicago,
-                fontSize: 11,
-                fontWeight: 'bold',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                flex: 1,
-                minWidth: 0,
+                ...chicago, fontSize: 11, fontWeight: 'bold',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                flex: 1, minWidth: 0,
               }}
             >
               {artist.name}
@@ -260,13 +245,9 @@ function ArtistList({ artists }: { artists: TopArtist[] }) {
         )
 
         const style: React.CSSProperties = {
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '4px 10px',
+          display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px',
           borderBottom: i < artists.length - 1 ? '1px solid #e0e0e0' : 'none',
-          textDecoration: 'none',
-          color: '#000',
+          textDecoration: 'none', color: '#000',
         }
 
         if (artist.spotifyUrl) {
@@ -283,12 +264,7 @@ function ArtistList({ artists }: { artists: TopArtist[] }) {
             </a>
           )
         }
-
-        return (
-          <div key={artist.name} style={style}>
-            {row}
-          </div>
-        )
+        return <div key={artist.name} style={style}>{row}</div>
       })}
     </div>
   )
@@ -306,41 +282,15 @@ function ProgressBar({ progressMs, durationMs }: { progressMs: number; durationM
     return `${min}:${sec.toString().padStart(2, '0')}`
   }
 
+  const timeStyle: React.CSSProperties = { ...chicago, fontSize: 9, color: '#555' }
   return (
     <div style={{ width: '100%', marginTop: 8 }}>
-      {/* Track */}
-      <div
-        style={{
-          width: '100%',
-          height: 2,
-          background: '#ccc',
-          position: 'relative',
-          border: '1px solid #000',
-          boxSizing: 'border-box',
-        }}
-      >
-        {/* Fill */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            height: '100%',
-            width: `${pct}%`,
-            background: '#000',
-          }}
-        />
+      <div style={{ width: '100%', height: 2, background: '#ccc', position: 'relative', border: '1px solid #000', boxSizing: 'border-box' }}>
+        <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', width: `${pct}%`, background: '#000' }} />
       </div>
-      {/* Times */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginTop: 2,
-        }}
-      >
-        <span style={{ ...chicago, fontSize: 9, color: '#555' }}>{formatTime(progressMs)}</span>
-        <span style={{ ...chicago, fontSize: 9, color: '#555' }}>{formatTime(durationMs)}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+        <span style={timeStyle}>{formatTime(progressMs)}</span>
+        <span style={timeStyle}>{formatTime(durationMs)}</span>
       </div>
     </div>
   )
