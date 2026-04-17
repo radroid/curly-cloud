@@ -85,29 +85,19 @@ export default function Page() {
   return (
     <div
       style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: 16,
-        background: '#1a1a1a',
-        padding: isDesktop && !isMaximized ? 0 : isMaximized ? 0 : '0 0 40px',
-        position: 'relative' as const,
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16, background: '#1a1a1a',
+        padding: isDesktop || isMaximized ? 0 : '0 0 40px',
+        position: 'relative',
       }}
     >
       {sizeReady && (
         <div
           style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
+            width: '100%', display: 'flex', justifyContent: 'center',
             transform: introDone ? undefined : animateIn ? 'scale(1)' : 'scale(0)',
             opacity: introDone ? undefined : animateIn ? 1 : 0,
-            transition:
-              introDone || prefersReduced
-                ? undefined
-                : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
+            transition: introDone || prefersReduced ? undefined : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
             willChange: introDone ? undefined : 'transform, opacity',
           }}
         >
