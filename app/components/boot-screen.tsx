@@ -1,19 +1,15 @@
 import { useEffect, useRef } from 'react'
 
 export function BootScreen({
-  isActive,
   fadeOut,
   iconSize,
 }: {
-  isActive: boolean
   fadeOut: boolean
   iconSize: number
 }) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
-    if (!isActive) return
-
     const audio = new Audio('/StartupMacI.wav')
     audioRef.current = audio
 
@@ -31,7 +27,7 @@ export function BootScreen({
         audioRef.current = null
       }
     }
-  }, [isActive])
+  }, [])
 
   return (
     <div

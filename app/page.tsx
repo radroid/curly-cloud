@@ -124,7 +124,6 @@ export default function Page() {
             >
               {phase === 'boot' && (
                 <BootScreen
-                  isActive
                   fadeOut={bootFadeOut}
                   iconSize={s.macIconSize}
                 />
