@@ -12,12 +12,8 @@ export function IMacG3Frame({
   animateMaximize?: boolean
 }) {
   const isLarge = maxWidth > 400
-  const bodyTransition = animateMaximize
-    ? 'opacity 220ms ease, transform 300ms ease, padding 300ms ease, border-radius 300ms ease'
-    : undefined
-  const chinTransition = animateMaximize
-    ? 'opacity 220ms ease, max-height 300ms ease, padding 300ms ease'
-    : undefined
+  const bodyTransition = animateMaximize ? 'opacity 220ms ease, transform 300ms ease, padding 300ms ease, border-radius 300ms ease' : undefined
+  const chinTransition = animateMaximize ? 'opacity 220ms ease, max-height 300ms ease, padding 300ms ease' : undefined
 
   return (
     <div
