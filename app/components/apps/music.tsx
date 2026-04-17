@@ -37,9 +37,7 @@ interface SpotifyData {
 // ── Style helpers ──────────────────────────────────────────────────────────────
 
 const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)',
-  WebkitFontSmoothing: 'none',
-  MozOsxFontSmoothing: 'grayscale',
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
 }
 
 const VINYL_KEYFRAMES = `
