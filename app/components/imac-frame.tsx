@@ -52,10 +52,8 @@ export function IMacG3Frame({
             background: isMaximized ? 'transparent' : 'linear-gradient(180deg, #2d2d2d, #1a1a1a)',
             borderRadius: isMaximized ? 0 : isLarge ? '12px 12px 8px 8px' : '10px 10px 6px 6px',
             padding: isMaximized ? 0 : isLarge ? '12px 12px 10px' : '6px 6px 5px',
-            flex: isMaximized ? 1 : undefined,
-            minHeight: isMaximized ? 0 : undefined,
-            display: isMaximized ? 'flex' : undefined,
             transition: bodyTransition,
+            ...(isMaximized && { flex: 1, minHeight: 0, display: 'flex' }),
           }}
         >
           {children}
@@ -65,14 +63,9 @@ export function IMacG3Frame({
         <div
           style={{
             padding: isMaximized ? 0 : isLarge ? '14px 0 20px' : '12px 0 16px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 6,
-            maxHeight: isMaximized ? 0 : 200,
-            opacity: isMaximized ? 0 : 1,
-            overflow: 'hidden',
-            pointerEvents: isMaximized ? 'none' : 'auto',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+            maxHeight: isMaximized ? 0 : 200, opacity: isMaximized ? 0 : 1,
+            overflow: 'hidden', pointerEvents: isMaximized ? 'none' : 'auto',
             transition: chinTransition,
           }}
         >
@@ -116,14 +109,10 @@ export function IMacG3Frame({
       {/* Stand */}
       <div
         style={{
-          width: '35%',
-          height: isMaximized ? 0 : isLarge ? 8 : 6,
-          margin: '0 auto',
+          width: '35%', margin: '0 auto', height: isMaximized ? 0 : isLarge ? 8 : 6,
           background: 'linear-gradient(180deg, #c0c0c0, #a0a0a0)',
-          borderRadius: '0 0 4px 4px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
-          opacity: isMaximized ? 0 : 1,
-          transition: bodyTransition,
+          borderRadius: '0 0 4px 4px', boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+          opacity: isMaximized ? 0 : 1, transition: bodyTransition,
         }}
       />
 
