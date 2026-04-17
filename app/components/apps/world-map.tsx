@@ -77,12 +77,7 @@ export function WorldMapApp() {
             authentic Mac OS System 1 "50% stipple" fill used in MacPaint
             and early Mac games.
           */}
-          <pattern
-            id="visitedPattern"
-            patternUnits="userSpaceOnUse"
-            width="4"
-            height="4"
-          >
+          <pattern id="visitedPattern" patternUnits="userSpaceOnUse" width="4" height="4">
             <rect x="0" y="0" width="1" height="1" fill="#000" />
             <rect x="2" y="2" width="1" height="1" fill="#000" />
           </pattern>

@@ -2,9 +2,7 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-    >
+    <div className="min-h-screen flex items-center justify-center">
       <div className="mac-dialog" style={{ maxWidth: 360 }}>
         <div style={{ fontSize: 48, marginBottom: 16, lineHeight: 1 }}>☹</div>
         <h1 style={{ fontFamily: 'var(--font-chicago)', fontSize: 16, fontWeight: 'bold', marginBottom: 12 }}>
