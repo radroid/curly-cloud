@@ -154,15 +154,7 @@ function VinylRecord({
 function GenreList({ genres }: { genres: Genre[] }) {
   if (genres.length === 0) {
     return (
-      <div
-        style={{
-          ...chicago,
-          fontSize: 12,
-          color: '#555',
-          padding: '12px 10px',
-          textAlign: 'center',
-        }}
-      >
+      <div style={{ ...chicago, fontSize: 12, color: '#555', padding: '12px 10px', textAlign: 'center' }}>
         No genre data
       </div>
     )
@@ -174,34 +166,16 @@ function GenreList({ genres }: { genres: Genre[] }) {
     <div style={{ padding: '4px 0' }}>
       {genres.map((genre, i) => {
         const barPct = Math.max(8, (genre.count / maxCount) * 100)
-
         return (
           <div
             key={genre.name}
-            style={{
-              padding: '6px 10px',
-              borderBottom: i < genres.length - 1 ? '1px solid #e0e0e0' : 'none',
-            }}
+            style={{ padding: '6px 10px', borderBottom: i < genres.length - 1 ? '1px solid #e0e0e0' : 'none' }}
           >
             <div style={{ ...ellipsisLine, fontSize: 12, fontWeight: 'bold', marginBottom: 3 }}>
               {genre.name}
             </div>
-            <div
-              style={{
-                width: '100%',
-                height: 6,
-                background: '#e8e8e8',
-                borderRadius: 1,
-              }}
-            >
-              <div
-                style={{
-                  width: `${barPct}%`,
-                  height: '100%',
-                  background: '#000',
-                  borderRadius: 1,
-                }}
-              />
+            <div style={{ width: '100%', height: 6, background: '#e8e8e8', borderRadius: 1 }}>
+              <div style={{ width: `${barPct}%`, height: '100%', background: '#000', borderRadius: 1 }} />
             </div>
           </div>
         )
@@ -463,24 +437,13 @@ export function MusicApp() {
           {/* Progress bar — only shown when actively playing */}
           {isPlaying && track.progressMs !== undefined && track.durationMs !== undefined && (
             <div style={{ width: '100%', padding: '0 4px' }}>
-              <ProgressBar
-                progressMs={track.progressMs}
-                durationMs={track.durationMs}
-              />
+              <ProgressBar progressMs={track.progressMs} durationMs={track.durationMs} />
             </div>
           )}
         </div>
 
         {/* ── Right column: Genres + Artists ────────────────────────────── */}
-        <div
-          style={{
-            flex: '0 0 45%',
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'auto',
-            minWidth: 0,
-          }}
-        >
+        <div style={{ flex: '0 0 45%', display: 'flex', flexDirection: 'column', overflow: 'auto', minWidth: 0 }}>
           {/* Top Genres */}
           <div style={{ ...sectionHeader, borderBottom: '1px solid #000' }}>
             Top Genres
