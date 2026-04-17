@@ -338,9 +338,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
   const defaultHeight = app ? app.defaultSize.height : `${state.dynamicSize?.height ?? 300}px`
 
   const normalStyle: React.CSSProperties = isFullscreen
-    ? {
-        inset: 0,
-      }
+    ? { inset: 0 }
     : {
         left: `${state.position.x * 100}%`,
         top: `${state.position.y * 100}%`,
@@ -349,12 +347,7 @@ export function Window({ app, windowId, containerRef, prefersReduced }: WindowPr
       }
 
   const zoomStyle: React.CSSProperties = atOrigin && state.fromOrigin
-    ? {
-        left: state.fromOrigin.x,
-        top: state.fromOrigin.y,
-        width: state.fromOrigin.width,
-        height: state.fromOrigin.height,
-      }
+    ? { left: state.fromOrigin.x, top: state.fromOrigin.y, width: state.fromOrigin.width, height: state.fromOrigin.height }
     : normalStyle
 
   const isResizable = app ? app.resizable !== false : (state.dynamicResizable ?? true)
