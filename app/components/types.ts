@@ -3,7 +3,6 @@ export type ScreenPhase = 'off' | 'flicker' | 'boot' | 'welcome' | 'desktop'
 export const SIZING = {
   mobile: {
     maxWidth: 480,
-    screenMinHeight: 0,
     titleFont: 11,
     topCornerLogoWidth: 34,
     curlyLogoHeight: 22,
@@ -13,7 +12,6 @@ export const SIZING = {
   },
   desktop: {
     maxWidth: 640,
-    screenMinHeight: 0,
     titleFont: 16,
     topCornerLogoWidth: 41,
     curlyLogoHeight: 40,

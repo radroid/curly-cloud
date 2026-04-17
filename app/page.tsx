@@ -119,7 +119,6 @@ export default function Page() {
           >
             <CRTScreen
               phase={phase}
-              minHeight={s.screenMinHeight}
               isMaximized={isMaximized}
               animateMaximize={!prefersReduced}
             >

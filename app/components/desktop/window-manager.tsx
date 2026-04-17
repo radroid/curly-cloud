@@ -46,7 +46,6 @@ const WindowManagerContext = createContext<WindowManagerContextType | null>(null
 
 const BASE_POS = { x: 0.12, y: 0.14 }
 const CASCADE_STEP = 0.03
-const CASCADE_MAX = { x: 0.6, y: 0.55 }
 
 function nextCascadePosition(topmost: WindowState | null) {
   if (!topmost) return { ...BASE_POS }

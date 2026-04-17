@@ -115,7 +115,6 @@ export function WorldMapApp() {
             geographies.map((geo: any) => {
               const name: string = geo.properties?.name ?? ''
               const visited = VISITED.has(name)
-              const isHovered = tooltip.name === name && name !== ''
 
               return (
                 <Geography

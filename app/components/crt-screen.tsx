@@ -4,13 +4,11 @@ const DITHERED_BG = `url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='
 
 export function CRTScreen({
   phase,
-  minHeight,
   isMaximized = false,
   animateMaximize = true,
   children,
 }: {
   phase: ScreenPhase
-  minHeight: number
   isMaximized?: boolean
   animateMaximize?: boolean
   children: React.ReactNode
