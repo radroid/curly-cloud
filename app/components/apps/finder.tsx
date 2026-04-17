@@ -152,12 +152,6 @@ const FILE_TREE: FSEntry[] = [
   { kind: 'file', label: 'Startup Sound',    path: '/StartupMacI.wav',         ext: '.wav' },
 ]
 
-function countItems(entries: FSEntry[]): number {
-  return entries.length
-}
-
-// Preview content is now rendered inside dynamic windows — see previewContent() above
-
 // ─── Download helper ─────────────────────────────────────────────────────────
 
 function triggerDownload(path: string, filename: string) {
@@ -251,10 +245,9 @@ type ContextGridItemProps = {
   selected: boolean
   onSelect: () => void
   onOpen: () => void
-  onPreview: ((entry: FileEntry) => void) | null
 }
 
-function ContextGridItem({ entry, selected, onSelect, onOpen, onPreview }: ContextGridItemProps) {
+function ContextGridItem({ entry, selected, onSelect, onOpen }: ContextGridItemProps) {
   const isFolder = entry.kind === 'folder'
 
   const handleDownload = () => {
@@ -403,7 +396,7 @@ export function FinderApp() {
   }, [])
 
   const canGoBack = pathStack.length > 0
-  const itemCount = countItems(currentEntries)
+  const itemCount = currentEntries.length
   const statusText = `${itemCount} item${itemCount !== 1 ? 's' : ''}, 72K in disk, 400K available`
 
   return (
@@ -489,7 +482,6 @@ export function FinderApp() {
               selected={selectedId === id}
               onSelect={() => setSelectedId(id)}
               onOpen={() => handleOpen(entry)}
-              onPreview={null}
             />
           )
         })}
