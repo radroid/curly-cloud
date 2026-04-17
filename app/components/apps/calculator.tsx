@@ -54,20 +54,10 @@ export function CalculatorApp() {
   const handleDigit = useCallback((digit: string) => {
     setState((prev) => {
       if (prev.hasError) return prev
-      if (prev.waitingForOperand) {
-        return {
-          ...prev,
-          display: digit === '0' ? '0' : digit,
-          waitingForOperand: false,
-        }
-      }
+      if (prev.waitingForOperand) return { ...prev, display: digit === '0' ? '0' : digit, waitingForOperand: false }
       // Leading zero: replace single '0' with digit unless digit is '0'
-      if (prev.display === '0') {
-        return { ...prev, display: digit === '0' ? '0' : digit }
-      }
-      if (prev.display.replace('-', '').replace('.', '').length >= MAX_DISPLAY_LENGTH) {
-        return prev
-      }
+      if (prev.display === '0') return { ...prev, display: digit === '0' ? '0' : digit }
+      if (prev.display.replace('-', '').replace('.', '').length >= MAX_DISPLAY_LENGTH) return prev
       return { ...prev, display: prev.display + digit }
     })
   }, [])
@@ -75,9 +65,7 @@ export function CalculatorApp() {
   const handleDecimal = useCallback(() => {
     setState((prev) => {
       if (prev.hasError) return prev
-      if (prev.waitingForOperand) {
-        return { ...prev, display: '0.', waitingForOperand: false }
-      }
+      if (prev.waitingForOperand) return { ...prev, display: '0.', waitingForOperand: false }
       if (prev.display.includes('.')) return prev
       return { ...prev, display: prev.display + '.' }
     })
