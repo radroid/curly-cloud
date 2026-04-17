@@ -90,50 +90,21 @@ export function CalculatorApp() {
       if (prev.operator !== null && !prev.waitingForOperand) {
         // Chain: apply previous operator left-to-right
         const result = applyOperator(prev.accumulator, operand, prev.operator)
-        if (!isFinite(result)) {
-          return { ...initialState, display: 'Error', hasError: true }
-        }
-        const formatted = formatResult(result)
-        if (formatted === 'Error') {
-          return { ...initialState, display: 'Error', hasError: true }
-        }
-        return {
-          ...prev,
-          display: formatted,
-          accumulator: result,
-          operator: op,
-          waitingForOperand: true,
-        }
+        const formatted = isFinite(result) ? formatResult(result) : 'Error'
+        if (formatted === 'Error') return { ...initialState, display: 'Error', hasError: true }
+        return { ...prev, display: formatted, accumulator: result, operator: op, waitingForOperand: true }
       }
-      return {
-        ...prev,
-        accumulator: operand,
-        operator: op,
-        waitingForOperand: true,
-      }
+      return { ...prev, accumulator: operand, operator: op, waitingForOperand: true }
     })
   }, [])
 
   const handleEquals = useCallback(() => {
     setState((prev) => {
-      if (prev.hasError) return prev
-      if (prev.operator === null) return prev
-      const operand = parseFloat(prev.display)
-      const result = applyOperator(prev.accumulator, operand, prev.operator)
-      if (!isFinite(result)) {
-        return { ...initialState, display: 'Error', hasError: true }
-      }
-      const formatted = formatResult(result)
-      if (formatted === 'Error') {
-        return { ...initialState, display: 'Error', hasError: true }
-      }
-      return {
-        display: formatted,
-        accumulator: result,
-        operator: null,
-        waitingForOperand: true,
-        hasError: false,
-      }
+      if (prev.hasError || prev.operator === null) return prev
+      const result = applyOperator(prev.accumulator, parseFloat(prev.display), prev.operator)
+      const formatted = isFinite(result) ? formatResult(result) : 'Error'
+      if (formatted === 'Error') return { ...initialState, display: 'Error', hasError: true }
+      return { display: formatted, accumulator: result, operator: null, waitingForOperand: true, hasError: false }
     })
   }, [])
 
