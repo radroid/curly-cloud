@@ -5,7 +5,15 @@ import { useWindowManager } from './window-manager'
 
 const STORAGE_KEY = 'maximizeNudgeDismissed'
 
-export function MaximizeNudge({ isMaximized, onToggleMaximize, prefersReduced }: { isMaximized: boolean; onToggleMaximize: () => void; prefersReduced: boolean }) {
+export function MaximizeNudge({
+  isMaximized,
+  onToggleMaximize,
+  prefersReduced,
+}: {
+  isMaximized: boolean
+  onToggleMaximize: () => void
+  prefersReduced: boolean
+}) {
   const { hasOpenedAnyApp } = useWindowManager()
   const [visible, setVisible] = useState(false)
   const [dismissed, setDismissed] = useState(false)

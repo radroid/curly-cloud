@@ -1,4 +1,16 @@
-export function IMacG3Frame({ children, maxWidth, isMaximized = false, onToggleMaximize, animateMaximize = true }: { children: React.ReactNode; maxWidth: number; isMaximized?: boolean; onToggleMaximize?: () => void; animateMaximize?: boolean }) {
+export function IMacG3Frame({
+  children,
+  maxWidth,
+  isMaximized = false,
+  onToggleMaximize,
+  animateMaximize = true,
+}: {
+  children: React.ReactNode
+  maxWidth: number
+  isMaximized?: boolean
+  onToggleMaximize?: () => void
+  animateMaximize?: boolean
+}) {
   const isLarge = maxWidth > 400
   const bodyTransition = animateMaximize ? 'opacity 220ms ease, transform 300ms ease, padding 300ms ease, border-radius 300ms ease' : undefined
   const chinTransition = animateMaximize ? 'opacity 220ms ease, max-height 300ms ease, padding 300ms ease' : undefined

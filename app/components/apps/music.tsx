@@ -42,7 +42,15 @@ const sectionHeader: React.CSSProperties = { ...chicago, fontSize: 12, fontWeigh
 
 // ── Vinyl Record ───────────────────────────────────────────────────────────────
 
-function VinylRecord({ albumArt, isPlaying, isOffline }: { albumArt: string | null; isPlaying: boolean; isOffline: boolean }) {
+function VinylRecord({
+  albumArt,
+  isPlaying,
+  isOffline,
+}: {
+  albumArt: string | null
+  isPlaying: boolean
+  isOffline: boolean
+}) {
   const reduceMotion = useReducedMotion()
   const shouldSpin = isPlaying && !isOffline && !reduceMotion
 

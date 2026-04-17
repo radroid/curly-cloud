@@ -49,7 +49,17 @@ const chicago: React.CSSProperties = { fontFamily: 'var(--font-chicago)', Webkit
 
 // ── Icon button (SVG from public/browser-icons/) ──────────────────────────────
 
-function IconButton({ src, label, disabled, onClick }: { src: string; label: string; disabled?: boolean; onClick?: () => void }) {
+function IconButton({
+  src,
+  label,
+  disabled,
+  onClick,
+}: {
+  src: string
+  label: string
+  disabled?: boolean
+  onClick?: () => void
+}) {
   return (
     <button
       type="button"
@@ -77,7 +87,13 @@ function IconButton({ src, label, disabled, onClick }: { src: string; label: str
 
 // ── Bookmark tile ─────────────────────────────────────────────────────────────
 
-function BookmarkTile({ bookmark, onOpen }: { bookmark: Bookmark; onOpen: (bm: Bookmark) => void }) {
+function BookmarkTile({
+  bookmark,
+  onOpen,
+}: {
+  bookmark: Bookmark
+  onOpen: (bm: Bookmark) => void
+}) {
   const [hovered, setHovered] = useState(false)
 
   const host = (() => {
@@ -146,7 +162,15 @@ function BookmarkTile({ bookmark, onOpen }: { bookmark: Bookmark; onOpen: (bm: B
 
 // ── Bookmark section ──────────────────────────────────────────────────────────
 
-function BookmarkSection({ title, bookmarks, onOpen }: { title: string; bookmarks: Bookmark[]; onOpen: (bm: Bookmark) => void }) {
+function BookmarkSection({
+  title,
+  bookmarks,
+  onOpen,
+}: {
+  title: string
+  bookmarks: Bookmark[]
+  onOpen: (bm: Bookmark) => void
+}) {
   return (
     <div style={{ marginBottom: 20 }}>
       <div
