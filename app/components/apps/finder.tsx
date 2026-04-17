@@ -40,13 +40,7 @@ function FolderIcon({ size = 36 }: { size?: number }) {
       width={size}
       height={size}
       draggable={false}
-      style={{
-        width: size,
-        height: size,
-        objectFit: 'contain',
-        imageRendering: 'pixelated',
-        display: 'block',
-      }}
+      style={{ objectFit: 'contain', imageRendering: 'pixelated', display: 'block' }}
     />
   )
 }
