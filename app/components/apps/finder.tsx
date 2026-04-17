@@ -2,7 +2,13 @@
 
 import { useState, useCallback, useRef } from 'react'
 import { useWindowManager } from '../desktop/window-manager'
-import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '../ui/context-menu'
+import {
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+} from '../ui/context-menu'
 
 // ─── File system data ───────────────────────────────────────────────────────
 

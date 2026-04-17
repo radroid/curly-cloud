@@ -3,7 +3,14 @@
 import { forwardRef, useRef, type RefObject } from 'react'
 import { useWindowManager } from './window-manager'
 import type { AppDefinition } from './app-registry'
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuSeparator, ContextMenuTrigger } from '@/app/components/ui/context-menu'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/app/components/ui/context-menu'
 
 type DesktopIconProps = {
   app: AppDefinition
