@@ -315,32 +315,25 @@ export function MusicApp() {
 
   useEffect(() => {
     let cancelled = false
-
     async function load() {
       try {
         const json = await fetchSpotify()
-        if (!cancelled) {
-          _cachedData = json
-          _cacheTime = Date.now()
-          setData(json)
-          setError(false)
-          setLoading(false)
-        }
+        if (cancelled) return
+        _cachedData = json
+        _cacheTime = Date.now()
+        setData(json)
+        setError(false)
       } catch {
-        if (!cancelled) {
-          setError(true)
-          setLoading(false)
-        }
+        if (!cancelled) setError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
 
     // Skip initial fetch when we already have fresh cache; poll either way
     if (!hasFreshCache) load()
     const interval = setInterval(load, 10_000)
-    return () => {
-      cancelled = true
-      clearInterval(interval)
-    }
+    return () => { cancelled = true; clearInterval(interval) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
