@@ -101,19 +101,14 @@ function BatteryTile() {
     }).catch(() => setUnavailable(true))
 
     return () => {
-      if (battery) {
-        battery.removeEventListener('levelchange', update)
-        battery.removeEventListener('chargingchange', update)
-      }
+      if (!battery) return
+      battery.removeEventListener('levelchange', update)
+      battery.removeEventListener('chargingchange', update)
     }
   }, [])
 
   const pct = batteryState ? Math.round(batteryState.level * 100) : 0
-  const label = unavailable
-    ? 'N/A'
-    : !batteryState
-      ? '...'
-      : `${pct}%${batteryState.charging ? ' \u25B2' : ''}`
+  const label = unavailable ? 'N/A' : !batteryState ? '...' : `${pct}%${batteryState.charging ? ' \u25B2' : ''}`
 
   return (
     <div style={tileStyle}>
