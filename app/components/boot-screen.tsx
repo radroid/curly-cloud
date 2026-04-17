@@ -1,26 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
-export function BootScreen({
-  fadeOut,
-  iconSize,
-}: {
-  fadeOut: boolean
-  iconSize: number
-}) {
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-
+export function BootScreen({ fadeOut, iconSize }: { fadeOut: boolean; iconSize: number }) {
   useEffect(() => {
     const audio = new Audio('/StartupMacI.wav')
-    audioRef.current = audio
     const timer = setTimeout(() => {
       audio.play().catch(() => {})
       navigator.vibrate?.([200, 100, 200])
-    }, 1000) // 1s after boot phase starts
-    return () => {
-      clearTimeout(timer)
-      audioRef.current?.pause()
-      audioRef.current = null
-    }
+    }, 1000)
+    return () => { clearTimeout(timer); audio.pause() }
   }, [])
 
   return (
