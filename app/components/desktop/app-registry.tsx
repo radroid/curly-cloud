@@ -12,7 +12,13 @@ export type Rect = { x: number; y: number; width: number; height: number }
 
 export type MenuItem =
   | { type: 'divider' }
-  | { type?: 'item'; label: string; action?: () => void; disabled?: boolean; shortcut?: string }
+  | {
+      type?: 'item'
+      label: string
+      action?: () => void
+      disabled?: boolean
+      shortcut?: string
+    }
 
 export type MenuConfig = {
   label: string
@@ -36,7 +42,13 @@ export type AppDefinition = {
 
 function ComingSoon({ name }: { name: string }) {
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20, fontFamily: 'var(--font-chicago)', textAlign: 'center' }}>
+    <div
+      style={{
+        flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20,
+        fontFamily: 'var(--font-chicago)', textAlign: 'center',
+      }}
+    >
       <div style={{ fontSize: 13, fontWeight: 'bold' }}>{name}</div>
       <div style={{ fontSize: 11, color: '#555' }}>Coming soon</div>
     </div>
