@@ -229,48 +229,20 @@ export function NotePadApp() {
             disabled={currentPage === 0}
             style={currentPage === 0 ? disabledButtonStyle : navButtonStyle}
             aria-label="Previous page"
-          >
-            ◀
-          </button>
-          <span
-            style={{
-              fontSize: '11px',
-              minWidth: '36px',
-              textAlign: 'center',
-              userSelect: 'none',
-            }}
-          >
+          >◀</button>
+          <span style={{ fontSize: '11px', minWidth: '36px', textAlign: 'center', userSelect: 'none' }}>
             {currentPage + 1} / {pages.length}
           </span>
           <button
             onClick={goToNextPage}
             disabled={currentPage >= pages.length - 1}
-            style={
-              currentPage >= pages.length - 1
-                ? disabledButtonStyle
-                : navButtonStyle
-            }
+            style={currentPage >= pages.length - 1 ? disabledButtonStyle : navButtonStyle}
             aria-label="Next page"
-          >
-            ▶
-          </button>
-          <button
-            onClick={addNewPage}
-            style={navButtonStyle}
-            aria-label="New page"
-          >
-            +
-          </button>
+          >▶</button>
+          <button onClick={addNewPage} style={navButtonStyle} aria-label="New page">+</button>
         </div>
 
-        {/* Right group: clear */}
-        <button
-          onClick={clearCurrentPage}
-          style={navButtonStyle}
-          aria-label="Clear current page"
-        >
-          Clear
-        </button>
+        <button onClick={clearCurrentPage} style={navButtonStyle} aria-label="Clear current page">Clear</button>
       </div>
     </div>
   );
