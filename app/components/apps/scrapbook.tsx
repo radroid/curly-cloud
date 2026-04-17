@@ -156,11 +156,7 @@ export function ScrapbookApp() {
     setViewMode('article')
   }
 
-  const navBtnBase: React.CSSProperties = {
-    ...chicago, fontSize: 14, background: '#fff', color: '#000',
-    border: '1px solid #000', padding: '1px 8px', cursor: 'pointer',
-    userSelect: 'none', lineHeight: 1.4,
-  }
+  const navBtnBase: React.CSSProperties = { ...chicago, fontSize: 14, background: '#fff', color: '#000', border: '1px solid #000', padding: '1px 8px', cursor: 'pointer', userSelect: 'none', lineHeight: 1.4 }
   const navBtnDisabled: React.CSSProperties = { ...navBtnBase, color: '#aaa', cursor: 'default' }
 
   return (

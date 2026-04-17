@@ -36,18 +36,9 @@ interface SpotifyData {
 
 // ── Style helpers ──────────────────────────────────────────────────────────────
 
-const chicago: React.CSSProperties = {
-  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
-}
-
-const ellipsisLine: React.CSSProperties = {
-  ...chicago, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4,
-}
-
-const sectionHeader: React.CSSProperties = {
-  ...chicago, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase',
-  letterSpacing: 1.2, padding: '8px 10px 7px', flexShrink: 0,
-}
+const chicago: React.CSSProperties = { fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale' }
+const ellipsisLine: React.CSSProperties = { ...chicago, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }
+const sectionHeader: React.CSSProperties = { ...chicago, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: 1.2, padding: '8px 10px 7px', flexShrink: 0 }
 
 // ── Vinyl Record ───────────────────────────────────────────────────────────────
 
@@ -72,9 +63,7 @@ function VinylRecord({
     : ['0 0 0 11px #222', '0 0 0 22px #1a1a1a', '0 0 0 33px #242424', '0 0 0 44px #1a1a1a',
        '0 0 0 55px #222', '0 0 0 66px #1a1a1a', '0 0 0 77px #242424'].map(s => `${s} inset`).join(', ')
 
-  const centered: React.CSSProperties = {
-    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', borderRadius: '50%',
-  }
+  const centered: React.CSSProperties = { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', borderRadius: '50%' }
 
   return (
     <div

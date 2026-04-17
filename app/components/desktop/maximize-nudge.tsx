@@ -73,8 +73,4 @@ export function MaximizeNudge({
   )
 }
 
-const pillBtnStyle: React.CSSProperties = {
-  appearance: 'none', fontFamily: 'var(--font-chicago)', fontSize: 10,
-  border: '1px solid #000', background: '#fff', padding: '3px 8px',
-  cursor: 'pointer', borderRadius: 10,
-}
+const pillBtnStyle: React.CSSProperties = { appearance: 'none', fontFamily: 'var(--font-chicago)', fontSize: 10, border: '1px solid #000', background: '#fff', padding: '3px 8px', cursor: 'pointer', borderRadius: 10 }
