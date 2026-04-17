@@ -40,19 +40,6 @@ const chicago: React.CSSProperties = {
   fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
 }
 
-const VINYL_KEYFRAMES = `
-  @keyframes curly-vinyl-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .curly-vinyl {
-    animation-name: curly-vinyl-spin;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .curly-vinyl { animation: none !important; }
-  }
-`
-
 const ellipsisLine: React.CSSProperties = {
   ...chicago, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4,
 }
@@ -99,7 +86,6 @@ function VinylRecord({
         animation: shouldSpin ? 'curly-vinyl-spin 8s linear infinite' : 'none',
         animationPlayState: shouldSpin ? 'running' : 'paused',
       }}
-      className="curly-vinyl"
     >
       {/* Album art label */}
       <div
@@ -319,12 +305,9 @@ export function MusicApp() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <>
-        <style>{VINYL_KEYFRAMES}</style>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...chicago, fontSize: 12, color: '#555' }}>
-          Loading...
-        </div>
-      </>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', ...chicago, fontSize: 12, color: '#555' }}>
+        Loading...
+      </div>
     )
   }
 
@@ -333,24 +316,21 @@ export function MusicApp() {
 
   if (isOffline) {
     return (
-      <>
-        <style>{VINYL_KEYFRAMES}</style>
-        <div
-          style={{
-            flex: 1, display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center',
-            gap: 10, padding: 16, background: '#fff',
-          }}
-        >
-          <div style={{ ...chicago, fontSize: 10, letterSpacing: 1, color: '#555' }}>
-            OFFLINE
-          </div>
-          <VinylRecord albumArt={null} isPlaying={false} isOffline={true} />
-          <div style={{ ...chicago, fontSize: 11, color: '#555', textAlign: 'center' }}>
-            Not connected to Spotify
-          </div>
+      <div
+        style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: 10, padding: 16, background: '#fff',
+        }}
+      >
+        <div style={{ ...chicago, fontSize: 10, letterSpacing: 1, color: '#555' }}>
+          OFFLINE
         </div>
-      </>
+        <VinylRecord albumArt={null} isPlaying={false} isOffline={true} />
+        <div style={{ ...chicago, fontSize: 11, color: '#555', textAlign: 'center' }}>
+          Not connected to Spotify
+        </div>
+      </div>
     )
   }
 
@@ -365,10 +345,7 @@ export function MusicApp() {
   const sortedGenres = [...(data.genres ?? [])].sort((a, b) => b.count - a.count)
 
   return (
-    <>
-      <style>{VINYL_KEYFRAMES}</style>
-
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', background: '#fff', minHeight: 0 }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden', background: '#fff', minHeight: 0 }}>
         {/* ── Left column: Vinyl ────────────────────────────────────────── */}
         <div
           style={{
@@ -429,6 +406,5 @@ export function MusicApp() {
           <ArtistList artists={artists ?? []} />
         </div>
       </div>
-    </>
   )
 }
