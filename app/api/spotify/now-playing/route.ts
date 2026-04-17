@@ -21,6 +21,17 @@ interface TopData {
   artists: { name: string; image: string | null; spotifyUrl: string | null }[]
 }
 
+function makeTrack(item: any, nowPlaying?: { progressMs: number }) {
+  return {
+    name: item.name ?? 'Unknown',
+    artist: (item.artists ?? []).map((a: any) => a.name).join(', '),
+    album: item.album?.name ?? '',
+    albumArt: item.album?.images?.[0]?.url ?? null,
+    spotifyUrl: item.external_urls?.spotify ?? null,
+    ...(nowPlaying && { progressMs: nowPlaying.progressMs, durationMs: item.duration_ms ?? 0 }),
+  }
+}
+
 async function fetchTopData(accessToken: string): Promise<TopData> {
   try {
     const headers = { Authorization: `Bearer ${accessToken}` }
@@ -138,15 +149,7 @@ export async function GET() {
     if (recentRes.ok) {
       const data = await recentRes.json() as any
       const first = (data.items ?? [])[0]
-      if (first?.track) {
-        lastTrack = {
-          name: first.track.name ?? 'Unknown',
-          artist: (first.track.artists ?? []).map((a: any) => a.name).join(', '),
-          album: first.track.album?.name ?? '',
-          albumArt: first.track.album?.images?.[0]?.url ?? null,
-          spotifyUrl: first.track.external_urls?.spotify ?? null,
-        }
-      }
+      if (first?.track) lastTrack = makeTrack(first.track)
     }
     return json({
       isPlaying: false,
@@ -169,15 +172,7 @@ export async function GET() {
 
   return json({
     isPlaying: nowData.is_playing === true,
-    track: {
-      name: item.name ?? 'Unknown',
-      artist: (item.artists ?? []).map((a: any) => a.name).join(', '),
-      album: item.album?.name ?? '',
-      albumArt: item.album?.images?.[0]?.url ?? null,
-      spotifyUrl: item.external_urls?.spotify ?? null,
-      progressMs: nowData.progress_ms ?? 0,
-      durationMs: item.duration_ms ?? 0,
-    },
+    track: makeTrack(item, { progressMs: nowData.progress_ms ?? 0 }),
     ...await topPromise,
   })
 }
