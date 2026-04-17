@@ -56,21 +56,12 @@ const VINYL_KEYFRAMES = `
 `
 
 const ellipsisLine: React.CSSProperties = {
-  ...chicago,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  lineHeight: 1.4,
+  ...chicago, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4,
 }
 
 const sectionHeader: React.CSSProperties = {
-  ...chicago,
-  fontSize: 12,
-  fontWeight: 'bold',
-  textTransform: 'uppercase',
-  letterSpacing: 1.2,
-  padding: '8px 10px 7px',
-  flexShrink: 0,
+  ...chicago, fontSize: 12, fontWeight: 'bold', textTransform: 'uppercase',
+  letterSpacing: 1.2, padding: '8px 10px 7px', flexShrink: 0,
 }
 
 // ── Vinyl Record ───────────────────────────────────────────────────────────────
