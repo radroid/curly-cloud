@@ -95,12 +95,7 @@ function IconButton({
         alt=""
         width={16}
         height={16}
-        style={{
-          width: 16,
-          height: 16,
-          imageRendering: 'pixelated',
-          display: 'block',
-        }}
+        style={{ imageRendering: 'pixelated', display: 'block' }}
       />
     </button>
   )
