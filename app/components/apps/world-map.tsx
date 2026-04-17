@@ -24,7 +24,9 @@ const VISITED_COUNT = 24
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
 
-const chicago: React.CSSProperties = { fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale' }
+const chicago: React.CSSProperties = {
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'grayscale',
+}
 
 // ── Tooltip state type ────────────────────────────────────────────────────────
 

@@ -115,7 +115,12 @@ export function CalculatorApp() {
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [handleDigit, handleDecimal, handleOperator, handleEquals, handleClear])
 
-  const btnBase: React.CSSProperties = { fontFamily: 'var(--font-chicago)', fontSize: 14, background: '#fff', color: '#000', border: '1px solid #000', padding: 0, margin: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', WebkitFontSmoothing: 'none', userSelect: 'none' }
+  const btnBase: React.CSSProperties = {
+    fontFamily: 'var(--font-chicago)', fontSize: 14, background: '#fff', color: '#000',
+    border: '1px solid #000', padding: 0, margin: 0, cursor: 'pointer',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    WebkitFontSmoothing: 'none', userSelect: 'none',
+  }
   const opBtnBase: React.CSSProperties = { ...btnBase, border: '2px solid #000' }
 
   return (

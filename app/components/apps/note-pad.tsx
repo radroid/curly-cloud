@@ -13,7 +13,9 @@ interface TrashItem {
   deletedAt: number;
 }
 
-const chicago: React.CSSProperties = { fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'unset' };
+const chicago: React.CSSProperties = {
+  fontFamily: 'var(--font-chicago)', WebkitFontSmoothing: 'none', MozOsxFontSmoothing: 'unset',
+};
 
 function loadPages(): string[] {
   if (typeof window === 'undefined') return [''];
@@ -135,7 +137,10 @@ export function NotePadApp() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const navButtonStyle: React.CSSProperties = { ...chicago, fontSize: '11px', background: '#fff', border: '1px solid #000', padding: '1px 6px', cursor: 'pointer', lineHeight: '14px' };
+  const navButtonStyle: React.CSSProperties = {
+    ...chicago, fontSize: '11px', background: '#fff', border: '1px solid #000',
+    padding: '1px 6px', cursor: 'pointer', lineHeight: '14px',
+  };
   const disabledButtonStyle: React.CSSProperties = { ...navButtonStyle, color: '#999', border: '1px solid #999', cursor: 'default' };
 
   return (

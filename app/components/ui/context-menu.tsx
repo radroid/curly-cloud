@@ -6,8 +6,17 @@ import * as ContextMenuPrimitive from '@radix-ui/react-context-menu'
 const ContextMenu = ContextMenuPrimitive.Root
 const ContextMenuTrigger = ContextMenuPrimitive.Trigger
 
-const contentStyle: React.CSSProperties = { minWidth: 160, zIndex: 10000, background: '#fff', border: '1px solid #000', boxShadow: '2px 2px 0 #000', padding: '2px 0', fontFamily: 'var(--font-chicago)', fontSize: 12, color: '#000' }
-const itemBaseStyle: React.CSSProperties = { position: 'relative', display: 'flex', alignItems: 'center', padding: '3px 16px', outline: 'none', userSelect: 'none', cursor: 'default', fontFamily: 'var(--font-chicago)', fontSize: 12, lineHeight: 1.25 }
+const contentStyle: React.CSSProperties = {
+  minWidth: 160, zIndex: 10000,
+  background: '#fff', border: '1px solid #000', boxShadow: '2px 2px 0 #000',
+  padding: '2px 0', fontFamily: 'var(--font-chicago)', fontSize: 12, color: '#000',
+}
+
+const itemBaseStyle: React.CSSProperties = {
+  position: 'relative', display: 'flex', alignItems: 'center',
+  padding: '3px 16px', outline: 'none', userSelect: 'none', cursor: 'default',
+  fontFamily: 'var(--font-chicago)', fontSize: 12, lineHeight: 1.25,
+}
 
 const ContextMenuContent = React.forwardRef<
   React.ElementRef<typeof ContextMenuPrimitive.Content>,
