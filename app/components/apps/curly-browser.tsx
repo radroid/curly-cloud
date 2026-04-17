@@ -174,12 +174,7 @@ function BookmarkTile({
             alt=""
             width={48}
             height={48}
-            style={{
-              imageRendering: 'pixelated',
-              display: 'block',
-              filter: hovered ? 'invert(1)' : 'none',
-              flexShrink: 0,
-            }}
+            style={{ imageRendering: 'pixelated', display: 'block', filter: hovered ? 'invert(1)' : 'none', flexShrink: 0 }}
           />
 
           {/* Label */}
