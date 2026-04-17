@@ -240,85 +240,37 @@ export function CalculatorApp() {
         {state.display}
       </div>
 
-      {/* Button grid */}
-      <div
-        style={{
-          flex: 1,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
-          gridTemplateRows: 'repeat(5, 1fr)',
-          gap: 2,
-          padding: 2,
-        }}
-      >
-        {/* Row 1: C / * + */}
-        <button
-          className="calc-btn"
-          type="button"
-          style={btnBase}
-          onClick={handleClear}
-        >
-          C
-        </button>
-        <button
-          className="calc-btn"
-          type="button"
-          style={opBtnBase}
-          onClick={() => handleOperator('/')}
-        >
-          ÷
-        </button>
-        <button
-          className="calc-btn"
-          type="button"
-          style={opBtnBase}
-          onClick={() => handleOperator('*')}
-        >
-          ×
-        </button>
-        <button
-          className="calc-btn"
-          type="button"
-          style={opBtnBase}
-          onClick={() => handleOperator('+')}
-        >
-          +
-        </button>
-
-        {/* Row 2: 7 8 9 - */}
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('7')}>7</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('8')}>8</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('9')}>9</button>
-        <button className="calc-btn" type="button" style={opBtnBase} onClick={() => handleOperator('-')}>−</button>
-
-        {/* Row 3: 4 5 6 = */}
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('4')}>4</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('5')}>5</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('6')}>6</button>
-        <button
-          className="calc-btn"
-          type="button"
-          style={{ ...opBtnBase, gridRow: 'span 2' }}
-          onClick={handleEquals}
-        >
-          =
-        </button>
-
-        {/* Row 4: 1 2 3 (= spans from row 3) */}
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('1')}>1</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('2')}>2</button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={() => handleDigit('3')}>3</button>
-
-        {/* Row 5: 0 (span 2 cols) . */}
-        <button
-          className="calc-btn"
-          type="button"
-          style={{ ...btnBase, gridColumn: 'span 2' }}
-          onClick={() => handleDigit('0')}
-        >
-          0
-        </button>
-        <button className="calc-btn" type="button" style={btnBase} onClick={handleDecimal}>.</button>
+      {/* Button grid — 4 cols × 5 rows. `=` spans 2 rows, `0` spans 2 cols. */}
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gridTemplateRows: 'repeat(5, 1fr)', gap: 2, padding: 2 }}>
+        {([
+          ['C', handleClear, false],
+          ['÷', () => handleOperator('/'), true],
+          ['×', () => handleOperator('*'), true],
+          ['+', () => handleOperator('+'), true],
+          ['7', () => handleDigit('7'), false],
+          ['8', () => handleDigit('8'), false],
+          ['9', () => handleDigit('9'), false],
+          ['−', () => handleOperator('-'), true],
+          ['4', () => handleDigit('4'), false],
+          ['5', () => handleDigit('5'), false],
+          ['6', () => handleDigit('6'), false],
+          ['=', handleEquals, true, { gridRow: 'span 2' }],
+          ['1', () => handleDigit('1'), false],
+          ['2', () => handleDigit('2'), false],
+          ['3', () => handleDigit('3'), false],
+          ['0', () => handleDigit('0'), false, { gridColumn: 'span 2' }],
+          ['.', handleDecimal, false],
+        ] as const).map(([label, onClick, isOp, extra], i) => (
+          <button
+            key={i}
+            className="calc-btn"
+            type="button"
+            style={{ ...(isOp ? opBtnBase : btnBase), ...(extra as React.CSSProperties | undefined) }}
+            onClick={onClick}
+          >
+            {label}
+          </button>
+        ))}
       </div>
     </div>
   )
