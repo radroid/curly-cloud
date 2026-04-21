@@ -1,0 +1,447 @@
+# Mac OS 1984 Desktop — Implementation Plan
+
+> Persistent plan document for the full desktop experience rebuild.
+> Both human and Claude should reference this when planning or implementing.
+> Mobile experience planned separately in `MOBILE-PLAN.md`.
+
+---
+
+## Table of Contents
+
+1. [Vision](#vision)
+2. [Design Decisions](#design-decisions)
+3. [Architecture](#architecture)
+4. [Applications](#applications)
+5. [Git & PR Strategy](#git--pr-strategy)
+6. [Inspiration & Anti-patterns from PostHog](#inspiration--anti-patterns-from-posthog)
+7. [Status](#status)
+8. [Reference Files](#reference-files)
+
+---
+
+## Vision
+
+Transform the "coming soon" welcome screen into a fully interactive Mac OS 1984 desktop. The iMac G3 frame contains a working operating system with draggable windows, functional applications, and a dynamic menu bar. Visitors explore the portfolio by using apps — not by scrolling a page.
+
+**Current flow:** Boot sequence → Welcome dialog ("Welcome to Macintosh / Curly")
+**Target flow:** Boot sequence → Welcome dialog ("Welcome to Macintosh / Curly") (without menu bar) → Desktop with app icons → Open/close/drag windows with real apps
+
+---
+
+## Design Decisions
+
+| # | Decision | Choice | Notes |
+|---|----------|--------|-------|
+| 1 | Mobile experience | Keep current welcome screen on mobile. iPhone-style experience is a separate future project. | Desktop OS is desktop-only. |
+| 2 | Draggable windows | Yes — drag via title bar, mouse only | No touch drag (desktop-only). No resize. |
+| 3 | Window behavior | Click-to-focus, cascaded open positions, close box top-left | Mac OS 1 style. Responsive size per app. |
+| 4 | Maximize mode | Button on iMac chin only (no menu bar option) | `isMaximized` state lives in `page.tsx`, passed as props. CRTScreen stays mounted; iMac frame (body/chin/stand) hides. Screen area fills viewport. |
+| 5 | Maximize nudge | Subtle Mac-style dialog after first app open | "Tip: Use Full Screen for more space" |
+| 6 | Menu bar | Dynamic — updates based on active/focused app | Apple icon menu (About) always left. Default = Finder menus (File/Edit/View/Special). Apps override via registry. |
+| 7 | Blog posts | Scrapbook app (period-accurate Mac OS app) | 3 posts from CONTENT-ARCHIVE.md |
+| 8 | World map style | Risk-style dithered map with pattern fills | Reference image is style guide only; travel data TBD — subagent asks user. |
+| 9 | Extra apps | Music/interests-based (details TBD) | Build shell with mock data; subagent asks user for real content. |
+| 10 | Icon art | User-provided 1-bit pixel art SVGs | User creates icons and adds to a folder. No external icon library. Match Mac OS 1 aesthetic. |
+| 11 | Trash icon | Clickable — opens a placeholder window (bottom-right corner, outside the main icon grid) | Registered as a real app in the registry. Not functional beyond opening for now. |
+| 12 | Window sizing | Container query units (`cqw`/`cqh`) with `clamp()` bounds | CRT screen is the CSS container. Windows scale proportionally on maximize. |
+| 13 | Desktop icons | Single click selects (highlight), double-click opens | Mac OS style selection model. |
+| 14 | Screen phases | `off → flicker → boot → welcome → desktop` | Welcome screen (no menu bar) shows briefly after boot, then transitions to desktop. |
+| 15 | App registry | "Coming Soon" placeholder for unbuilt apps | Apps register real components when built. Registry also defines per-app menu bar actions. |
+
+---
+
+## Architecture
+
+### Desktop Shell
+- Replaces `WelcomeScreen` on desktop viewports after boot
+- Crosshatch/dithered gray background (Mac OS 1984 pattern, already in `global.css`)
+- Grid of app icons (classic Finder-style)
+- Decorative Trash icon bottom-right
+- Menu bar at top — dynamic per focused app
+
+### Window Manager (React Context)
+```typescript
+type Rect = { x: number; y: number; width: number; height: number } // px relative to CRT screen (the drag container)
+
+type WindowState = {
+  appId: string
+  position: { x: number; y: number }  // percentage of container (0–1), e.g. { x: 0.15, y: 0.20 }
+  zIndex: number                      // contiguous 0..n across open windows (not a counter)
+  isOpen: boolean
+  fromOrigin?: Rect                   // clicked-icon rect (CRT-relative px) for zoom-from-origin animation; cleared after open animation completes
+}
+
+type WindowManagerContextType = {
+  windows: Record<string, WindowState>
+  selectedIconId: string | null    // currently highlighted desktop icon (single-click selection)
+  openApp: (appId: string, fromOrigin?: Rect) => void // cascaded position; fromOrigin enables zoom-in animation
+  closeApp: (appId: string) => void   // unmounts the app; re-normalizes zIndex to keep remaining windows contiguous
+  focusApp: (appId: string) => void   // reshuffles zIndex so target becomes top of stack (see below)
+  selectIcon: (appId: string | null) => void  // single-click highlight
+  moveWindow: (appId: string, pos: { x: number; y: number }) => void  // pos in percentage (0–1)
+}
+```
+
+**Derived focused window** — there is no stored `activeWindowId`. The focused window is always the one with the highest `zIndex`, derived via `useMemo`. This is how PostHog does it and it eliminates sync bugs where a separate focus field drifts from the stack order.
+
+```tsx
+const activeWindowId = useMemo(() => {
+  return Object.values(windows).reduce<WindowState | null>(
+    (top, cur) => (cur.zIndex > (top?.zIndex ?? -1) ? cur : top),
+    null,
+  )?.appId ?? null
+}, [windows])
+```
+
+**Contiguous zIndex reshuffle** — `focusApp` does NOT increment a counter. It rewrites every window's `zIndex` so the target becomes `count - 1` and everything above it shifts down. This keeps values in `[0, n)` forever, no drift, no overflow.
+
+```tsx
+const focusApp = (appId: string) => {
+  setWindows((prev) => {
+    const count = Object.values(prev).filter((w) => w.isOpen).length
+    const target = prev[appId]
+    if (!target) return prev
+    const next = { ...prev }
+    for (const id of Object.keys(next)) {
+      const w = next[id]
+      if (!w.isOpen) continue
+      next[id] = {
+        ...w,
+        zIndex:
+          id === appId ? count - 1
+          : w.zIndex < target.zIndex ? w.zIndex
+          : w.zIndex - 1,
+      }
+    }
+    return next
+  })
+}
+```
+
+**Cascade-on-open**: first window opens at base `{ x: 0.12, y: 0.14 }`. Each subsequent open offsets `+0.03` on both axes from the current topmost window's position. If the offset would put the top-left past `{ x: 0.6, y: 0.55 }`, wrap back to the base. Keeps things readable without running offscreen.
+
+**Close normalizes zIndex**: `closeApp` removes the entry *and* decrements every remaining window's `zIndex` that was above the closed one, so the remaining set stays contiguous `[0, n-1)`. Without this, closing a middle window leaves a gap that breaks the derived focus logic.
+
+**Mount/unmount behavior**: App components mount when opened, unmount when closed. Apps that need persistence (e.g., Notepad) use `localStorage`. This keeps things simple and avoids hidden mounted components.
+
+**Re-render cost**: dragging updates `position` in the windows record, which re-renders every consumer of the context. For 8 windows this is fine; if it ever feels janky, wrap each `Window` in `React.memo` (compare by `appId`) and read its own slice via a selector hook rather than consuming the whole record.
+
+**Keep the provider focused**: PostHog's `App.tsx` grew to 2588 lines by bundling windows + settings + notifications + user + chat into one context. Our `WindowManagerProvider` should own windows only. Theme, settings, and any future cross-cutting concerns go in separate providers.
+
+### Window Component (Generic, Reusable)
+The `Window` component is the frame that wraps every app. It provides:
+- **Title bar**: app name, close box (top-left square), horizontal lines pattern
+- **Drag**: mousedown on title bar → mousemove/mouseup listeners on `document` (so fast drags don't lose the cursor) → convert px deltas to percentage of container → update position. Use a **5px click-vs-drag threshold** — movement under 5px is treated as a focus click, not a drag, so a quick click on the title bar doesn't jitter the window.
+- **Focus**: clicking anywhere in window brings to front (highest z-index)
+- **Content slot**: `children` prop — each app renders inside this
+- **Lazy content mount**: app content only renders once the entry animation completes. Prevents layout thrash during the pop-in. PostHog gates this on an `animating` flag; we can do the same or just delay-mount via `setTimeout(..., transitionDuration)`.
+- **Open animation from origin**: when `fromOrigin` is set on the window state, the window scales in from the clicked icon's rect (Mac OS "zoom rect" effect). Close animates back to the same origin if still known.
+- **Configurable props**:
+  - `title: string` — window title
+  - `appId: string` — used for window manager state
+  - `size: { width, height }` — responsive dimensions using `clamp()` with container query units (see below)
+  - `menuItems: MenuConfig[]` — app-specific menu bar items (passed up to menu bar via context)
+  - `showScrollbar?: boolean` — vertical scrollbar (Mac OS 1 style)
+  - `statusBar?: ReactNode` — optional bottom status bar (e.g., Finder's "X items")
+
+### Window Sizing & Position Strategy
+The CRT screen element is a CSS `container-type: size` container. Window **sizes** use `cqw`/`cqh` (container query units) with `clamp()` for min/max bounds. Window **positions** are stored as percentages (0–1) of the container dimensions. Both scale automatically when toggling maximize mode — no recalculation needed.
+
+Size example:
+```css
+width: clamp(200px, 75cqw, 500px);   /* 75% of screen width, bounded */
+height: clamp(200px, 70cqh, 400px);  /* 70% of screen height, bounded */
+```
+
+Position example:
+```tsx
+// Stored: { x: 0.15, y: 0.20 }
+// Rendered: style={{ left: `${pos.x * 100}%`, top: `${pos.y * 100}%` }}
+// On drag: convert px delta to % via containerRef.clientWidth/clientHeight
+```
+
+### App Registry
+Defined in `app/components/desktop/app-registry.ts` (created in Phase 3).
+```typescript
+type MenuConfig = {
+  label: string                              // e.g., "File", "Edit", "Bookmarks"
+  items: {
+    label: string                            // e.g., "New Tab", "Save", "---" for divider
+    action?: () => void                      // callback on click
+    disabled?: boolean
+    shortcut?: string                        // display only, e.g., "⌘S"
+  }[]
+}
+
+type AppDefinition = {
+  id: string
+  name: string
+  icon: React.FC                             // user-provided 1-bit pixel art SVG
+  defaultSize: {
+    width: string                            // clamp() with cqw, e.g. "clamp(200px, 75cqw, 500px)"
+    height: string                           // clamp() with cqh, e.g. "clamp(200px, 70cqh, 400px)"
+  }
+  menuItems: MenuConfig[]                    // app-specific menu bar overrides (merged with defaults)
+  component: React.FC                        // "Coming Soon" placeholder until app is built
+}
+```
+
+### Menu Bar (Dynamic)
+- **Apple icon menu** (always, leftmost): About This Macintosh, app list
+- **Default menus** (Finder-style, shown when no app is focused or as base): File, Edit, View, Special
+- **App-specific overrides**: each app defines `menuItems` in the registry that replace the defaults when that app is focused
+- Menu bar reads the derived `activeWindowId` from the window manager context and looks up that app's `menuItems` in the registry; falls back to Finder defaults when no window is focused
+- **Z-ordering**: menu bar sits at a higher z-index than all windows so dropdown menus cover windows (and windows cannot be dragged over the menu bar). Reserve a range — windows live in `[0, n)`, menu bar at e.g. `z-[9999]`.
+- Default menu bar (with Apple icon + Finder menus) is part of the foundation PR
+
+### Rendering Hierarchy
+```
+page.tsx (owns isMaximized, isDesktop, phase)
+ └── IMacG3Frame (receives isMaximized — hides body/chin/stand when true; CRTScreen always mounted)
+      └── CRTScreen (container-type: size — CSS container for window sizing + positioning)
+           └── phase === 'welcome' → WelcomeScreen (no menu bar, brief display)
+           └── phase === 'desktop' →
+                └── WindowManagerProvider
+                     └── Desktop
+                          ├── MenuBar (top, always visible)
+                          ├── Icon Grid (desktop background layer)
+                          └── Open Windows (positioned absolutely via %, z-ordered above icons)
+                               └── Window (frame) → App Component (content)
+
+When maximized:
+ └── IMacG3Frame body/chin/stand hidden via CSS
+      └── CRTScreen (expands to fill viewport — container size changes, windows scale via cqw/cqh + %)
+           └── Desktop (same component tree, just bigger container)
+
+Mobile:
+ └── isDesktop === false → welcome phase never advances to desktop
+ └── WelcomeScreen stays permanently (current behavior preserved)
+```
+
+### Maximize Mode
+- `isMaximized` state lives in `page.tsx`, passed as props to `IMacG3Frame` and `Desktop`
+- CRTScreen stays mounted at all times
+- Hides: iMac body, chin, stand (CSS toggle)
+- CRTScreen expands to fill browser viewport
+- Windows auto-scale: sizes via container query units, positions via percentage — no JS resize logic
+- Menu bar spans full width
+- Triggered by: chin button only (single toggle location)
+- Transition: smooth (respects `prefers-reduced-motion`, see below)
+
+**Container sizing note**: CRTScreen currently uses `aspectRatio: '4 / 3'` and flex layout. Adding `container-type: size` requires the element to have a determinate size — flex + aspectRatio gives us that, but we need to verify the parent (`IMacG3Frame`) still gives CRTScreen concrete width/height. In maximize mode, CRTScreen fills `100vw × 100vh` — also concrete. Test both.
+
+**Reduced motion**: `prefers-reduced-motion` disables ALL of these — maximize transition, zoom-from-origin open animation, and close animation. Windows appear/disappear instantly in reduced-motion mode. Use the existing `app/lib/use-reduced-motion.ts` hook.
+
+---
+
+## Applications
+
+### App 1: Web Browser — "Curly Browser"
+- **Purpose**: Bookmarks launcher disguised as a Mac OS 1 browser
+- **Design**: Mac OS 1 window chrome with **disabled** back/forward buttons, decorative read-only address bar, info banner, and a bookmarks "home page" as the only view. No internal navigation.
+- **Key behavior**: Clicking any bookmark calls `window.open(url, '_blank', 'noopener,noreferrer')` — opens in the user's real browser, new tab. Right-click uses the existing Shadcn ContextMenu for "Open in New Tab" and "Copy Link" (actually copies via `navigator.clipboard`).
+- **Info banner** (styled tan/yellow, top of content area): `"Curly Browser uses iframes, which most sites block for security. Links open in your real browser instead."` — this explains the quirk instead of hiding it.
+- **Bookmarks** (11 total, grouped visually into "Projects" and "Tools"):
+  - **Projects (8)**: Penguin Mail (penguinmail.app), ARK Experience (funwithark.ca), Bridger (bridger.atawalk.ca), Stella 56 Diamonds (stella56diamonds.com), Playground (playground.createplus.club), Couples Budget (couplesbudget.ca), 75 Creates (75.createplus.club), KayVee Gems (kayveegems.com)
+  - **Tools (3)**: Google, Claude (claude.ai), ChatGPT (chatgpt.com)
+- **Favicons**: fetched via `https://www.google.com/s2/favicons?domain=<host>&sz=128`, rendered with `imageRendering: pixelated` for lo-fi vibe.
+- **Size**: `clamp(300px, 78cqw, 600px)` × `clamp(250px, 75cqh, 450px)` (large)
+- **Does not iframe anything.** Don't try. The whole point is that it doesn't.
+
+### App 2: Note Pad
+- **Purpose**: Fun interactive element
+- **Design**: Mac OS 1 Note Pad (simple lined text area, torn-paper top edge)
+- **Features**: Single pad, localStorage save, pre-populated welcome message
+- **Menu**: File > Clear Note
+- **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+### App 3: System — "Control Panel"
+- **Purpose**: Visitor diagnostics + Raj's info
+- **Design**: Control Panel style (dark panels, icons) from reference image 2
+- **Features**: Browser, OS, screen res, timezone, connection, language; Raj's name, role, links
+- **Size**: `clamp(250px, 55cqw, 420px)` × `clamp(200px, 55cqh, 350px)` (medium)
+
+### App 4: Calculator
+- **Purpose**: Functional easter egg
+- **Design**: Exact Mac OS 1 calculator (reference image 2)
+- **Features**: C, E, =, *, 0-9, +, -, /, . — basic arithmetic
+- **Size**: `clamp(120px, 25cqw, 200px)` × `clamp(180px, 45cqh, 280px)` (small)
+
+### App 5: Finder — "Documents"
+- **Purpose**: File explorer that mirrors the real `public/` folder with Mac-styled folder names for flavor
+- **Design**: Classic Finder icon grid with breadcrumb path + Back button, scrollable content area, status bar footer
+- **Folder rename map** (display label ← actual path):
+  - "Macintosh HD" — root
+  - "Applications" ← `public/app-icons/`
+  - "Documents" ← `public/cv/` (contains Resume.pdf)
+  - "Fonts" ← `public/fonts/`
+  - Loose files at root (Apple Logo.svg ← apple-icon.svg, Startup Sound.wav ← StartupMacI.wav, Avatar.webp ← raj-avatar.webp, etc.)
+- **Interactions**:
+  - Single-click: selects the item (text-inverted label highlight, matching desktop icons)
+  - Double-click folder: navigate into it (path stack)
+  - Double-click file: preview in an **absolute-positioned overlay** within the Finder window (not a new top-level window — overlay has its own close button, ESC dismisses)
+  - Right-click file (Shadcn ContextMenu): Open, Download, Get Info (disabled), Rename (disabled)
+  - Back button: pop path stack
+- **Preview overlay by file type**:
+  - `.svg` / `.png` / `.webp` / `.jpg` → `<img>` with object-fit contain
+  - `.wav` / `.mp3` → `<audio controls>`
+  - `.pdf` → `<iframe src={path}>` (browser native PDF viewer)
+  - `.woff` / `.woff2` / `.ttf` → message + sample text rendered in the font
+  - anything else → "Preview not available" + Download hint
+- **Download**: right-click → Download triggers `<a href={path} download>.click()`
+- **No cover letter** — ship with just the resume for now. Nothing to gate on.
+- **Status bar**: "N items, 72K in disk, 400K available" (fake-realistic)
+- **Size**: `clamp(220px, 48cqw, 380px)` × `clamp(180px, 50cqh, 320px)` (medium)
+- **Menu**: uses the existing `FINDER_DEFAULT_MENUS` export from `app-registry.tsx`
+
+### App 6: Scrapbook — "Journal"
+- **Purpose**: Blog posts
+- **Design**: Mac OS Scrapbook — page-by-page with arrows
+- **Content**: 3 blog posts from CONTENT-ARCHIVE.md
+- **Size**: `clamp(250px, 55cqw, 420px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+### App 7: World Map
+- **Purpose**: Travel showcase — 24 visited countries highlighted
+- **Design**: Public-domain world map, dithered SVG pattern fill on visited countries, plain white on unvisited, black stroke throughout. Aesthetic reference: `public/worldmap.png` (a Risk-style Mac OS screenshot — style only; **no** game chrome, Player1, Done/Fortify/Cards).
+- **Visited countries (24, ISO alpha-3)**:
+  `CAN, USA, GBR, FRA, DEU, AUT, ITA, CHE, HUN, CZE, NLD, BEL, LUX, EGY, SAU, ARE, IND, JPN, THA, MYS, SGP, LKA, MUS, NZL`
+  (Canada, United States, United Kingdom, France, Germany, Austria, Italy, Switzerland, Hungary, Czechia, Netherlands, Belgium, Luxembourg, Egypt, Saudi Arabia, UAE, India, Japan, Thailand, Malaysia, Singapore, Sri Lanka, Mauritius, New Zealand)
+- **Features**: Hover tooltip with country name; small legend at a corner (patterned box + plain box with labels); viewBox scales map to window; visited count shown subtly ("24 / ~195 countries").
+- **Map data**: `react-simple-maps` + `world-atlas` (TopoJSON, ~100KB) — installed as deps on `feat/mac-os-1984-desktop` before the app PR begins.
+- **Size**: `clamp(280px, 70cqw, 540px)` × `clamp(220px, 60cqh, 380px)` (large)
+
+### App 8: Music — live Spotify now-playing (vinyl parody of Apple Music)
+- **Purpose**: Show what Raj is currently listening to on Spotify, as a playful Mac-era vinyl record
+- **Design**: Spinning vinyl record (CSS rotate animation) with the current album art as the record label (circular mask), playlist list beside it showing recent tracks. Chicago font captions.
+- **Live data**: Spotify Web API `me/player/currently-playing` endpoint, polled every ~10s. Uses refresh-token OAuth flow so no user login is needed by visitors — it's always Raj's account.
+- **Fallback**: If nothing playing, show a featured/last-played track (or a static "Offline" vinyl).
+- **Reduced-motion**: freeze the vinyl rotation when `prefers-reduced-motion: reduce`.
+- **Size**: `clamp(180px, 40cqw, 300px)` × `clamp(220px, 60cqh, 380px)` (medium)
+
+#### Spotify integration architecture — works on localhost, Cloudflare preview, and production
+
+**Key insight**: the runtime does NOT use the browser-based OAuth authorization flow. It uses the **refresh-token grant** — a server-side-only swap of `refresh_token` → `access_token` on each request. No user redirect, no CORS issues, no per-URL registration in the Spotify dashboard. The SAME code works on every deploy target.
+
+```
+┌──────────────┐   GET /api/spotify/now-playing  ┌─────────────────────┐
+│ Browser      │ ──────────────────────────────▶ │ Next.js route       │
+│ (vinyl UI)   │                                 │ (Cloudflare fn or   │
+│              │ ◀────────────────────────────── │  local dev server)  │
+└──────────────┘   JSON { track, artist, ... }   └─────────────────────┘
+                                                           │
+                                                           │  POST /api/token (grant_type=refresh_token)
+                                                           ▼
+                                                 ┌─────────────────────┐
+                                                 │ Spotify Accounts    │
+                                                 │ (auth server)       │
+                                                 └─────────────────────┘
+                                                           │
+                                                           │  { access_token, expires_in }
+                                                           ▼
+                                                 ┌─────────────────────┐
+                                                 │ Spotify Web API     │
+                                                 │ me/player/currently │
+                                                 │   -playing          │
+                                                 └─────────────────────┘
+```
+
+**One-time setup** (user runs `scripts/spotify-oauth.mjs` once, locally):
+1. Creates a Spotify Developer app at https://developer.spotify.com/dashboard
+2. Registers redirect URI `http://127.0.0.1:8888/callback` (for the one-shot helper ONLY)
+3. Sets `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` in `.env.local`
+4. Runs `node scripts/spotify-oauth.mjs` → helper starts a local HTTP server on port 8888 → opens browser → user authorizes with the `user-read-currently-playing user-read-playback-state` scopes → Spotify redirects back to `127.0.0.1:8888/callback` with a `code` → helper exchanges it for a refresh token → prints the token
+5. User appends `SPOTIFY_REFRESH_TOKEN=<printed value>` to `.env.local`
+
+The `127.0.0.1:8888/callback` URL only exists for this 30-second ritual. **It is never used at runtime.** The refresh token is long-lived (effectively non-expiring unless revoked).
+
+**Runtime (every environment — localhost / preview / production)**:
+- Backend route `app/api/spotify/now-playing/route.ts` reads three env vars:
+  - `SPOTIFY_CLIENT_ID`
+  - `SPOTIFY_CLIENT_SECRET`
+  - `SPOTIFY_REFRESH_TOKEN`
+- On each request: POST to `https://accounts.spotify.com/api/token` with `grant_type=refresh_token` → get an `access_token` (valid 1 hour, but we don't cache — Cloudflare functions are stateless per invocation, so each request gets a fresh one; acceptable rate cost)
+- GET `https://api.spotify.com/v1/me/player/currently-playing` with the access token
+- Return `{ isPlaying, track, artist, album, albumArt, progressMs, durationMs }` as JSON
+- Browser polls this route every ~10 seconds (no auth needed on the browser side — it's just a fetch to a same-origin API route)
+
+**Environment variable setup by deploy target**:
+| Environment | Where to set the 3 env vars |
+|-------------|-----------------------------|
+| **Local dev** (`bun run dev`) | `.env.local` at project root (gitignored — never commit). Next.js auto-loads it. |
+| **Cloudflare Pages preview** (any `*.pages.dev` branch deploy) | Pages → Settings → Environment variables → **"Preview"** scope. Add all three vars. |
+| **Cloudflare Pages production** (`curlycloud.dev`) | Same dashboard → **"Production"** scope. Add all three vars (can be the same values as Preview). |
+
+OpenNext/Cloudflare Pages passes `process.env.*` through to the runtime for both Next.js API routes and Cloudflare functions. No code differences between environments — it's literally the same `route.ts` reading the same variable names.
+
+**Why this works on preview links despite the dynamic `*.pages.dev` hostnames**: the runtime never talks to Spotify's auth server with a redirect URI. The only place a redirect URI matters is the one-time OAuth helper, which always runs on `http://127.0.0.1:8888/callback` — completely decoupled from any deploy URL.
+
+---
+
+## Git & PR Strategy
+
+### Branch Structure
+```
+main
+ └── feat/mac-os-1984-desktop  (long-lived integration branch — final merge target)
+      ├── feat/pre-app-foundation  (PR #1 — MERGED 2026-04-15)
+      └── feat/desktop-apps        (PR #3 — all 8 apps + Spotify, per-app commits)
+```
+
+Final merge: `feat/desktop-apps` → `feat/mac-os-1984-desktop` → `main`.
+
+---
+
+## Inspiration & Anti-patterns from PostHog
+
+Summary of what we're copying from PostHog.com's desktop-OS and what we're deliberately not.
+
+### Patterns we're adopting
+1. **Derived focused window** — top of z-stack IS the focused window; no separate `activeWindowId` field. Eliminates sync bugs.
+2. **Contiguous zIndex reshuffle** on `focusApp` — values stay in `[0, n)`, no counter drift.
+3. **5px click-vs-drag threshold** on draggable title bar (and desktop icons if we ever make them draggable). A quick click shouldn't jitter the window.
+4. **Lazy content mount** — app contents render only after the window's entry animation completes. Prevents layout thrash on pop-in.
+5. **Zoom-from-origin open animation** — window scales in from the clicked icon's bounding rect (`fromOrigin`). This is the authentic Mac OS "zoom rects" effect and the easiest big-wow polish item.
+6. **DragConstraints via ref** — pass a ref to the CRT screen element to constrain drag. Works unchanged in maximized mode because CRTScreen is always the container.
+7. **Provider discipline** — the window manager owns windows only. Site settings, theme, and notifications (if any) live elsewhere. PostHog's `App.tsx` is 2588 lines because they merged everything.
+
+### Patterns we're deliberately NOT using
+1. **Per-window history / URL-backed windows** — PostHog ties windows to Gatsby routes so each window has a path. We're a single-page Next.js app; apps are React components, not routes. Keep it simple.
+2. **Share-layout-via-URL** — neat but out of scope for v1. Revisit as a future enhancement.
+3. **Framer Motion for drag** — PostHog uses `useDragControls`. We're using native pointer events to keep the dep surface small and the behavior trivially predictable. If drag feels janky, reconsider.
+4. **Window resize** — PostHog has 5 resize handles. We explicitly chose no-resize in Design Decisions (#2). Mac OS 1 windows didn't resize anyway.
+5. **Snap-to-side** — PostHog has half-screen left-snap. We have a single maximize mode and no snap. Period-accurate.
+6. **Tabs inside windows** — PostHog's `WindowTabs` is literally `<div>TABS</div>`. Don't bother.
+7. **Radix Menubar** — our menu bar is 1-bit and purely visual; Radix's ARIA-heavy menubar is overkill. Roll our own.
+8. **Lottie for animations** — PostHog's inline Lottie file is 1669 lines of JSON. We use CSS + reduced-motion hooks.
+9. **Giant `safelist.txt`** — we're not runtime-generating Tailwind classes from data attributes; no safelist needed.
+
+### Future enhancements (inspired, not blocking v1)
+- **Screensaver**: inactivity-triggered overlay — a bouncing Happy Mac or "After Dark flying toasters" riff. PostHog has this (`Screensaver/index.tsx`) and it's charming.
+- **Active windows panel**: a side panel or Apple-menu submenu listing open windows with close buttons. In Mac OS 1 this was the Application menu in the top-right. Nice quality-of-life, not critical for v1.
+- **Shareable layout URL**: encode open windows + positions as a query param so you can send someone a link to "this exact desktop state."
+- **Right-click context menu** on desktop: "Reset Icons", "About", etc. PostHog has this on desktop empty space.
+
+---
+
+## Status
+
+Phases 1–4 complete. Final 1-bit SVG icons + final merge to `main` are the remaining gates. See `git log` for per-commit history.
+
+---
+
+## Reference Files
+
+| File | Purpose |
+|------|---------|
+| `CONTENT-ARCHIVE.md` | Projects, blog posts, skills, timeline — source content for apps |
+| `MOBILE-PLAN.md` | Separate plan for mobile iPhone OS 1 experience |
+| `app/page.tsx` | Entry point — boot sequence + screen rendering |
+| `app/components/imac-frame.tsx` | iMac G3 frame — modify for maximize mode |
+| `app/components/welcome-screen.tsx` | Current welcome screen — replaced by Desktop on desktop viewports |
+| `app/components/menu-bar.tsx` | Menu bar — update for dynamic per-app menus |
+| `app/components/crt-screen.tsx` | CRT screen wrapper — stays as-is |
+| `app/components/boot-screen.tsx` | Boot animation — stays as-is |
+| `app/components/types.ts` | Shared types — extend for window/app types |
+| `app/components/desktop/app-registry.ts` | App definitions — created in Phase 2+3 |
+| `app/global.css` | Theme CSS — crosshatch pattern, Chicago font, Mac OS styles |
+| `app/lib/use-reduced-motion.ts` | Accessibility hook — use for animations |

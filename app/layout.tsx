@@ -4,40 +4,21 @@ import { JetBrains_Mono } from 'next/font/google'
 
 const baseUrl = 'https://curlycloud.dev'
 
+const TITLE = 'curlycloud'
+const DESCRIPTION = 'Coming soon — curlycloud.dev'
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
-  title: 'curlycloud',
-  description: 'Coming soon — curlycloud.dev',
-  icons: {
-    icon: '/raj-avatar.webp',
-    apple: '/raj-avatar.webp',
-  },
-  other: {
-    'color-scheme': 'light',
-    'theme-color': '#a8a8a8',
-  },
-  alternates: {
-    canonical: baseUrl,
-  },
-  openGraph: {
-    title: 'curlycloud',
-    description: 'Coming soon — curlycloud.dev',
-    url: baseUrl,
-    siteName: 'curlycloud',
-    locale: 'en_US',
-    type: 'website',
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
+  title: TITLE,
+  description: DESCRIPTION,
+  icons: { icon: '/raj-avatar.webp', apple: '/raj-avatar.webp' },
+  other: { 'color-scheme': 'light', 'theme-color': '#a8a8a8' },
+  alternates: { canonical: baseUrl },
+  openGraph: { title: TITLE, description: DESCRIPTION, url: baseUrl, siteName: TITLE, locale: 'en_US', type: 'website' },
+  robots: { index: true, follow: true },
 }
 
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-jetbrains',
-  display: 'swap',
-})
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains', display: 'swap' })
 
 export default function RootLayout({
   children,

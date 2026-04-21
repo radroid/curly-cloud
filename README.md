@@ -1,56 +1,26 @@
-# Portfolio & Blog
+# curlycloud.dev
 
-Personal portfolio and blog site showcasing my work as a generalist builder—bridging the gap between physical experiences and digital infrastructure.
+A Mac OS System 1 (1984) themed "coming soon" site for [curlycloud.dev](https://curlycloud.dev).
 
-Visit at: **https://curlycloud.dev**
+## Stack
 
-## About
+- Next.js 15 (App Router) + TypeScript
+- Tailwind CSS v4 alpha
+- Chicago bitmap font (`public/fonts/ChicagoFLF.woff`)
+- Deployed to Cloudflare Pages via OpenNext
 
-I build experiences—both digital and physical—for people who want more from life. Engineering background. Founder at ARK Experiences. Engineer, Developer and Entrepreneur.
-
-## Features
-
-- **Portfolio Showcase**: Interactive carousel displaying my projects and work
-- **Blog**: MDX and Markdown support for writing and sharing thoughts
-- **SEO Optimized**: Complete with sitemap, robots.txt, and JSON-LD schema
-- **RSS Feed**: Subscribe to stay updated with new posts
-- **Dynamic OG Images**: Automatically generated Open Graph images for social sharing
-- **Syntax Highlighting**: Beautiful code blocks in blog posts
-- **Dark Mode**: Theme switching with smooth transitions
-- **Modern Stack**: Built with Next.js 16, Tailwind v4, and TypeScript
-- **Performance**: Vercel Speed Insights and Web Analytics integrated
-
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **Styling**: Tailwind CSS v4
-- **Content**: MDX with next-mdx-remote
-- **Deployment**: Cloudflare Pages (via OpenNext)
-- **Fonts**: Geist Sans & Geist Mono
-- **UI Components**: shadcn/ui
-
-## Development
-
-Install dependencies:
+## Develop
 
 ```bash
 bun install
+bun run dev      # http://localhost:3000
 ```
 
-Run the development server:
+## Build & deploy
 
 ```bash
-bun run dev
+bun run build    # Next.js production build
+bun run deploy   # OpenNext → Cloudflare Pages
 ```
 
-Build for production:
-
-```bash
-bun run build
-```
-
-Deploy to Cloudflare:
-
-```bash
-bun run deploy
-```
+See `CLAUDE.md` for architecture notes and `DESKTOP-PLAN.md` for the full implementation plan.
