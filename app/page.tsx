@@ -6,8 +6,11 @@ import { IMacG3Frame } from '@/app/components/imac-frame'
 import { CRTScreen } from '@/app/components/crt-screen'
 import { BootScreen } from '@/app/components/boot-screen'
 import { WelcomeScreen } from '@/app/components/welcome-screen'
+import { Desktop } from '@/app/components/desktop/desktop'
 import { SIZING } from '@/app/components/types'
 import type { ScreenPhase } from '@/app/components/types'
+
+const WELCOME_HOLD_MS = 2600
 
 export default function Page() {
   const prefersReduced = useReducedMotion()
@@ -18,6 +21,8 @@ export default function Page() {
   const [isDesktop, setIsDesktop] = useState(false)
   const [sizeReady, setSizeReady] = useState(false)
   const [animateIn, setAnimateIn] = useState(false)
+  const [introDone, setIntroDone] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
 
   // Responsive detection — must resolve before we render the iMac
   useEffect(() => {
@@ -31,13 +36,18 @@ export default function Page() {
     return () => mql.removeEventListener('change', handler)
   }, [])
 
-  // Phase state machine
+  // After the intro scale animation completes, drop the transform entirely.
+  // A persistent `transform: scale(1)` establishes a containing block that
+  // traps `position: fixed` descendants — which breaks maximize mode.
   useEffect(() => {
-    if (skipBoot) {
-      setPhase('welcome')
-      return
-    }
+    if (!animateIn || introDone) return
+    const t = setTimeout(() => setIntroDone(true), prefersReduced ? 0 : 700)
+    return () => clearTimeout(t)
+  }, [animateIn, introDone, prefersReduced])
 
+  // Phase state machine — boot sequence
+  useEffect(() => {
+    if (skipBoot) { setPhase('welcome'); return }
     const timers = [
       setTimeout(() => setPhase('flicker'), 500),
       setTimeout(() => setPhase('boot'), 1200),
@@ -48,84 +58,74 @@ export default function Page() {
         sessionStorage.setItem('hasBooted', '1')
       }, 5700),
     ]
-
     return () => timers.forEach(clearTimeout)
   }, [skipBoot])
 
+  // Welcome → desktop auto-advance (desktop viewports only)
+  useEffect(() => {
+    if (phase !== 'welcome' || !isDesktop) return
+    const t = setTimeout(() => setPhase('desktop'), WELCOME_HOLD_MS)
+    return () => clearTimeout(t)
+  }, [phase, isDesktop])
+
+  // Drop maximize if the viewport narrows back to mobile mid-session
+  useEffect(() => {
+    if (!isDesktop && isMaximized) setIsMaximized(false)
+  }, [isDesktop, isMaximized])
+
   const s = isDesktop ? SIZING.desktop : SIZING.mobile
+  const screenIsOn = phase === 'welcome' || phase === 'desktop'
+  const toggleMaximize = isDesktop && screenIsOn ? () => setIsMaximized((v) => !v) : undefined
 
   return (
     <div
       style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: 16,
-        background: '#1a1a1a',
-        padding: isDesktop ? 0 : '0 0 40px',
-        position: 'relative' as const,
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexDirection: 'column', gap: 16, background: '#1a1a1a',
+        padding: isDesktop || isMaximized ? 0 : '0 0 40px',
+        position: 'relative',
       }}
     >
       {sizeReady && (
         <div
           style={{
-            width: '100%',
-            display: 'flex',
-            justifyContent: 'center',
-            transform: animateIn ? 'scale(1)' : 'scale(0)',
-            opacity: animateIn ? 1 : 0,
-            transition: prefersReduced
-              ? 'none'
-              : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
-            willChange: 'transform, opacity',
+            width: '100%', display: 'flex', justifyContent: 'center',
+            transform: introDone ? undefined : animateIn ? 'scale(1)' : 'scale(0)',
+            opacity: introDone ? undefined : animateIn ? 1 : 0,
+            transition: introDone || prefersReduced ? undefined : 'transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease',
+            willChange: introDone ? undefined : 'transform, opacity',
           }}
         >
-          <IMacG3Frame maxWidth={s.maxWidth}>
-            <CRTScreen phase={phase} minHeight={s.screenMinHeight}>
+          <IMacG3Frame
+            maxWidth={s.maxWidth}
+            isMaximized={isMaximized}
+            onToggleMaximize={toggleMaximize}
+            animateMaximize={!prefersReduced}
+          >
+            <CRTScreen
+              phase={phase}
+              isMaximized={isMaximized}
+              animateMaximize={!prefersReduced}
+            >
               {phase === 'boot' && (
                 <BootScreen
-                  isActive
                   fadeOut={bootFadeOut}
                   iconSize={s.macIconSize}
                 />
               )}
               {phase === 'welcome' && <WelcomeScreen isDesktop={isDesktop} />}
+              {phase === 'desktop' && toggleMaximize && (
+                <Desktop
+                  prefersReduced={prefersReduced}
+                  isMaximized={isMaximized}
+                  onToggleMaximize={toggleMaximize}
+                />
+              )}
             </CRTScreen>
           </IMacG3Frame>
         </div>
       )}
 
-      {phase === 'welcome' && (
-        <div
-          style={{
-            position: 'absolute',
-            top: isDesktop ? 20 : 12,
-            right: isDesktop ? 24 : 14,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            fontFamily: 'var(--font-chicago)',
-            color: '#666',
-            fontSize: isDesktop ? 13 : 10,
-            letterSpacing: 1,
-            animation: 'fadeIn 0.8s ease',
-          }}
-        >
-          <span
-            style={{
-              display: 'inline-block',
-              width: isDesktop ? 8 : 6,
-              height: isDesktop ? 8 : 6,
-              borderRadius: '50%',
-              background: '#d4a017',
-              animation: 'blink 1.2s ease-in-out infinite',
-            }}
-          />
-          UNDER CONSTRUCTION
-        </div>
-      )}
     </div>
   )
 }

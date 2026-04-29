@@ -342,7 +342,7 @@ Source: `app/blog/utils.ts`
 ### Post 1: Building Product for Humans, Not Metrics
 
 - **slug:** `building-for-humans`
-- **publishedAt:** 2025-01-15
+- **publishedAt:** 2026-01-15
 - **summary:** The best products measure success by whether people grew, not just whether numbers went up.
 
 **Full MDX content:**
@@ -350,7 +350,7 @@ Source: `app/blog/utils.ts`
 ```mdx
 ---
 title: 'Building Product for Humans, Not Metrics'
-publishedAt: '2025-01-15'
+publishedAt: '2026-01-15'
 summary: 'The best products measure success by whether people grew, not just whether numbers went up.'
 ---
 
@@ -949,7 +949,7 @@ googleBot:
 - `https://curlycloud.dev/history`
 
 **Blog routes (from posts):**
-- `https://curlycloud.dev/blog/building-for-humans` (lastModified: 2025-01-15)
+- `https://curlycloud.dev/blog/building-for-humans` (lastModified: 2026-01-15)
 - `https://curlycloud.dev/blog/generalism-future` (lastModified: 2025-02-10)
 - `https://curlycloud.dev/blog/physical-digital-tension` (lastModified: 2025-03-05)
 

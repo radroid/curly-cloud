@@ -14,13 +14,9 @@
   --mac-white: #ffffff;
   --mac-black: #000000;
   --mac-gray: #a8a8a8;
-  --mac-gray-light: #c0c0c0;
   --mac-gray-dark: #808080;
 
   --font-chicago: 'Chicago', 'VT323', system-ui, monospace;
-  --font-mono: var(--font-jetbrains), 'Monaco', 'Courier New', monospace;
-
-  --z-boot: 80;
 }
 
 /* Inverted selection — classic Mac */
@@ -64,22 +60,6 @@ body {
 
 /* ── Boot Sequence Animations ────────────────────────────── */
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -96,6 +76,11 @@ body {
   100% { opacity: 0; }
 }
 
+@keyframes curly-vinyl-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 /* ── Mac Window Chrome ───────────────────────────────────── */
 
 .mac-dialog {
@@ -109,26 +94,15 @@ body {
   width: 90%;
 }
 
-/* ── Mac Menu Bar ────────────────────────────────────────── */
+/* ── Mac Context Menu (Radix data-attribute driven) ──────── */
 
-.mac-menu-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 22px;
-  background: var(--mac-white);
-  border-bottom: 2px solid var(--mac-black);
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  font-family: var(--font-chicago);
-  font-size: 12px;
-  z-index: 50;
-  gap: 16px;
+[data-mac-item][data-highlighted] {
+  background: var(--mac-black);
+  color: var(--mac-white);
+  outline: none;
 }
 
-.mac-menu-bar span {
-  cursor: default;
-  user-select: none;
+[data-mac-item][data-disabled] {
+  color: var(--mac-gray-dark);
+  pointer-events: none;
 }
