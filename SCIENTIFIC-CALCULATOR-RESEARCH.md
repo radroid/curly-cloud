@@ -208,14 +208,17 @@ Match a TI-30X-style scientific calculator. All Tier A / lightweight B features.
 
 ---
 
-## 5. Open Questions (worth confirming before building)
+## 5. Decisions Log
 
-1. **Bundle size budget** — `mathjs` adds ~150 KB gzipped. Acceptable if lazy-loaded only when the Calculator app opens? Or do we want zero deps and hand-roll the math?
-2. **Symbolic vs. numeric** — do we promise symbolic algebra/calculus (heavier, leaks Wolfram-grade expectations) or stop at numeric (lighter, more honest about limits)? Current plan above splits it: numeric in v2, symbolic only in v3 / best-effort.
-3. **Window resize on mode switch** — OK to grow the window in scientific mode, or keep it identical and reflow buttons? Period-correct answer is "grow."
-4. **Persisted state** — persist mode, memory, and history to `localStorage`? Convention in the app uses `sessionStorage` for boot. Pick one.
-5. **History UI** — inline strip, dropdown, or separate Mac-style palette window?
-6. **Scope cut for the first PR** — are we shipping v1 in one PR, or splitting into "expression parser + display refactor" → "scientific buttons" → "fractions/complex/base"?
+### Resolved (round 1)
+
+1. **Math library / bundle strategy** — **Lazy-load `mathjs`** only when the Calculator app is opened *and* the user enters Scientific mode. The "coming soon" landing page and Standard mode must not pay the bundle cost. Rationale: only some users will open Scientific, so the page-load budget for the rest of the site is preserved.
+2. **PR scope** — **Ship the full feature set in one PR**, not split across multiple. The original product ask spans fractions → integration/derivatives → statistics → probability → complex numbers, and we will deliver all of it together.
+3. **Window resize on mode switch** — **Low priority.** Don't invest in animated resize; pick a single larger fixed `defaultSize` for Scientific mode and leave it at that.
+
+### Open (round 2 — pending answers)
+
+See the chat thread for the round-2 questions; once answered they will move into "Resolved" above.
 
 ---
 
