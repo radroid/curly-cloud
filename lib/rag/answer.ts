@@ -2,7 +2,7 @@
  * The clone's answer loop. Yields `sources` once, then `delta`s, then `done` (or `error`).
  *
  *   budget check → hybrid retrieval → numbered sources → prompt → LLM stream
- *   → citation filter (drops out-of-range markers) → verbatim guard → holdback buffer → client
+ *   → citation filter (drops out-of-range markers) → verbatim guard → word holdback → client
  *   → usage + chat_logs row → done
  */
 import { getMeta, newId, now, run } from '@/lib/db'
@@ -10,8 +10,9 @@ import { getLimits, type AppEnv } from '@/lib/env'
 import { estimateTokens, getLlm, systemText, type Llm, type LlmStopReason, type LlmUsage } from '@/lib/llm'
 import { createCitationFilter } from '@/lib/rag/citations'
 import { buildContext, type ContextSource } from '@/lib/rag/context'
-import { createVerbatimGuard } from '@/lib/rag/guard'
-import { buildMessages, buildSystemPrompt, PUBLIC_EMAIL, unknownLine } from '@/lib/rag/prompt'
+import { createVerbatimGuard, DEFAULT_GUARD_WINDOW, PROMPT_MARKERS, releasableIndex } from '@/lib/rag/guard'
+import { EXTRACTION_REPLY, isPromptExtraction } from '@/lib/rag/injection'
+import { buildMessages, buildSystemPrompt, PUBLIC_EMAIL, sayableLines, unknownLine } from '@/lib/rag/prompt'
 import { retrievalQuery, retrieveChunks, type RetrieveOptions } from '@/lib/rag/retrieve'
 import type { Answer, AnswerErrorCode, AnswerEvent, AnswerRequest, Channel, CitationSource } from '@/lib/rag/types'
 import { budgetRemaining, recordUsage, redactPii } from '@/lib/security'
@@ -26,13 +27,19 @@ export class RagError extends Error {
   }
 }
 
-/** Chars held back from the client so the guard can stop a verbatim run before it's shown. */
-export const HOLDBACK_CHARS = 48
+/**
+ * Words held back from the client: the guard window. The guard only counts a word once it's
+ * complete, so it can lag the buffer by one word; holding back a full window means no word of a
+ * run it detects has been shown yet.
+ */
+export const HOLDBACK_WORDS = DEFAULT_GUARD_WINDOW
 
 const MAX_TOKENS: Record<Channel, number> = { web: 700, terminal: 700, mcp: 900, studio: 900 }
 
 export const GUARD_LINE =
   "— actually, I'll stop there rather than recite my notes word for word. Ask me about a specific part and I'll put it in my own words."
+export const GUARD_LINE_FRESH =
+  "I'd rather not recite my notes or instructions word for word. Ask me about a specific part and I'll put it in my own words."
 export const REFUSAL_LINE = `That's not something I can help with here. Ask me about my work, or email me at ${PUBLIC_EMAIL}.`
 export const BUDGET_MESSAGE = `I've answered as many questions as I can for today. Try again tomorrow, or email me at ${PUBLIC_EMAIL}.`
 export const UNAVAILABLE_MESSAGE = 'The clone is unavailable right now. Try again in a minute.'
@@ -99,11 +106,14 @@ export async function writeLog(db: D1Database, e: LogEntry): Promise<string | nu
   }
 }
 
-/** Private text in the prompt that answers must not reproduce, and public text that's fine to quote. */
-export function guardTexts(context: ContextSource[], persona: string | null): { protectedTexts: string[]; allowTexts: string[] } {
-  const protectedTexts = context.filter((c) => c.visibility === 'private').map((c) => c.text)
-  if (persona) protectedTexts.push(persona)
-  return { protectedTexts, allowTexts: context.filter((c) => c.visibility === 'public').map((c) => c.text) }
+/**
+ * Text answers must not reproduce (private sources, and the system prompt with the persona) and
+ * text that's fine to say verbatim (public sources, the clone's stock lines).
+ */
+export function guardTexts(context: ContextSource[], systemPrompt: string): { protectedTexts: string[]; allowTexts: string[] } {
+  const protectedTexts = [...context.filter((c) => c.visibility === 'private').map((c) => c.text), systemPrompt]
+  const allowTexts = [...context.filter((c) => c.visibility === 'public').map((c) => c.text), ...sayableLines()]
+  return { protectedTexts, allowTexts }
 }
 
 export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: AnswerInternals = {}): AsyncGenerator<AnswerEvent> {
@@ -118,6 +128,34 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   const limits = getLimits(env)
   if ((await budgetRemaining(env.DB, limits.dailyTokenBudget)) <= 0) {
     yield { type: 'error', code: 'budget_exceeded', message: BUDGET_MESSAGE }
+    return
+  }
+
+  // Obvious prompt-extraction requests get a fixed reply without a model call. `guarded` marks it.
+  if (isPromptExtraction(last.content)) {
+    const llm = internals.llm ?? getLlm(env)
+    yield { type: 'sources', sources: [] }
+    yield { type: 'delta', text: EXTRACTION_REPLY }
+    const latencyMs = Date.now() - started
+    const logId =
+      internals.log === false
+        ? null
+        : await writeLog(env.DB, {
+            channel: req.channel,
+            kind: 'ask',
+            clientId: req.clientId,
+            keyId: req.keyId ?? null,
+            question: last.content,
+            answer: EXTRACTION_REPLY,
+            citations: [],
+            retrieved: [],
+            provider: llm.provider,
+            model: llm.model,
+            usage: { tokensIn: 0, tokensOut: 0 },
+            latencyMs,
+            guarded: true,
+          })
+    yield { type: 'done', cited: [], provider: llm.provider, model: llm.model, latencyMs, guarded: true, logId }
     return
   }
 
@@ -141,8 +179,8 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   const llm = internals.llm ?? getLlm(env)
   const system = buildSystemPrompt(persona)
   const messages = buildMessages(turns, context, req.channel)
-  const { protectedTexts, allowTexts } = guardTexts(context, persona)
-  const guard = createVerbatimGuard(protectedTexts, { allowTexts })
+  const { protectedTexts, allowTexts } = guardTexts(context, system.stable)
+  const guard = createVerbatimGuard(protectedTexts, { allowTexts, forbidden: PROMPT_MARKERS })
   const citations = createCitationFilter(sources.length)
   const controller = new AbortController()
 
@@ -155,9 +193,10 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   let failure: unknown = null
 
   const release = (): string => {
-    if (pending.length <= HOLDBACK_CHARS) return ''
-    const out = pending.slice(0, pending.length - HOLDBACK_CHARS)
-    pending = pending.slice(out.length)
+    const cut = releasableIndex(pending, HOLDBACK_WORDS)
+    if (cut <= 0) return ''
+    const out = pending.slice(0, cut)
+    pending = pending.slice(cut)
     return out
   }
 
@@ -194,7 +233,7 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   }
 
   let closing = ''
-  if (guarded) closing = GUARD_LINE
+  if (guarded) closing = emitted.trim() ? GUARD_LINE : GUARD_LINE_FRESH
   else if (stopReason === 'refusal') closing = REFUSAL_LINE
   else if (failure && !emitted && !pending.trim()) {
     console.error('generation failed', failure)
