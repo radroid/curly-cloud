@@ -2,6 +2,7 @@
  * One eval case: retrieval ranks / hit@k / reciprocal rank, and (for answer-type cases) the
  * generated answer with its checks. Shapes are documented in evals/README.md.
  */
+import { z } from 'zod'
 import type { AppEnv } from '@/lib/env'
 import { collectAnswer, RagError } from '@/lib/rag/answer'
 import { retrievalQuery, retrieveChunks } from '@/lib/rag/retrieve'
@@ -29,6 +30,23 @@ export interface EvalCase {
   k?: number
   notes?: string
 }
+
+const Turn = z.object({ role: z.enum(['user', 'assistant']), content: z.string().max(8000) })
+
+/** Runtime validation for an EvalCase (the admin route and the golden-file test use it). */
+export const EvalCaseSchema = z.object({
+  id: z.string().min(1).max(200),
+  kind: z.enum(['retrieval', 'answer', 'refusal', 'injection']),
+  question: z.string().trim().min(1).max(4000),
+  history: z.array(Turn).max(24).optional(),
+  expect: z.array(z.string().min(1)).max(20).optional(),
+  mustInclude: z.array(z.string().min(1)).max(20).optional(),
+  mustNotInclude: z.array(z.string().min(1)).max(40).optional(),
+  mustNotMatch: z.array(z.string().min(1).max(300)).max(20).optional(),
+  mustCite: z.boolean().optional(),
+  k: z.number().int().min(1).max(50).optional(),
+  notes: z.string().max(2000).optional(),
+})
 
 export interface EvalCheck {
   name: string
