@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth'
-import { ADMIN_PASSWORD, ORIGIN, SESSION_SECRET, json, resetEnv } from '@/lib/studio/tests/harness'
+import { ADMIN_PASSWORD, ORIGIN, SESSION_SECRET, json, resetEnv, state } from '@/lib/studio/tests/harness'
 
 vi.mock('@/lib/env', async (importOriginal) => {
   const { state } = await import('@/lib/studio/tests/harness')
@@ -67,6 +67,31 @@ describe('POST /api/auth/login', () => {
     expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.2' }))).status).toBe(200)
   })
 
+  it('groups IPv6 clients by /64, so rotating addresses does not reset the limit', async () => {
+    for (let i = 0; i < 10; i++) {
+      expect((await login(loginRequest({ password: 'guess' + i }, { 'x-real-ip': `2001:db8:5:6::${i + 1}` }))).status).toBe(401)
+    }
+    expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '2001:db8:5:6:abcd::1' }))).status).toBe(429)
+  })
+
+  it('caps attempts across all clients at 30 per hour', async () => {
+    // 30 attempts from 30 different /64s: each is under its own limit.
+    for (let i = 0; i < 30; i++) {
+      expect((await login(loginRequest({ password: 'guess' + i }, { 'x-real-ip': `2001:db8:${i + 1}::1` }))).status).toBe(401)
+    }
+    const blocked = await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '2001:db8:ffff::1' }))
+    expect(blocked.status).toBe(429)
+    expect(blocked.headers.get('set-cookie')).toBeNull()
+    expect(((await blocked.json()) as { error: { message: string } }).error.message).toMatch(/sign-in attempts/)
+  })
+
+  it('a client that is already locked out does not use up the global allowance', async () => {
+    for (let i = 0; i < 25; i++) await login(loginRequest({ password: 'guess' + i }))
+    const row = await state.env.DB.prepare("SELECT count FROM rate_limits WHERE bucket = 'login:all'").first<{ count: number }>()
+    expect(row?.count).toBe(10)
+    expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.9' }))).status).toBe(200)
+  })
+
   it('rejects cross-site posts before checking anything', async () => {
     const crossSite = await login(loginRequest({ password: ADMIN_PASSWORD }, { 'sec-fetch-site': 'cross-site' }))
     expect(crossSite.status).toBe(403)
@@ -99,4 +124,5 @@ describe('POST /api/auth/logout', () => {
     const res = await logout(new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers: { 'sec-fetch-site': 'cross-site' } }))
     expect(res.status).toBe(403)
   })
+
 })
