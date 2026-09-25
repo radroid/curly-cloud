@@ -87,7 +87,7 @@ export function Notice({ tone = 'info', title, children, className }: {
     info: 'border-rule bg-paper text-ink',
     warn: 'border-sun/60 bg-marker/40 text-ink',
     error: 'border-coral/40 bg-coral/[0.06] text-ink',
-    ok: 'border-forest/30 bg-forest/[0.06] text-ink',
+    ok: 'border-forest/30 bg-forest/10 text-ink',
   }
   const marks = { info: 'bg-muted', warn: 'bg-sun', error: 'bg-coral', ok: 'bg-forest' }
   return (

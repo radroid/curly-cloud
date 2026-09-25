@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { CitedAnswer } from '@/app/studio/_components/cited-answer'
 import { useDebounced, useUrlState } from '@/app/studio/_components/hooks'
 import { Drawer } from '@/app/studio/_components/overlays'
+import { When } from '@/app/studio/_components/when'
 import {
   btn,
   ChannelMark,
@@ -21,10 +22,10 @@ import {
   VisibilityMark,
 } from '@/app/studio/_components/ui'
 import { studio, type ApiFailure } from '@/lib/studio/api'
-import { CHANNELS, correctionText, fmtDateTime, fmtMs, fmtNum, fmtScore, timeAgo, truncate } from '@/lib/studio/shared'
+import { CHANNELS, LOGS_PAGE_SIZE, correctionText, fmtDateTime, fmtMs, fmtNum, fmtScore, truncate } from '@/lib/studio/shared'
 import type { Channel, CorrectionResult, LogDetail, LogItem, LogSourceRef, Page } from '@/lib/studio/types'
 
-const PAGE_SIZE = 40
+const PAGE_SIZE = LOGS_PAGE_SIZE
 
 interface Initial {
   channel: Channel | ''
@@ -35,21 +36,27 @@ interface Initial {
   open: string | null
 }
 
-export function LogsView({ initial }: { initial: Initial }) {
+export function LogsView({ initial, initialData }: { initial: Initial; initialData?: Page<LogItem> }) {
   const [channel, setChannel] = useState<Channel | ''>(initial.channel)
   const [flagged, setFlagged] = useState(initial.flagged)
   const [q, setQ] = useState(initial.q)
   const [key, setKey] = useState(initial.key)
   const [page, setPage] = useState(initial.page)
   const [open, setOpen] = useState<string | null>(initial.open)
-  const [data, setData] = useState<Page<LogItem> | null>(null)
+  const [data, setData] = useState<Page<LogItem> | null>(initialData ?? null)
   const [error, setError] = useState<ApiFailure | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialData)
   const query = useDebounced(q.trim(), 250)
+  // The server rendered the first page; don't fetch it again on mount.
+  const skipFirst = useRef(!!initialData)
 
   useUrlState({ channel, flagged: flagged ? 1 : null, q: query, key, page: page > 1 ? page : null, open })
 
   useEffect(() => {
+    if (skipFirst.current) {
+      skipFirst.current = false
+      return
+    }
     const ac = new AbortController()
     setLoading(true)
     studio.logs
@@ -179,9 +186,7 @@ function LogRow({ log, active, onOpen }: { log: LogItem; active: boolean; onOpen
   return (
     <button type="button" onClick={onOpen} className={cx('block w-full px-4 py-3 text-left hover:bg-paper', active && 'bg-marker/30 hover:bg-marker/40')}>
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-mono text-[11px] tabular-nums text-muted" title={fmtDateTime(log.createdAt)}>
-          {timeAgo(log.createdAt)}
-        </span>
+        <When at={log.createdAt} className="font-mono text-[11px] tabular-nums text-muted" />
         <ChannelMark channel={log.channel} />
         {log.keyLabel ? <span className="font-mono text-[11px] text-ink">{log.keyLabel}</span> : null}
         {log.kind === 'fit' ? <Tag tone="muted">fit</Tag> : null}
@@ -192,7 +197,7 @@ function LogRow({ log, active, onOpen }: { log: LogItem; active: boolean; onOpen
         </span>
       </span>
       <span className="mt-1.5 block text-[15px] font-medium leading-snug text-ink">{truncate(log.question, 220)}</span>
-      <span className="mt-1 line-clamp-2 block text-sm leading-relaxed text-muted">{log.answer ? truncate(log.answer, 320) : '(no answer)'}</span>
+      <span className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{log.answer ? truncate(log.answer, 320) : '(no answer)'}</span>
       <span className="mt-1.5 flex flex-wrap gap-x-3 font-mono text-[10.5px] text-muted">
         <span>{fmtMs(log.latencyMs)}</span>
         {log.provider ? <span>{log.provider}</span> : null}
@@ -373,7 +378,7 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
   const [text, setText] = useState('')
   const [loadingExisting, setLoadingExisting] = useState(!!detail.correctionSourceId)
   const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ApiFailure | null>(null)
   const [done, setDone] = useState<CorrectionResult | null>(null)
 
   // Prefill with the current correction so a second pass edits rather than starts over.
@@ -396,7 +401,7 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
     if (res.ok) {
       setDone(res.data)
       onCorrected(res.data)
-    } else setError(res.message)
+    } else setError(res)
   }
 
   return (
@@ -425,8 +430,8 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
         className={cx(textarea, 'mt-3')}
       />
       {error ? (
-        <Notice tone="error" className="mt-3">
-          {error}
+        <Notice tone={error.status === 503 ? 'warn' : 'error'} title={error.status === 503 ? 'Not saved: the knowledge base isn’t wired up yet' : 'Not saved'} className="mt-3">
+          {error.message}
         </Notice>
       ) : null}
       {done ? (

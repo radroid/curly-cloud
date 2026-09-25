@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect, useRef } from 'react'
 import { cx } from '@/app/studio/_components/ui'
 
 const ITEMS = [
@@ -30,6 +31,11 @@ function LogoutButton({ className }: { className: string }) {
 
 export function StudioNav() {
   const pathname = usePathname() ?? '/studio'
+  const mobileNav = useRef<HTMLElement>(null)
+  // On a phone the section row scrolls sideways: keep the current section in view.
+  useEffect(() => {
+    mobileNav.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [pathname])
   return (
     <>
       {/* Phone: compact bar with a scrollable row of sections. */}
@@ -46,7 +52,7 @@ export function StudioNav() {
             <LogoutButton className="rounded px-2 py-1.5 text-term-dim hover:text-white" />
           </div>
         </div>
-        <nav aria-label="Studio" className="flex gap-1 overflow-x-auto px-3 pb-2 [scrollbar-width:none]">
+        <nav ref={mobileNav} aria-label="Studio" className="flex gap-1 overflow-x-auto px-3 pb-2 [scrollbar-width:none]">
           {ITEMS.map((item) => {
             const active = isActive(pathname, item.href)
             return (

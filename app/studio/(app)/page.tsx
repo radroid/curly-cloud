@@ -58,6 +58,10 @@ export default async function DashboardPage() {
   )
 }
 
+function plural(n: number, word: string): string {
+  return `${fmtNum(n)} ${word}${n === 1 ? '' : 's'}`
+}
+
 function Coverage({ stats, className }: { stats: StudioStats; className?: string }) {
   const topics = stats.coverage.filter((t) => t.origin === 'interview')
   const max = Math.max(1, ...topics.map((t) => t.sources))
@@ -109,7 +113,7 @@ function Coverage({ stats, className }: { stats: StudioStats; className?: string
         ))}
       </ul>
       <p className="border-t border-rule px-4 py-2.5 text-xs text-muted">
-        Counts interview answers, notes and corrections. Resume topics come from <code className="font-mono text-ink">content/resume.ts</code> ({fmtNum(stats.sourcesByKind.resume + stats.sourcesByKind.profile)} sources).
+        Counts interview answers, notes and corrections. Resume topics come from <code className="font-mono text-ink">content/resume.ts</code> ({plural(stats.sourcesByKind.resume + stats.sourcesByKind.profile, 'source')}).
       </p>
     </Panel>
   )
@@ -203,7 +207,7 @@ function Recent({ stats, className }: { stats: StudioStats; className?: string }
         <ol className="divide-y divide-rule">
           {stats.recent.map((r) => (
             <li key={r.id}>
-              <Link href={`/studio/logs?open=${encodeURIComponent(r.id)}`} className="grid grid-cols-[4.5rem_minmax(0,1fr)] gap-x-3 px-4 py-2.5 hover:bg-paper sm:grid-cols-[4.5rem_4.5rem_minmax(0,1fr)_auto]">
+              <Link href={`/studio/logs?open=${encodeURIComponent(r.id)}`} className="grid grid-cols-[4.5rem_minmax(0,1fr)] items-baseline gap-x-3 px-4 py-2.5 hover:bg-paper sm:grid-cols-[4.5rem_4.5rem_minmax(0,1fr)_auto]">
                 <span className="font-mono text-[11px] tabular-nums text-muted">{timeAgo(r.createdAt, stats.generatedAt)}</span>
                 <span className="hidden sm:block">
                   <ChannelMark channel={r.channel} />

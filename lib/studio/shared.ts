@@ -7,6 +7,9 @@ import type { Channel, SourceInput, SourceKind } from '@/lib/rag/types'
 export const SOURCE_KINDS: SourceKind[] = ['resume', 'profile', 'interview', 'note', 'correction']
 export const CHANNELS: Channel[] = ['web', 'terminal', 'mcp', 'studio']
 
+export const SOURCES_PAGE_SIZE = 50
+export const LOGS_PAGE_SIZE = 40
+
 /** Kinds generated from content/resume.ts. Editing them in D1 would be overwritten by the next seed. */
 export const READ_ONLY_KINDS: SourceKind[] = ['resume', 'profile']
 export const READ_ONLY_MESSAGE = 'Resume and profile sources are read-only: edit content/resume.ts and re-seed.'

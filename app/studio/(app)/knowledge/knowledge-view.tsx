@@ -1,9 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useDebounced, useUrlState } from '@/app/studio/_components/hooks'
 import { ConfirmButton, CopyButton, Drawer } from '@/app/studio/_components/overlays'
+import { When } from '@/app/studio/_components/when'
 import {
   btn,
   cx,
@@ -21,10 +22,10 @@ import {
 } from '@/app/studio/_components/ui'
 import { TOPICS, topicLabel } from '@/content/topics'
 import { studio, type ApiFailure } from '@/lib/studio/api'
-import { CORRECTION_PREFIX, SOURCE_KINDS, fmtDateTime, fmtNum, isReadOnlyKind, timeAgo } from '@/lib/studio/shared'
+import { CORRECTION_PREFIX, SOURCES_PAGE_SIZE, SOURCE_KINDS, fmtDateTime, fmtNum, isReadOnlyKind } from '@/lib/studio/shared'
 import type { ImportResult, IngestResult, Page, SourceKind, SourceRecord } from '@/lib/studio/types'
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = SOURCES_PAGE_SIZE
 
 type Panel = { type: 'source'; id: string } | { type: 'new' } | { type: 'import' } | null
 
@@ -37,17 +38,19 @@ interface Initial {
   panel: 'new' | 'import' | null
 }
 
-export function KnowledgeView({ initial }: { initial: Initial }) {
+export function KnowledgeView({ initial, initialData }: { initial: Initial; initialData?: Page<SourceRecord> }) {
   const [kind, setKind] = useState<SourceKind | ''>(initial.kind)
   const [topic, setTopic] = useState(initial.topic)
   const [q, setQ] = useState(initial.q)
   const [page, setPage] = useState(initial.page)
   const [panel, setPanel] = useState<Panel>(initial.open ? { type: 'source', id: initial.open } : initial.panel ? { type: initial.panel } : null)
-  const [data, setData] = useState<Page<SourceRecord> | null>(null)
+  const [data, setData] = useState<Page<SourceRecord> | null>(initialData ?? null)
   const [error, setError] = useState<ApiFailure | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialData)
   const [reload, setReload] = useState(0)
   const query = useDebounced(q.trim(), 250)
+  // The server rendered the first page when lib/rag could; don't fetch it again on mount.
+  const skipFirst = useRef(!!initialData)
 
   useUrlState({
     kind,
@@ -59,6 +62,10 @@ export function KnowledgeView({ initial }: { initial: Initial }) {
   })
 
   useEffect(() => {
+    if (skipFirst.current) {
+      skipFirst.current = false
+      return
+    }
     const ac = new AbortController()
     setLoading(true)
     studio.sources
@@ -165,7 +172,7 @@ export function KnowledgeView({ initial }: { initial: Initial }) {
         </Notice>
       ) : null}
 
-      <div className="overflow-hidden rounded-lg border border-rule bg-white">
+      <div className={cx('overflow-hidden rounded-lg border border-rule bg-white', error && !data && 'hidden')}>
         <div className="hidden grid-cols-[minmax(0,1fr)_6.5rem_9rem_5.5rem_5.5rem_3.5rem] gap-4 border-b border-rule bg-paper/60 px-4 py-2 md:grid">
           {['Title', 'Kind', 'Topic', 'Visibility', 'Updated', 'Chunks'].map((h, i) => (
             <Eyebrow key={h} className={i === 5 ? 'text-right' : undefined}>
@@ -199,9 +206,7 @@ export function KnowledgeView({ initial }: { initial: Initial }) {
                       <KindMark kind={s.kind} />
                       <span className="truncate text-xs text-muted md:text-[13px] md:text-ink">{topicLabel(s.topic)}</span>
                       <VisibilityMark visibility={s.visibility} />
-                      <span className="font-mono text-[11px] text-muted" title={fmtDateTime(s.updatedAt)}>
-                        {timeAgo(s.updatedAt)}
-                      </span>
+                      <When at={s.updatedAt} className="font-mono text-[11px] text-muted" />
                       <span className="font-mono text-[11px] tabular-nums text-muted md:text-right md:text-ink">
                         {fmtNum(s.chunkCount)}
                         <span className="md:hidden"> chunks</span>
@@ -544,6 +549,10 @@ interface Picked {
   parseError: string | null
 }
 
+function fmtBytes(n: number): string {
+  return n < 1024 ? `${fmtNum(n)} B` : n < 1024 * 1024 ? `${(n / 1024).toFixed(1)} KB` : `${(n / 1024 / 1024).toFixed(1)} MB`
+}
+
 function inspect(name: string, size: number, text: string): Picked {
   try {
     const json = JSON.parse(text) as Record<string, unknown>
@@ -642,7 +651,7 @@ function ImportPanel({ onImported }: { onImported: () => void }) {
       >
         <input type="file" accept=".json,application/json" className="sr-only" onChange={(e) => void pick(e.target.files?.[0])} />
         <span className="text-sm font-medium text-ink">{picked ? picked.name : 'Choose an export file'}</span>
-        <span className="font-mono text-[11px] text-muted">{picked ? `${fmtNum(Math.round(picked.size / 1024))} KB` : 'or drop it here'}</span>
+        <span className="font-mono text-[11px] text-muted">{picked ? fmtBytes(picked.size) : 'or drop it here'}</span>
       </label>
 
       {picked?.parseError ? <Notice tone="error" title="That file isn’t valid JSON">{picked.parseError}</Notice> : null}
