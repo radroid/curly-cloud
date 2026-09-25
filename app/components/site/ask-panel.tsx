@@ -153,7 +153,6 @@ export function AskPanel() {
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const stickToBottom = useRef(true)
   const isDesktop = useMediaQuery('(min-width: 1024px)', true)
   const sheet = !isDesktop
 
@@ -183,11 +182,30 @@ export function AskPanel() {
     return () => window.removeEventListener('keydown', onKey)
   }, [site])
 
-  // Follow the stream unless the reader scrolled up.
+  // Height of the scroll area, so the latest answer can reserve room for its question to pin.
+  const [viewH, setViewH] = useState(0)
   useEffect(() => {
     const el = scrollRef.current
-    if (el && stickToBottom.current) el.scrollTop = el.scrollHeight
-  }, [messages])
+    if (!el) return
+    const ro = new ResizeObserver(() => setViewH(el.clientHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // When a question is sent, pin it to the top of the panel and let the answer grow beneath it
+  // (reading from the start beats chasing the stream).
+  const lastUserId = [...messages].reverse().find((m) => m.role === 'user')?.id
+  const pinned = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!lastUserId || lastUserId === pinned.current) return
+    const first = pinned.current === undefined
+    pinned.current = lastUserId
+    const el = scrollRef.current
+    const target = el?.querySelector<HTMLElement>(`[data-msg="${lastUserId}"]`)
+    if (!el || !target) return
+    // Restored history: jump to the latest exchange without animating.
+    el.scrollTo({ top: target.offsetTop - 16, behavior: first || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }, [lastUserId])
 
   // Sheet: focus moves in on open and back on close; Escape closes.
   const panelRef = useRef<HTMLElement>(null)
@@ -208,7 +226,6 @@ export function AskPanel() {
 
   const submit = () => {
     if (!input.trim() || busy) return
-    stickToBottom.current = true
     void send(input)
     setInput('')
   }
@@ -242,11 +259,7 @@ export function AskPanel() {
 
         <div
           ref={scrollRef}
-          onScroll={(e) => {
-            const el = e.currentTarget
-            stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 48
-          }}
-          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
           aria-live="polite"
           aria-busy={busy}
         >
@@ -254,13 +267,13 @@ export function AskPanel() {
             <EmptyState onPick={(q) => void send(q)} />
           ) : (
             <ol className="space-y-6">
-              {messages.map((m) =>
+              {messages.map((m, i) =>
                 m.role === 'user' ? (
-                  <li key={m.id} className="flex justify-end">
+                  <li key={m.id} data-msg={m.id} className="flex justify-end">
                     <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ink px-3.5 py-2 text-[0.95rem] text-paper">{m.content}</p>
                   </li>
                 ) : (
-                  <li key={m.id}>
+                  <li key={m.id} style={i === messages.length - 1 && viewH ? { minHeight: Math.max(0, viewH - 120) } : undefined}>
                     <AssistantMessage message={m} />
                   </li>
                 ),
@@ -487,11 +500,11 @@ function SourceRow({ source: s, active, onOpen }: { source: CitationSource; acti
       <span className="mt-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded bg-coral/10 px-1 font-mono text-[0.7rem] text-coral">{s.n}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-1.5 text-xs">
-          <span className="font-medium text-ink">{label}</span>
-          <span className="text-muted">{isPublic ? (s.kind === 'profile' ? 'Profile' : 'Resume') : 'In my own words'}</span>
+          <span className="truncate font-medium text-ink">{label}</span>
+          <span className="shrink-0 text-muted">{isPublic ? (s.kind === 'profile' ? 'Profile' : 'Resume') : 'In my own words'}</span>
           {isPublic && s.anchor && <span className="ml-auto shrink-0 text-forest">Show ↗</span>}
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-xs text-muted">{isPublic ? s.snippet : `“${s.title}”`}</span>
+        <span className="mt-0.5 line-clamp-1 text-xs text-muted">{isPublic ? s.snippet : `“${s.title}”`}</span>
       </span>
     </button>
   )

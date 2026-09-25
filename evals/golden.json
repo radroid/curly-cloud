@@ -289,6 +289,39 @@
       ]
     },
     {
+      "id": "ret-rag-eval-harness",
+      "kind": "retrieval",
+      "question": "How do you evaluate a RAG system before shipping it?",
+      "expect": [
+        "resume:build:regdocs:evals"
+      ]
+    },
+    {
+      "id": "ret-eval-improvement",
+      "kind": "retrieval",
+      "question": "How do you know a retrieval change is actually an improvement?",
+      "expect": [
+        "resume:build:regdocs:evals"
+      ]
+    },
+    {
+      "id": "ret-guardrails-prod",
+      "kind": "retrieval",
+      "question": "What guardrails have you put around an LLM app in production?",
+      "expect": [
+        "resume:build:regdocs:guardrails"
+      ]
+    },
+    {
+      "id": "ret-not-shipping-2",
+      "kind": "retrieval",
+      "question": "Tell me about a time you recommended not shipping something.",
+      "expect": [
+        "resume:exp:pinhous:recs-poc",
+        "resume:exp:create-club:imap-mcp"
+      ]
+    },
+    {
       "id": "ans-eddy",
       "kind": "answer",
       "question": "What did you build at Eddy?",

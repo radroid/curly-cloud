@@ -161,6 +161,25 @@ export interface RetrieveOptions {
   rerank?: boolean
 }
 
+/**
+ * The reranker votes as a third ranked list in RRF alongside BM25 and dense, rather than having
+ * the final word. bge-reranker-base scores long, dense chunks near zero even when both retrievers
+ * rank them highly (e.g. the regdocs eval-harness bullet for "how do you evaluate a RAG system"),
+ * so letting it override fusion buried the best evidence.
+ */
+export function fuseRerank(results: RetrievedChunk[]): RetrievedChunk[] {
+  const byRerank = results
+    .map((r, i) => ({ i, score: r.scores.rerank }))
+    .filter((x): x is { i: number; score: number } => x.score !== null)
+    .sort((a, b) => b.score - a.score)
+  const rerankRank = new Map(byRerank.map((x, rank) => [x.i, rank + 1]))
+  const vote = (rank: number | null | undefined): number => (rank ? 1 / (RRF_K + rank) : 0)
+  return results
+    .map((r, i) => ({ r, score: vote(r.scores.bm25Rank) + vote(r.scores.denseRank) + vote(rerankRank.get(i)) }))
+    .sort((a, b) => b.score - a.score || b.r.scores.rrf - a.r.scores.rrf)
+    .map((x) => x.r)
+}
+
 export async function retrieveChunks(env: RetrieveEnv, query: string, opts: RetrieveOptions = {}): Promise<RetrievedChunk[]> {
   const k = Math.max(1, Math.min(50, Math.floor(opts.k ?? DEFAULT_K)))
   const q = query.trim().slice(0, 2000)
@@ -182,8 +201,7 @@ export async function retrieveChunks(env: RetrieveEnv, query: string, opts: Retr
       )
       const scores = new Map(ranked.map((r) => [r.index, r.score]))
       results = results.map((r, i) => ({ ...r, scores: { ...r.scores, rerank: scores.get(i) ?? null } }))
-      // Order by reranker, with RRF breaking ties and ranking anything the reranker skipped.
-      results.sort((a, b) => (b.scores.rerank ?? -Infinity) - (a.scores.rerank ?? -Infinity) || b.scores.rrf - a.scores.rrf)
+      results = fuseRerank(results)
     } catch (err) {
       console.warn('rerank failed; using RRF order', err)
     }
