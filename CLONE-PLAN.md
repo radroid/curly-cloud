@@ -105,17 +105,41 @@ are AI-generated, and cite sources.
 ## 5. Module ownership (parallel build)
 
 Contracts are fixed in the foundation commit. Each workstream owns its files and must not edit files
-owned by another stream; request contract changes in the plan instead.
+owned by another stream; if a contract needs to change, note it in the stream's final report.
 
 | Stream | Branch | Owns |
 |--------|--------|------|
-| Foundation | `feat/clone-site` | config, migrations, `lib/env.ts`, `lib/auth/*`, `lib/security/*`, `lib/db/*`, `lib/rag/types.ts`, `lib/client/sse.ts`, `content/resume.ts`, `test/helpers/*`, `app/mac`, design tokens in `app/global.css` |
-| RAG | `feat/clone-rag` | `lib/rag/**` (except types), `lib/llm/**`, `app/api/chat`, `app/api/fit`, `app/api/profile`, `app/api/admin/{seed,ingest,debug,eval,persona}`, `evals/**`, `scripts/clone.ts` |
-| MCP | `feat/clone-mcp` | `lib/mcp/**`, `app/api/mcp`, `app/llms.txt` |
-| Studio | `feat/clone-studio` | `app/studio/**`, `app/api/auth/**`, `app/api/admin/{sources,notes,logs,keys,stats}` |
+| Foundation | `feat/clone-site` | config, migrations, `lib/env.ts`, `lib/auth/*`, `lib/security/*`, `lib/db/*`, `lib/rag/types.ts`, `lib/client/sse.ts`, `content/resume.ts`, `content/topics.ts`, `test/helpers/*`, `app/mac`, `app/api/health`, design tokens in `app/global.css` |
+| RAG | `feat/clone-rag` | `lib/rag/**` (except types.ts), `lib/llm/**`, `app/api/{chat,fit,profile}`, `app/api/admin/{seed,ingest,persona,debug,eval}`, `evals/**`, `scripts/eval.ts` |
+| MCP | `feat/clone-mcp` | `lib/mcp/**`, `app/api/mcp/**`, `app/llms.txt/**` |
+| Studio | `feat/clone-studio` | `app/studio/**`, `lib/studio/**`, `app/api/auth/**`, `app/api/admin/{sources,logs,keys,stats}` |
 | Terminal | `feat/clone-terminal` | `lib/shell/**`, `app/terminal/**` |
-| Interview | `feat/clone-interview` | `interview/**`, `content/questions/**`, `lib/interview/**`, `.claude/skills/ingest-answers/**` |
-| Website | `feat/clone-site` (lead) | `app/page.tsx`, `app/(site)/**`, `app/components/site/**` |
+| Interview | `feat/clone-interview` | `interview/**`, `content/questions/**`, `lib/interview/**`, `scripts/clone.ts`, `scripts/build-interview.ts`, `.claude/skills/ingest-answers/**` |
+| Website | `feat/clone-site` (lead) | `app/page.tsx`, `app/components/site/**`, integration of all streams |
+
+### 5.1 Admin API contracts (all require `requireAdmin`)
+
+| Route | Body → Response |
+|-------|-----------------|
+| `POST /api/admin/seed` | — → `IngestResult` (public resume sources, `replaceKind: 'resume'`) |
+| `POST /api/admin/ingest` | `{ sources: SourceInput[], replaceKind?: SourceKind }` → `IngestResult` (max 500 sources per call) |
+| `GET /api/admin/persona` | → `{ text, updatedAt } \| null` |
+| `POST /api/admin/persona` | — → `{ text, sourcesUsed }` (rebuild) |
+| `POST /api/admin/debug/retrieve` | `{ query, k? }` → `{ chunks: RetrievedChunk[] }` |
+| `POST /api/admin/debug/answer` | `{ question }` → `Answer` (channel `studio`) |
+| `POST /api/admin/eval/case` | `EvalCase` (see `evals/README.md`) → `EvalCaseResult` |
+| `GET /api/admin/sources?kind&topic&q&limit&offset` | → `{ items: SourceRecord[], total }` |
+| `POST /api/admin/sources` | `{ title, body, topic? }` → `SourceRecord` (creates a private `note:`) |
+| `GET/PATCH/DELETE /api/admin/sources/:id` | `PATCH { title?, body?, topic?, visibility? }`; resume sources are read-only |
+| `GET /api/admin/logs?channel&flagged&limit&offset` | → `{ items, total }` |
+| `GET /api/admin/logs/:id`, `PATCH { flagged }`, `POST { correction }` | correction creates a private `correction:<logId>` source |
+| `GET/POST /api/admin/keys`, `DELETE /api/admin/keys/:id` | `POST { label, dailyLimit? }` → `{ token, record }` (token shown once) |
+| `GET /api/admin/stats` | → corpus stats + usage today + recent activity |
+
+### 5.2 Local dev ports per worktree
+
+RAG 3201 · MCP 3202 · Studio 3203 · Terminal 3204 · Interview 3205 · Integration 3190.
+Raj's own `bun run dev` owns 3000 — never start anything there.
 
 ## 6. Configuration
 

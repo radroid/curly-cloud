@@ -17,7 +17,7 @@
     "clone:seed": "bun scripts/clone.ts seed",
     "clone:ingest": "bun scripts/clone.ts ingest",
     "clone:persona": "bun scripts/clone.ts persona",
-    "clone:eval": "bun scripts/clone.ts eval"
+    "clone:eval": "bun scripts/eval.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.128.0",
