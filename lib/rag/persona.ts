@@ -8,7 +8,7 @@ import { topicLabel } from '@/content/topics'
 import { all, getMeta, setMeta } from '@/lib/db'
 import type { AppEnv } from '@/lib/env'
 import { getLlm, type Llm } from '@/lib/llm'
-import { createVerbatimGuard } from '@/lib/rag/guard'
+import { buildGuardIndex, createVerbatimGuard } from '@/lib/rag/guard'
 import { sanitizeSourceText } from '@/lib/rag/prompt'
 import { recordUsage } from '@/lib/security'
 
@@ -70,8 +70,9 @@ interface PrivateRow {
 
 /** Drop any line that reproduces a run of private text. */
 export function scrubPersona(text: string, privateTexts: string[]): string {
+  const index = buildGuardIndex(privateTexts, { window: PERSONA_GUARD_WINDOW })
   const lines = text.split('\n').filter((line) => {
-    const guard = createVerbatimGuard(privateTexts, { window: PERSONA_GUARD_WINDOW })
+    const guard = createVerbatimGuard(index)
     return !(guard.push(line) || guard.finish())
   })
   return lines.join('\n').trim().slice(0, PERSONA_MAX_CHARS)

@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { AppEnv } from '@/lib/env'
 import { collectAnswer, RagError } from '@/lib/rag/answer'
 import { retrievalQuery, retrieveChunks } from '@/lib/rag/retrieve'
+import { signTurns, turnSecret } from '@/lib/rag/turns'
 import type { ChatTurn } from '@/lib/rag/types'
 
 export type EvalKind = 'retrieval' | 'answer' | 'refusal' | 'injection'
@@ -145,7 +146,9 @@ export async function runEvalCase(env: AppEnv, c: EvalCase, opts: { rerank?: boo
       result.retrieval = scoreRetrieval(ids, c.expect)
     }
     if (c.kind !== 'retrieval') {
-      const a = await collectAnswer(env, { messages, channel: 'studio', clientId: 'eval' }, { log: false, retrieve: { rerank: opts.rerank } })
+      // Eval histories come from the admin, so their assistant turns are signed as if the clone said them.
+      const signed = await signTurns(turnSecret(env), messages)
+      const a = await collectAnswer(env, { messages: signed, channel: 'studio', clientId: 'eval' }, { log: false, retrieve: { rerank: opts.rerank } })
       result.answer = {
         text: a.text,
         cited: a.cited,

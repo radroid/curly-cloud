@@ -26,8 +26,13 @@
   public endpoint (web, terminal, MCP).
 - Public endpoints return **generated answers** plus **citation labels**. For private sources the
   label is the question/topic only; snippets are shown only for public sources (resume, profile).
-- A streaming **verbatim guard** holds back output and stops the answer if it reproduces a long run
-  of words from a private source (prompt-extraction defence).
+- A streaming **verbatim guard** holds back output and stops the answer if it reproduces private
+  text (private sources, the system prompt with the persona), including disguised copies: filler
+  words, separators, spelled-out letters, look-alike characters, leetspeak, base64/hex
+  (`lib/rag/guard.ts`). Fit assessments run it over all fields joined. Translation isn't caught.
+- Every user turn (and each fit field) goes through the prompt-extraction check
+  (`lib/rag/injection.ts`). Replayed assistant turns are trusted only with the server's signature
+  (`sig` from `done`, HMAC over the answer text; `lib/rag/turns.ts`).
 - Retrieved text is wrapped as untrusted data in the prompt; instructions inside sources are ignored.
 - Exported answer files live in `private/` (gitignored). Only the studio (after login) and the admin
   API (bearer `ADMIN_TOKEN`) can read raw private text.
@@ -77,10 +82,11 @@ D1: sources · chunks · chunks_fts · meta · chat_logs · api_keys · rate_lim
 - `chat_logs`, `api_keys`, `rate_limits`, `usage_daily`.
 
 ### 4.2 Stream protocol — `POST /api/chat`
-Request: `{ messages: {role, content}[] (≤ 12 turns), channel: 'web' | 'terminal' }`.
+Request: `{ messages: {role, content, sig?}[] (≤ 12 turns), channel: 'web' | 'terminal' }`.
 Response: `text/event-stream`, events in order:
 `sources` → `delta`* → `done` (or `error` at any point). Payload types live in `lib/rag/types.ts`
-(`AnswerEvent`). Client parser: `lib/client/sse.ts`.
+(`AnswerEvent`). Client parser: `lib/client/sse.ts`. `done.sig` signs the streamed text; clients
+send it back as `sig` on that assistant turn, and assistant turns without a valid `sig` are dropped.
 
 ### 4.3 Public API surface
 | Route | Auth | Purpose |

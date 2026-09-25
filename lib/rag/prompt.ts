@@ -57,7 +57,7 @@ How to answer
   return { stable: rules + voice }
 }
 
-const PARAPHRASE_REMINDER =
+export const PARAPHRASE_REMINDER =
   'Some sources are my private notes (kind interview, note or correction). Retell them in your own words; never copy more than five words in a row from them.'
 
 const CHANNEL_NOTE: Record<Channel, string> = {

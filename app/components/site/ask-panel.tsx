@@ -21,6 +21,8 @@ interface Message {
   status?: 'streaming' | 'done' | 'stopped' | 'error'
   error?: { code: string; message: string }
   meta?: { provider: string; model: string; latencyMs: number; guarded: boolean }
+  /** The server's signature over this answer; sent back with it so the clone trusts the turn. */
+  sig?: string
 }
 
 const STORAGE_KEY = 'raj-clone-chat-v1'
@@ -44,6 +46,30 @@ function modelLabel(model: string): string {
   const tail = model.split('/').pop() ?? model
   if (tail.startsWith('llama-4-scout')) return 'Llama 4 Scout'
   return tail
+}
+
+/**
+ * The conversation to send with the next question. Answers go back only with the `sig` the server
+ * gave them (the server drops unsigned assistant turns anyway). Exchanges the clone refused or cut
+ * short (`guarded`) are left out, so one refused question doesn't turn every later answer into a
+ * refusal: the server checks every user turn it receives.
+ */
+function replayTurns(messages: Message[]): ChatTurn[] {
+  const turns: ChatTurn[] = []
+  for (let i = 0; i < messages.length; i++) {
+    const m = messages[i]
+    if (m.role === 'user') {
+      const reply = messages[i + 1]
+      if (reply?.role === 'assistant' && reply.meta?.guarded) {
+        i++
+        continue
+      }
+      if (m.content.trim()) turns.push({ role: 'user', content: m.content })
+    } else if (m.sig && m.content.trim()) {
+      turns.push({ role: 'assistant', content: m.content, sig: m.sig })
+    }
+  }
+  return turns
 }
 
 function useChat() {
@@ -77,11 +103,7 @@ function useChat() {
     async (raw: string) => {
       const question = raw.trim().slice(0, MAX_QUESTION)
       if (!question || controller.current) return
-      const history: ChatTurn[] = messages
-        .filter((m) => m.role === 'user' || m.status === 'done' || m.status === 'stopped')
-        .filter((m) => m.content.trim())
-        .map((m) => ({ role: m.role, content: m.content }))
-      const turns: ChatTurn[] = [...history, { role: 'user' as const, content: question }].slice(-MAX_TURNS)
+      const turns: ChatTurn[] = [...replayTurns(messages), { role: 'user' as const, content: question }].slice(-MAX_TURNS)
       if (turns[0]?.role === 'assistant') turns.shift()
 
       const userMsg: Message = { id: crypto.randomUUID(), role: 'user', content: question }
@@ -105,6 +127,7 @@ function useChat() {
               status: 'done',
               cited: ev.cited,
               meta: { provider: ev.provider, model: ev.model, latencyMs: ev.latencyMs, guarded: ev.guarded },
+              sig: ev.sig,
             }))
           } else if (ev.type === 'error') {
             patch(reply.id, (m) => ({ ...m, status: 'error', error: { code: ev.code, message: ev.message } }))
