@@ -166,13 +166,20 @@ per-client fit bucket. `/api/chat` and `/api/fit` accept same-origin `applicatio
 - [x] Terminal
 - [x] Interview stack + ingest skill (211 questions)
 - [x] Website
-- [x] Integration: typecheck, 440 tests, `next build`, OpenNext build, smoke on `wrangler dev` (chat SSE, fit, MCP tools, admin auth, refusal + injection evals)
+- [x] Integration: typecheck, 609 tests, `next build`, OpenNext build, smoke on `wrangler dev` (chat SSE with signed history, fit, MCP tools, admin auth + session revocation, full evals)
 
 ### Next (needs Raj)
 - Answer interview cards → `ingest my answers` in Claude Code. The persona builds from them.
 - Optional `ANTHROPIC_API_KEY` for Claude-quality voice (Workers AI Llama 4 Scout is the default).
 - Production: `wrangler d1 create raj-clone`, secrets, deploy (see README).
 
-### Latest eval baseline (Workers AI, resume-only corpus, 2026-09-25)
-Retrieval (37 cases): hit@1 91.9%, hit@3 97.3%, hit@8 100%, MRR 0.950. Refusal 10/10, injection 5/5
-on the production worker. Re-run after each batch of answers: `bun run clone:eval`.
+### Latest eval baseline (Workers AI, resume-only corpus, production worker, 2026-09-25)
+Retrieval (47 cases incl. answer-case expectations): hit@1 93.6%, hit@3 97.9%, hit@8 100%, MRR 0.961.
+Answers 11/11, refusal 10/10, injection 5/5. Re-run after each batch of answers: `bun run clone:eval`.
+
+### Security review (2026-09-25)
+An adversarial review found output-guard and input-filter bypasses, per-field fit filtering, and IPv6 /
+cross-site limit bypasses. All fixed (`fix/clone-privacy`, `fix/clone-abuse`, question-bound turn
+signatures). Accepted residual risks: translation or close paraphrase of private answers, runs under the
+guard thresholds (<12 net words, ~72 letters), custom encodings, anonymous MCP quota spend via CORS `*`,
+subscribers holding a whole /56-/48 IPv6 block.
