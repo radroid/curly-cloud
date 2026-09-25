@@ -47,4 +47,12 @@ next-env.d.ts
 
 github-banner.html
 clash-api-player-response.json
-.claude/
+
+
+# Raj's private answers, question packs and eval cases — never commit.
+/private/*
+!/private/README.md
+
+# Local Claude Code state; project skills are committed.
+.claude/*
+!.claude/skills/

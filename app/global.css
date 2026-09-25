@@ -1,6 +1,29 @@
 @import 'tailwindcss';
 
-/* ── Chicago Bitmap Font ─────────────────────────────────── */
+/* ── Design tokens ────────────────────────────────────────────────────────────
+   Raj's brand palette (shared with his resume): ink, forest, pine, coral, sun.
+   Use these through Tailwind (`bg-paper`, `text-forest`, `font-mono`) — no ad-hoc hex. */
+
+@theme {
+  --color-ink: #1c2927;
+  --color-muted: #56655f;
+  --color-forest: #164c46;
+  --color-pine: #103a35;
+  --color-coral: #d95f4f;
+  --color-sun: #e5bb52;
+  --color-paper: #f5f7f5;
+  --color-rule: #d3dcd8;
+  --color-marker: #f7e3a3;
+
+  --color-term-bg: #103a35;
+  --color-term-text: #dce8e2;
+  --color-term-dim: #8db3a8;
+  --color-term-accent: #9fd0c2;
+
+  --font-sans: var(--font-plex-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-chicago: 'Chicago', 'VT323', system-ui, monospace;
+}
 
 @font-face {
   font-family: 'Chicago';
@@ -8,44 +31,22 @@
   font-display: swap;
 }
 
-/* ── Mac OS System 1 (1984) Theme ────────────────────────── */
-
-:root {
-  --mac-white: #ffffff;
-  --mac-black: #000000;
-  --mac-gray: #a8a8a8;
-  --mac-gray-dark: #808080;
-
-  --font-chicago: 'Chicago', 'VT323', system-ui, monospace;
-}
-
-/* Inverted selection — classic Mac */
-::selection {
-  background-color: var(--mac-black);
-  color: var(--mac-white);
-}
-
-/* ── Crosshatch Dithered Desktop Pattern ─────────────────── */
-
 html {
-  height: 100%;
-  overflow: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100%;
   margin: 0;
-  background-color: var(--mac-gray);
-  background-image: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3C/svg%3E");
-  background-size: 2px 2px;
-  image-rendering: pixelated;
-  font-family: var(--font-chicago);
-  color: var(--mac-black);
-  -webkit-font-smoothing: none;
-  -moz-osx-font-smoothing: unset;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ── Reduced Motion ──────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-coral);
+  outline-offset: 2px;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -58,7 +59,33 @@ body {
   }
 }
 
-/* ── Boot Sequence Animations ────────────────────────────── */
+/* ── Mac OS System 1 (1984) — scoped to /mac ─────────────────────────────── */
+
+:root {
+  --mac-white: #ffffff;
+  --mac-black: #000000;
+  --mac-gray: #a8a8a8;
+  --mac-gray-dark: #808080;
+}
+
+.mac-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--mac-gray);
+  background-image: url("data:image/svg+xml,%3Csvg width='2' height='2' xmlns='http://www.w3.org/2000/svg'%3E%3Crect x='0' y='0' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3Crect x='1' y='1' width='1' height='1' fill='%23000000' fill-opacity='0.18'/%3E%3C/svg%3E");
+  background-size: 2px 2px;
+  image-rendering: pixelated;
+  font-family: var(--font-chicago);
+  color: var(--mac-black);
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: unset;
+}
+
+.mac-root ::selection {
+  background-color: var(--mac-black);
+  color: var(--mac-white);
+}
 
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -81,8 +108,6 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* ── Mac Window Chrome ───────────────────────────────────── */
-
 .mac-dialog {
   border: 3px solid var(--mac-black);
   border-radius: 8px;
@@ -93,8 +118,6 @@ body {
   max-width: 480px;
   width: 90%;
 }
-
-/* ── Mac Context Menu (Radix data-attribute driven) ──────── */
 
 [data-mac-item][data-highlighted] {
   background: var(--mac-black);

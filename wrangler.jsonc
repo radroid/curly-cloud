@@ -1,27 +1,50 @@
 {
-    "$schema": "./node_modules/wrangler/config-schema.json",
-    "main": ".open-next/worker.js",
-    "name": "raj-portfolio",
-    "compatibility_date": "2025-12-19",
-    "compatibility_flags": [
-      "nodejs_compat"
-    ],
-    "assets": {
-      "directory": ".open-next/assets",
-      "binding": "ASSETS"
-    },
-    "observability": {
-      "logs": {
-        "enabled": true,
-        "head_sampling_rate": 1,
-        "invocation_logs": true,
-        "persist": true
-      }
-    },
-    "routes": [
-      {
-        "pattern": "curlycloud.dev",
-        "custom_domain": true
-      }
-    ]
-  }
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "raj-portfolio",
+  "compatibility_date": "2025-12-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  // Knowledge base, retrieval index, logs, keys and rate limits.
+  // Local dev uses a local SQLite file under .wrangler/. Before the first deploy, run
+  // `bunx wrangler d1 create raj-clone` and paste the returned id below (see README).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "raj-clone",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+  // Embeddings, reranking and the fallback chat model. Always remote, even in local dev.
+  "ai": { "binding": "AI", "remote": true },
+  "vars": {
+    "EMBEDDING_MODEL": "@cf/baai/bge-m3",
+    "RERANK_MODEL": "@cf/baai/bge-reranker-base",
+    "ANTHROPIC_MODEL": "claude-opus-5",
+    "WORKERS_AI_CHAT_MODEL": "@cf/meta/llama-4-scout-17b-16e-instruct",
+    "CHAT_PER_HOUR": "30",
+    "CHAT_PER_DAY": "120",
+    "FIT_PER_DAY": "10",
+    "MCP_ANON_PER_DAY": "40",
+    "DAILY_TOKEN_BUDGET": "3000000",
+    "MCP_REQUIRE_KEY": "false"
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
+  "routes": [
+    {
+      "pattern": "curlycloud.dev",
+      "custom_domain": true
+    }
+  ]
+}

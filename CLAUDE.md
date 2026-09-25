@@ -2,63 +2,62 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## What this is
+
+curlycloud.dev: Raj Dholakia's interactive AI-Engineer resume, an AI clone of Raj that answers in his
+voice with citations (RAG), a terminal mode, an MCP server for visiting agents, a private studio, and an
+offline interview stack Raj uses to feed the clone. The 1984 Mac desktop lives on at `/mac`.
+
+**Read `CLONE-PLAN.md` first.** It holds the architecture, privacy model, contracts and module ownership.
+
 ## Commands
 
 ```bash
-bun run dev          # Start development server
-bun run build        # Build for production (Next.js)
-bun run cloud-build  # Build for Cloudflare (OpenNext)
-bun run preview      # Build and preview Cloudflare deployment locally
-bun run deploy       # Build and deploy to Cloudflare Pages
+bun run dev              # Next dev server with Cloudflare bindings (D1 local, Workers AI remote)
+bun run test             # Vitest (D1 emulated with node:sqlite)
+bun run typecheck        # tsc --noEmit
+bun run preview          # OpenNext build + wrangler dev (closest to production)
+bun run deploy           # Build and deploy to Cloudflare
+bun run db:migrate:local # Apply migrations/ to the local D1
+bun run cf-typegen       # Regenerate cloudflare-env.d.ts after editing wrangler.jsonc
+bun run clone:seed       # Load the public resume into the knowledge base
+bun run clone:ingest <file.json>   # Ingest answers exported from interview/raj-interview.html
+bun run clone:persona    # Rebuild the distilled persona after a batch of answers
+bun run clone:eval       # Retrieval + answer evals
 ```
 
-### Dev server is always running
-Assume `bun run dev` is already running in another terminal. Do **not** start it yourself. If you need to verify changes, ask the user to check in the browser, or use `bunx tsc --noEmit` for a type-only check.
+### Dev server is usually running
+Raj keeps `bun run dev` running in another terminal. Don't start a second one on port 3000. For an
+isolated end-to-end check use `bun run preview` on another port, and stop it when done.
 
-## Architecture
+## Layout
 
-This is a minimal "coming soon" portfolio site themed after **Mac OS System 1 (1984)**. It has a single page with two states:
+- `app/` — routes. `page.tsx` is the resume site, `terminal/`, `studio/`, `mac/`, `api/` (chat, fit, mcp, admin, auth).
+- `lib/` — server and shared modules: `rag/`, `llm/`, `mcp/`, `auth/`, `security/`, `db/`, `shell/`, `client/`.
+- `content/` — public data: `resume.ts` (single source for site, terminal, MCP, public corpus), `topics.ts`, `questions/`.
+- `interview/raj-interview.html` — standalone interview stack. Answers export to `private/` (gitignored).
+- `migrations/` — D1 schema. `test/helpers/d1.ts` runs the same SQL in tests.
 
-1. **Boot Sequence** — CRT flicker → Happy Mac icon on dithered gray background with startup sound. Stored in `sessionStorage` so it only plays once per session.
-2. **Welcome Screen** — "Welcome to Macintosh." dialog on a dithered gray desktop background with a decorative menu bar.
+## Privacy rules (don't break these)
 
-### Key Files
-- `app/page.tsx` — Client component with `BootScreen` and `WelcomeScreen` components
-- `app/global.css` — Mac OS 1984 theme (Chicago font, crosshatch pattern, dialog/menu styles)
-- `app/layout.tsx` — Minimal root layout with JetBrains Mono font
-- `app/lib/use-reduced-motion.ts` — Accessibility hook for animation preferences
-- `app/not-found.tsx` — Mac-style "system error" 404 page
+- Raj's interview answers, notes and corrections are private. They live only in D1 and `private/`.
+  Never commit them, never put them in client bundles, never return raw private text from a public route.
+- Public routes return generated answers plus citation labels. Snippets only for public sources.
+- New routes under `/api/admin` must call `requireAdmin` first.
 
-### Content Archive
-All previous site content (projects, blog posts, timeline, skills) is preserved in `CONTENT-ARCHIVE.md` at the project root.
+## Code style
 
-### Implementation Plan
-The full desktop experience implementation plan is in `DESKTOP-PLAN.md` at the project root. Reference this file when creating plans, working on implementation, or briefing subagents. It contains all design decisions, architecture details, git/PR strategy, subagent contracts, and a progress tracker.
+- Collocate: Tailwind classes inline; `app/global.css` holds only design tokens (`@theme`), base styles and the scoped Mac theme.
+- Use the design tokens (`bg-paper`, `text-ink`, `text-forest`, `bg-term-bg`, `font-mono`) — no ad-hoc hex in components.
+- Explicit return types on server functions and route helpers.
+- Raw SQL through `lib/db` helpers; no ORM.
+- Hooks live in `app/lib/`.
 
-## Code Style
+## Traps
 
-### Collocate Everything
-Keep styles, logic, and UI together. Uses Tailwind CSS for utility classes and inline `style` attributes for Mac OS theme values.
-
-### No Separate CSS Files
-The only CSS file is `app/global.css` which defines the Mac OS 1984 theme variables, crosshatch pattern, and shared styles (dialog, menu bar). Don't add component-specific CSS there.
-
-## Common Mistakes & Traps
-
-### Tailwind v4 Alpha — No Config File
-This project uses **Tailwind CSS v4 alpha** with `@tailwindcss/postcss`. There is **no `tailwind.config.ts`**. Do not create one. The CSS uses `@import 'tailwindcss'`.
-
-### Mac OS 1984 Theme — Single Theme, No Switching
-There is only one theme. CSS variables use standard hex values (not RGB triplets). There are no `data-theme` attributes, no theme switcher, no localStorage theme state.
-
-### Chicago Bitmap Font
-The site uses ChicagoFLF (`public/fonts/ChicagoFLF.woff`) for the Mac OS look. `--font-chicago` falls back to VT323 then monospace. Anti-aliasing is disabled (`-webkit-font-smoothing: none`) to preserve the bitmap aesthetic.
-
-### No Test Framework
-There are no tests, no test runner, no test dependencies. Do not assume you can validate changes with automated tests.
-
-### TypeScript Is `strict: false` with `strictNullChecks: true`
-This unusual combo means no `noImplicitAny`, no strict property initialization, but null checks are enforced.
-
-### Hooks Live in `app/lib/`
-Custom hooks live in `app/lib/`, not `app/hooks/`.
+- **TypeScript is `strict: false` + `strictNullChecks: true`.** `const xs = []` infers `never[]` — annotate empty arrays.
+- **Tailwind v4 (stable), no config file.** Tokens live in `@theme` in `app/global.css`.
+- **Workers AI is always remote**, even in dev. It needs `wrangler login` and costs neurons.
+- **`database_id` in wrangler.jsonc is a placeholder** until `wrangler d1 create raj-clone` is run for production.
+- **Bindings in route handlers** come from `getAppEnv()` (`lib/env.ts`), not `process.env`.
+- **Mac theme is scoped** to `.mac-root` (set by `app/mac/layout.tsx`). Don't style `body` for it.
