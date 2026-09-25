@@ -1,0 +1,176 @@
+import type { Question } from './types'
+
+export const CONFLICT: Question[] = [
+  {
+    id: 'conflict-001',
+    topic: 'conflict',
+    type: 'scenario',
+    depth: 2,
+    prompt:
+      'A senior engineer with ten more years than you blocks your PR in review with "this is not how we do things here", no further detail. The feature is due tomorrow. What do you do in the next hour?',
+    hint: 'Walk through your actual first message to them.',
+    followUps: [
+      'What if they were right and you only realised afterwards?',
+      'When do you escalate, and to whom?',
+      'Has a version of this actually happened to you? How did it go?',
+    ],
+    why: 'How he handles hierarchy and vague pushback under time pressure.',
+  },
+  {
+    id: 'conflict-002',
+    topic: 'conflict',
+    type: 'this-or-that',
+    depth: 1,
+    prompt: 'A colleague says something in a team meeting that you think is flat-out wrong. Your instinct?',
+    options: ['Say so in the meeting', 'Raise it one-on-one after'],
+    hint: 'Answer with what you actually did the last time, not what you would advise.',
+    followUps: [
+      'Does it change if the person is your manager, or a client?',
+      'When have you regretted waiting, or regretted speaking up?',
+    ],
+    why: 'His default for public versus private disagreement.',
+  },
+  {
+    id: 'conflict-003',
+    topic: 'conflict',
+    type: 'scale',
+    depth: 1,
+    prompt: 'How long is your fuse at work?',
+    scale: { min: 1, max: 5, minLabel: 'Short, and people can tell', maxLabel: 'Very long, maybe too long' },
+    hint: 'Rate yourself the way your teammates would, not the way you would like to be.',
+    followUps: [
+      "What's the fastest way for someone to burn through it?",
+      'What does it look like from the outside when it finally runs out?',
+    ],
+    why: 'What tests his patience and how visible his frustration is to others.',
+  },
+  {
+    id: 'conflict-004',
+    topic: 'conflict',
+    type: 'this-or-that',
+    depth: 1,
+    prompt: 'A PM hands you requirements that are genuinely ambiguous, and they are in back-to-back meetings all week. Your default move?',
+    options: ['Build a rough cut and show it', 'Pin them down before building'],
+    hint: 'Think of the last fuzzy spec you were handed.',
+    followUps: [
+      'When has your default backfired?',
+      'How do you push back on a spec without making the PM feel attacked?',
+      'You have been a Product Lead yourself. What do you wish engineers had asked you more often?',
+    ],
+    why: 'How he handles ambiguous requirements with product partners, and whether he leans towards action or clarification.',
+  },
+  {
+    id: 'conflict-005',
+    topic: 'conflict',
+    type: 'open',
+    depth: 2,
+    prompt: "What's the most useful piece of feedback you've ever received that stung at the time?",
+    hint: 'Roughly who said it, roughly what they said, and what you changed afterwards.',
+    followUps: [
+      'What was your first reaction in the moment, honestly?',
+      'Is there feedback you have heard more than once and still not acted on?',
+    ],
+    why: 'How he receives criticism and whether he turns it into change.',
+  },
+  {
+    id: 'conflict-006',
+    topic: 'conflict',
+    type: 'scenario',
+    depth: 2,
+    prompt:
+      "In a demo to leadership, a teammate presents the retrieval fix you spent two weeks on as 'something we figured out', and the VP thanks them by name. You're in the room. What do you do, there and afterwards?",
+    hint: 'Separate what you do in the room from what you do later that day.',
+    followUps: [
+      'Does anything change if they are a junior engineer rather than a peer?',
+      'How much does credit matter to you, honestly?',
+      'Could you have been on the other side of this without noticing?',
+    ],
+    why: 'How he handles credit, fairness and ego on a team.',
+  },
+  {
+    id: 'conflict-007',
+    topic: 'conflict',
+    type: 'scenario',
+    depth: 2,
+    prompt:
+      'Say a Create Club client, two weeks before launch, asks for a feature that would push the date by three weeks. Their CEO has already promised it to a partner, and the contract is fixed-price. What do you say on the call?',
+    hint: 'Write out your first two sentences.',
+    followUps: [
+      'What would make you say yes and absorb the cost?',
+      'How did you actually handle scope creep at Create Club, as opposed to in theory?',
+      'What do you put in writing at the start of an engagement to make this conversation easier?',
+    ],
+    why: 'How he negotiates scope and pushback with paying clients without damaging the relationship.',
+  },
+  {
+    id: 'conflict-008',
+    topic: 'conflict',
+    type: 'story',
+    depth: 2,
+    prompt:
+      'Your LangChain recommendations proof of concept at Pinhous worked, and you still recommended against shipping it on cost. Tell me about the conversation where you made that recommendation.',
+    hint: 'Situation · what you said and showed · how it landed · what you would do differently.',
+    followUps: [
+      'Who most wanted it shipped, and what was their best argument?',
+      'How do you make a cost argument land with people who have just seen a working demo?',
+      'How do you shelve something that works without deflating the people who built it?',
+    ],
+    why: 'How he delivers unwelcome recommendations to decision-makers and holds a position against a working demo.',
+  },
+  {
+    id: 'conflict-009',
+    topic: 'conflict',
+    type: 'open',
+    depth: 2,
+    prompt: 'When a conversation at work gets heated, what does repair look like for you afterwards?',
+    hint: 'Think of a real one: the next message you sent, or the conversation you had the next day.',
+    followUps: [
+      'Who usually makes the first move, you or them?',
+      'Is there a working relationship you never fully repaired? What would you do now?',
+    ],
+    why: 'How he recovers relationships after conflict and whether he takes the first step.',
+  },
+  {
+    id: 'conflict-010',
+    topic: 'conflict',
+    type: 'open',
+    depth: 3,
+    prompt:
+      'At Create Club you costed an IMAP MCP server for a client and recommended stopping at the prototype, which may also have meant less paid work for your own studio. How did you frame that recommendation to the client?',
+    hint: 'What you showed them, the numbers you used, and the words you chose.',
+    followUps: [
+      'Did the conflict of interest cross your mind, and did you name it out loud?',
+      'How did the client react, and did it change the relationship?',
+      'Would you make the same call if the studio had badly needed the revenue that month?',
+    ],
+    why: "Whether he puts the client's interest ahead of his own revenue, and how he says no to a paying customer.",
+  },
+  {
+    id: 'conflict-011',
+    topic: 'conflict',
+    type: 'story',
+    depth: 3,
+    prompt: 'Tell me about the hardest piece of feedback you have had to give someone you worked with.',
+    hint: 'Situation · what you said, as close to word for word as you can · how they took it · what you would change.',
+    followUps: [
+      'How long did you wait before giving it, and was that too long?',
+      'What did your working relationship look like a month later?',
+      'How do you give hard feedback upward, to someone more senior than you?',
+    ],
+    why: 'How he gives difficult feedback: timing, directness and care.',
+  },
+  {
+    id: 'conflict-012',
+    topic: 'conflict',
+    type: 'open',
+    depth: 3,
+    prompt:
+      'Co-founding means nobody above you breaks the tie. When the founders at Create Club disagreed on something that mattered (if you ever did), how did it actually get resolved?',
+    hint: 'Pick one real disagreement: what it was about, who moved, and why.',
+    followUps: [
+      'What did co-founding teach you about your own conflict style?',
+      'What would you agree on in writing with a co-founder before starting next time?',
+    ],
+    why: 'How he handles conflict between equals, where nobody has the authority to settle it.',
+  },
+]
