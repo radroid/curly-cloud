@@ -69,5 +69,6 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 - **`interview/raj-interview.html` is generated.** Edit `content/questions/` or `interview/src/`, then rebuild; a test fails if the committed HTML is stale. Shared export/XP logic lives in `lib/interview/core.ts` (compiled into the page).
 - **Stale `.next/types` after merging routes.** With a dev server running, `tsc` can report unknown routes until the dev server compiles them. Hit the route once or delete `.next/types`.
 - **Worker size.** The OpenNext bundle is ~2.3 MiB gzipped (free plan limit 3 MiB). Check `bunx wrangler deploy --dry-run` before adding heavy dependencies.
+- **Replayed assistant turns need their `sig`.** The clone drops assistant turns without the signature from that answer's `done` event (`lib/rag/turns.ts`), so a test or eval history with plain assistant turns loses them silently. Sign admin-trusted histories with `signTurns`.
 - **Rerank is a vote, not a verdict.** `bge-reranker-base` scores long chunks near zero; it's fused into RRF with BM25 and dense. Keep it that way unless evals say otherwise.
 - **Mac theme is scoped** to `.mac-root` (set by `app/mac/layout.tsx`). Don't style `body` for it.

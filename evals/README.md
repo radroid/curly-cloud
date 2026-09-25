@@ -74,3 +74,31 @@ Add `?rerank=0` to the route (or `--no-rerank` to the script) to score without t
 
 Retrieval scores are computed at the source level, so a relevant source counts once however many
 of its chunks were retrieved.
+
+## Privacy checks (what the evals can't show)
+
+The golden cases only cover the public resume, so the private-text defences are tested in unit
+tests with clearly fake private answers (`lib/rag/testing.ts`): `lib/rag/guard.test.ts`,
+`lib/rag/injection.test.ts`, `lib/rag/turns.test.ts`, and the privacy cases in
+`lib/rag/answer.test.ts` and `lib/rag/fit-persona.test.ts`. The layers:
+
+1. **Input check** (`lib/rag/injection.ts`) on every user turn in the conversation (earlier turns
+   and the MCP `context` turn too) and on every fit field. Requests to print, quote, encode,
+   translate or spell out the clone's prompt, persona, notes or sources get a fixed reply (chat) or a
+   `bad_request` (fit) without a model call.
+2. **Signed assistant turns** (`lib/rag/turns.ts`). The `done` event carries `sig`; clients send it
+   back on that assistant turn. Replayed assistant turns without a valid signature are dropped, so a
+   visitor can't invent a turn where the clone agreed to leak.
+3. **Output guard** (`lib/rag/guard.ts`), on the streamed answer and on all fit fields joined in a
+   fixed order. Both sides are folded first (Unicode compatibility forms, zero-width characters,
+   accents, Cyrillic/Greek look-alikes, leetspeak). It trips on our prompt delimiters, 15 words in a
+   row (forwards or reversed), a gapped alignment of 12 words that ignores filler, 70 letters in a
+   row with everything but letters removed (plain or ROT13), and base64/hex runs. Text inside a
+   detected run is held back, so none of it reaches the client.
+
+**Not caught, by design:** translation into another language, and close paraphrase with synonyms.
+Text matching can't recognise those cheaply; the input check refuses requests that ask for them
+and the system prompt tells the model not to comply, but an answer that translates a private note
+on its own would pass the output guard. Also below the thresholds: fewer than 12 aligned words (or
+~72 letters) per run, chunks separated by several unrelated words, encodings with separators, and
+custom ciphers. See the header of `lib/rag/guard.ts` for the exact bounds.
