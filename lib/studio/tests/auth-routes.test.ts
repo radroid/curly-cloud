@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth'
-import { ADMIN_PASSWORD, ORIGIN, SESSION_SECRET, json, resetEnv } from '@/lib/studio/tests/harness'
+import { SESSION_COOKIE, getAdminAuth, verifySessionToken } from '@/lib/auth'
+import { ADMIN_PASSWORD, ORIGIN, SESSION_SECRET, json, resetEnv, state } from '@/lib/studio/tests/harness'
 
 vi.mock('@/lib/env', async (importOriginal) => {
   const { state } = await import('@/lib/studio/tests/harness')
@@ -67,6 +67,31 @@ describe('POST /api/auth/login', () => {
     expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.2' }))).status).toBe(200)
   })
 
+  it('groups IPv6 clients by /64, so rotating addresses does not reset the limit', async () => {
+    for (let i = 0; i < 10; i++) {
+      expect((await login(loginRequest({ password: 'guess' + i }, { 'x-real-ip': `2001:db8:5:6::${i + 1}` }))).status).toBe(401)
+    }
+    expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '2001:db8:5:6:abcd::1' }))).status).toBe(429)
+  })
+
+  it('caps attempts across all clients at 30 per hour', async () => {
+    // 30 attempts from 30 different /64s: each is under its own limit.
+    for (let i = 0; i < 30; i++) {
+      expect((await login(loginRequest({ password: 'guess' + i }, { 'x-real-ip': `2001:db8:${i + 1}::1` }))).status).toBe(401)
+    }
+    const blocked = await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '2001:db8:ffff::1' }))
+    expect(blocked.status).toBe(429)
+    expect(blocked.headers.get('set-cookie')).toBeNull()
+    expect(((await blocked.json()) as { error: { message: string } }).error.message).toMatch(/sign-in attempts/)
+  })
+
+  it('a client that is already locked out does not use up the global allowance', async () => {
+    for (let i = 0; i < 25; i++) await login(loginRequest({ password: 'guess' + i }))
+    const row = await state.env.DB.prepare("SELECT count FROM rate_limits WHERE bucket = 'login:all'").first<{ count: number }>()
+    expect(row?.count).toBe(10)
+    expect((await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.9' }))).status).toBe(200)
+  })
+
   it('rejects cross-site posts before checking anything', async () => {
     const crossSite = await login(loginRequest({ password: ADMIN_PASSWORD }, { 'sec-fetch-site': 'cross-site' }))
     expect(crossSite.status).toBe(403)
@@ -98,5 +123,40 @@ describe('POST /api/auth/logout', () => {
   it('rejects cross-site logout', async () => {
     const res = await logout(new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers: { 'sec-fetch-site': 'cross-site' } }))
     expect(res.status).toBe(403)
+  })
+
+  it('logs out everywhere: a copied cookie stops working, a fresh login works', async () => {
+    const first = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    const second = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.2' })))
+    const adminReq = (token: string | null) => new Request(`${ORIGIN}/api/admin/stats`, { headers: { cookie: `${SESSION_COOKIE}=${token}` } })
+    expect(await getAdminAuth(adminReq(first), state.env)).toEqual({ via: 'session' })
+    expect(await getAdminAuth(adminReq(second), state.env)).toEqual({ via: 'session' })
+
+    await new Promise((r) => setTimeout(r, 2))
+    const res = await logout(
+      new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers: { 'sec-fetch-site': 'same-origin', cookie: `${SESSION_COOKIE}=${first}` } }),
+    )
+    expect(res.status).toBe(200)
+    // Both the logged-out cookie and the one on "another device" are dead.
+    expect(await getAdminAuth(adminReq(first), state.env)).toBeNull()
+    expect(await getAdminAuth(adminReq(second), state.env)).toBeNull()
+
+    await new Promise((r) => setTimeout(r, 2))
+    const fresh = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    expect(await getAdminAuth(adminReq(fresh), state.env)).toEqual({ via: 'session' })
+  })
+
+  it('without a valid session, logout only clears the cookie (strangers cannot sign the owner out)', async () => {
+    const owner = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    await new Promise((r) => setTimeout(r, 2))
+    for (const cookie of [undefined, `${SESSION_COOKIE}=forged.token`]) {
+      const headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' }
+      if (cookie) headers.cookie = cookie
+      const res = await logout(new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers }))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('set-cookie')).toContain('Max-Age=0')
+    }
+    const adminReq = new Request(`${ORIGIN}/api/admin/stats`, { headers: { cookie: `${SESSION_COOKIE}=${owner}` } })
+    expect(await getAdminAuth(adminReq, state.env)).toEqual({ via: 'session' })
   })
 })

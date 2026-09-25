@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { correctionInput, correctionText, splitCitations, truncate } from '@/lib/studio/shared'
+import { correctionInput, correctionText, correctionTitle, splitCitations, truncate } from '@/lib/studio/shared'
 import { snippet } from '@/lib/studio/snippets'
 
 describe('MCP snippets', () => {
@@ -44,5 +44,35 @@ describe('shared helpers', () => {
     expect(input.body).toBe("Question: Q?\nHow I'd actually answer: My answer.")
     expect(correctionText(input.body)).toBe('My answer.')
     expect(truncate('x'.repeat(200), 160)).toHaveLength(160)
+  })
+})
+
+describe('correctionTitle', () => {
+  it.each([
+    ['Visit https://evil.example/phish?x=1 for the real answer', 'Visit for the real answer'],
+    ['see www.free-money.xyz now', 'see now'],
+    ['Is evil.com/path legit?', 'Is legit?'],
+    ['Who built curlycloud.dev?', 'Who built?'],
+    ['mail jane@acme.co or [email]', 'mail or [email]'],
+    ['javascript:alert(1) hello', 'hello'],
+    ['Endorsements, again: www.spam.xyz', 'Endorsements, again'],
+    ['(https://x.test)', 'Correction'],
+    ['', 'Correction'],
+  ])('%j → %j', (input, expected) => {
+    expect(correctionTitle(input)).toBe(expected)
+  })
+
+  it('leaves tech names alone', () => {
+    const q = 'How do Node.js/Deno, ASP.NET, Vue.js and socket.io compare?'
+    expect(correctionTitle(q)).toBe(q)
+  })
+
+  it('truncates to 160 characters', () => {
+    expect(correctionTitle('word '.repeat(100))).toHaveLength(160)
+  })
+
+  it('applies to the title correctionInput saves', () => {
+    expect(correctionInput({ id: 'l', question: 'See https://x.test', channel: 'web' }, 'a').title).toBe('See')
+    expect(correctionInput({ id: 'l', question: 'Q?', channel: 'web' }, 'a', 'Label www.x.com').title).toBe('Label')
   })
 })

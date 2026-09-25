@@ -4,21 +4,27 @@ import { requireAdmin } from '@/lib/auth'
 import { getAppEnv, type AppEnv } from '@/lib/env'
 import { RagError } from '@/lib/rag/answer'
 import { IngestLimitError } from '@/lib/rag/ingest'
-import { errorResponse, type ApiErrorCode } from '@/lib/security'
+import { errorResponse, isJsonContentType, readCapped, type ApiErrorCode } from '@/lib/security'
 
 export type BodyResult = { ok: true; value: unknown } | { ok: false; response: Response }
 
-/** Read and parse a JSON body with a size cap. Never throws. */
+/**
+ * Read and parse a JSON body. Never throws. Requires `Content-Type: application/json` (415
+ * otherwise) and reads at most `maxBytes` from the stream whatever Content-Length says (413).
+ */
 export async function readJsonBody(request: Request, maxBytes: number): Promise<BodyResult> {
-  const declared = Number(request.headers.get('content-length') ?? 0)
-  if (declared > maxBytes) return { ok: false, response: errorResponse('bad_request', 'Request body is too large.') }
-  let text: string
+  if (!isJsonContentType(request)) {
+    return { ok: false, response: errorResponse('unsupported_media_type', 'Send the body as JSON with Content-Type: application/json.') }
+  }
+  let text: string | null
   try {
-    text = await request.text()
+    text = await readCapped(request, maxBytes)
   } catch {
     return { ok: false, response: errorResponse('bad_request', 'Could not read the request body.') }
   }
-  if (text.length > maxBytes) return { ok: false, response: errorResponse('bad_request', 'Request body is too large.') }
+  if (text === null) {
+    return { ok: false, response: errorResponse('payload_too_large', `Request body is larger than ${Math.round(maxBytes / 1024)} KB.`) }
+  }
   try {
     return { ok: true, value: text ? JSON.parse(text) : {} }
   } catch {

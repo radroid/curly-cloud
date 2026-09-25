@@ -5,7 +5,7 @@ import { ingestSources } from '@/lib/rag'
 import { errorResponse, jsonResponse } from '@/lib/security'
 import { decodeId, parseBody, ragFailure } from '@/lib/studio/http'
 import { getLog, getLogDetail, linkCorrection, setLogFlagged } from '@/lib/studio/logs'
-import { correctionInput } from '@/lib/studio/shared'
+import { CORRECTION_TITLE_MAX, correctionInput } from '@/lib/studio/shared'
 import type { CorrectionResult } from '@/lib/studio/types'
 
 export const dynamic = 'force-dynamic'
@@ -13,7 +13,11 @@ export const dynamic = 'force-dynamic'
 type Ctx = { params: Promise<{ id: string }> }
 
 const Flag = z.object({ flagged: z.boolean() })
-const Correction = z.object({ correction: z.string().trim().min(1).max(8_000) })
+const Correction = z.object({
+  correction: z.string().trim().min(1).max(8_000),
+  /** The public citation label. Defaults to the visitor's question; URLs are stripped either way. */
+  title: z.string().trim().max(CORRECTION_TITLE_MAX).nullish(),
+})
 
 /** GET → LogDetail: the full row plus the titles of the numbered and retrieved sources. */
 export async function GET(request: Request, ctx: Ctx): Promise<Response> {
@@ -38,8 +42,9 @@ export async function PATCH(request: Request, ctx: Ctx): Promise<Response> {
 }
 
 /**
- * POST { correction } → CorrectionResult. Writes (or overwrites) the private source
- * `correction:<logId>` in Raj's words, links it to the log and clears the flag.
+ * POST { correction, title? } → CorrectionResult. Writes (or overwrites) the private source
+ * `correction:<logId>` in Raj's words, links it to the log and clears the flag. The title is
+ * shown to visitors as a citation label, so it never carries URLs or emails.
  */
 export async function POST(request: Request, ctx: Ctx): Promise<Response> {
   const env = await getAppEnv()
@@ -51,7 +56,7 @@ export async function POST(request: Request, ctx: Ctx): Promise<Response> {
   const log = await getLog(env.DB, id)
   if (!log) return errorResponse('not_found', `No log ${id}.`)
 
-  const input = correctionInput(log, body.data.correction)
+  const input = correctionInput(log, body.data.correction, body.data.title)
   let result: CorrectionResult['result']
   try {
     result = await ingestSources(env, [input])

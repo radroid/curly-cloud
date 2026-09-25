@@ -1,4 +1,4 @@
-import { all, first, newId, now, run } from '@/lib/db'
+import { all, first, getMeta, newId, now, run, setMeta } from '@/lib/db'
 import type { AppEnv } from '@/lib/env'
 import { fromBase64Url, hmacSha256, randomToken, sha256Hex, timingSafeEqual, toBase64Url } from '@/lib/security/crypto'
 import { errorResponse, isSameOrigin } from '@/lib/security'
@@ -7,33 +7,80 @@ import { errorResponse, isSameOrigin } from '@/lib/security'
 
 export const SESSION_COOKIE = 'studio_session'
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7
+/** meta key: sessions issued at or before this time (epoch ms) are revoked. Logout sets it. */
+export const SESSION_EPOCH_KEY = 'session_epoch'
 
-interface SessionPayload {
+/**
+ * v2 carries the issue time in milliseconds so logout can revoke everything issued before it,
+ * even a login a moment earlier. Tokens without `v: 2` (the old seconds format) are rejected,
+ * which signs the owner out once after deploy.
+ */
+export interface SessionPayload {
+  v: 2
   sub: 'owner'
+  /** Issued at, epoch ms. */
   iat: number
+  /** Expires at, epoch ms. */
   exp: number
 }
 
-/** `<base64url(payload)>.<base64url(hmac)>` — stateless, signed with SESSION_SECRET. */
+/** `<base64url(payload)>.<base64url(hmac)>`, signed with SESSION_SECRET. */
 export async function createSessionToken(secret: string, ttlSeconds = SESSION_TTL_SECONDS, at = Date.now()): Promise<string> {
-  const payload: SessionPayload = { sub: 'owner', iat: Math.floor(at / 1000), exp: Math.floor(at / 1000) + ttlSeconds }
+  const payload: SessionPayload = { v: 2, sub: 'owner', iat: at, exp: at + ttlSeconds * 1000 }
   const body = toBase64Url(new TextEncoder().encode(JSON.stringify(payload)))
   const sig = toBase64Url(await hmacSha256(secret, body))
   return `${body}.${sig}`
 }
 
-export async function verifySessionToken(secret: string, token: string | null | undefined, at = Date.now()): Promise<boolean> {
-  if (!token || !secret) return false
-  const [body, sig] = token.split('.')
-  if (!body || !sig) return false
+/** The signed payload of an unexpired v2 token, or null. Doesn't check revocation. */
+export async function readSessionToken(secret: string, token: string | null | undefined, at = Date.now()): Promise<SessionPayload | null> {
+  if (!token || !secret) return null
+  const [body, sig, extra] = token.split('.')
+  if (!body || !sig || extra !== undefined) return null
   const expected = toBase64Url(await hmacSha256(secret, body))
-  if (!(await timingSafeEqual(sig, expected))) return false
+  if (!(await timingSafeEqual(sig, expected))) return null
   try {
-    const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(body))) as SessionPayload
-    return payload.sub === 'owner' && payload.exp * 1000 > at
+    const p = JSON.parse(new TextDecoder().decode(fromBase64Url(body))) as Partial<SessionPayload> | null
+    if (!p || p.v !== 2 || p.sub !== 'owner' || typeof p.iat !== 'number' || typeof p.exp !== 'number') return null
+    return p.exp > at ? (p as SessionPayload) : null
   } catch {
-    return false
+    return null
   }
+}
+
+/**
+ * Signature and expiry only. `notBefore` (epoch ms) rejects tokens issued at or before it; pass
+ * the session epoch, or use verifySession, which reads it from D1.
+ */
+export async function verifySessionToken(
+  secret: string,
+  token: string | null | undefined,
+  at = Date.now(),
+  notBefore = 0,
+): Promise<boolean> {
+  const payload = await readSessionToken(secret, token, at)
+  return !!payload && payload.iat > notBefore
+}
+
+export async function getSessionEpoch(db: D1Database): Promise<number> {
+  const n = Number(await getMeta(db, SESSION_EPOCH_KEY))
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
+/** "Log out everywhere": every session issued up to `at` stops working. */
+export async function revokeAllSessions(db: D1Database, at = Date.now()): Promise<void> {
+  await setMeta(db, SESSION_EPOCH_KEY, String(at))
+}
+
+/** A valid, unexpired, unrevoked studio session token. */
+export async function verifySession(
+  env: Pick<AppEnv, 'SESSION_SECRET' | 'DB'>,
+  token: string | null | undefined,
+  at = Date.now(),
+): Promise<boolean> {
+  const payload = await readSessionToken(env.SESSION_SECRET, token, at)
+  if (!payload) return false
+  return payload.iat > (await getSessionEpoch(env.DB))
 }
 
 export function sessionCookie(token: string, secure: boolean): string {
@@ -72,14 +119,17 @@ export async function checkPassword(env: Pick<AppEnv, 'ADMIN_PASSWORD'>, candida
 
 export type AdminAuth = { via: 'token' } | { via: 'session' }
 
-/** Bearer ADMIN_TOKEN (CLI) or a valid studio session cookie. */
-export async function getAdminAuth(request: Request, env: Pick<AppEnv, 'ADMIN_TOKEN' | 'SESSION_SECRET'>): Promise<AdminAuth | null> {
+/** What admin auth needs from the env: DB holds the session epoch that logout bumps. */
+export type AdminAuthEnv = Pick<AppEnv, 'ADMIN_TOKEN' | 'SESSION_SECRET' | 'DB'>
+
+/** Bearer ADMIN_TOKEN (CLI) or a valid, unrevoked studio session cookie. */
+export async function getAdminAuth(request: Request, env: AdminAuthEnv): Promise<AdminAuth | null> {
   const header = request.headers.get('authorization')
   if (header?.startsWith('Bearer ') && env.ADMIN_TOKEN) {
     if (await timingSafeEqual(header.slice(7).trim(), env.ADMIN_TOKEN)) return { via: 'token' }
     return null
   }
-  if (await verifySessionToken(env.SESSION_SECRET, readCookie(request, SESSION_COOKIE))) return { via: 'session' }
+  if (await verifySession(env, readCookie(request, SESSION_COOKIE))) return { via: 'session' }
   return null
 }
 
@@ -88,7 +138,7 @@ export async function getAdminAuth(request: Request, env: Pick<AppEnv, 'ADMIN_TO
  *   const denied = await requireAdmin(request, env); if (denied) return denied
  * Cookie-authenticated mutations must also be same-origin (CSRF).
  */
-export async function requireAdmin(request: Request, env: Pick<AppEnv, 'ADMIN_TOKEN' | 'SESSION_SECRET'>): Promise<Response | null> {
+export async function requireAdmin(request: Request, env: AdminAuthEnv): Promise<Response | null> {
   const auth = await getAdminAuth(request, env)
   if (!auth) return errorResponse('unauthorized', 'Sign in to the studio or pass the admin token.')
   if (auth.via === 'session' && request.method !== 'GET' && request.method !== 'HEAD' && !isSameOrigin(request)) {

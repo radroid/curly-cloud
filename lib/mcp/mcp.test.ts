@@ -415,7 +415,7 @@ describe('assess_fit', () => {
       clientId: expect.any(String),
       keyId: null,
     })
-    expect(rateRows().map((r) => r.bucket)).toEqual([expect.stringMatching(/^fit:/), expect.stringMatching(/^mcp:a:/)])
+    expect(rateRows().map((r) => r.bucket)).toEqual(['fit:all', expect.stringMatching(/^fit:day:/), expect.stringMatching(/^mcp:a:/)])
   })
 
   it('clamps out-of-range model output so it still matches the schema', async () => {

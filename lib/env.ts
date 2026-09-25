@@ -26,6 +26,8 @@ export interface Limits {
   chatPerHour: number
   chatPerDay: number
   fitPerDay: number
+  /** assess_fit calls per day across all clients and channels (bucket `fit:all`). */
+  fitGlobalPerDay: number
   mcpAnonPerDay: number
   dailyTokenBudget: number
   mcpRequireKey: boolean
@@ -34,11 +36,14 @@ export interface Limits {
   maxTurns: number
 }
 
-export function getLimits(env: Pick<AppEnv, 'CHAT_PER_HOUR' | 'CHAT_PER_DAY' | 'FIT_PER_DAY' | 'MCP_ANON_PER_DAY' | 'DAILY_TOKEN_BUDGET' | 'MCP_REQUIRE_KEY'>): Limits {
+export function getLimits(
+  env: Pick<AppEnv, 'CHAT_PER_HOUR' | 'CHAT_PER_DAY' | 'FIT_PER_DAY' | 'FIT_GLOBAL_PER_DAY' | 'MCP_ANON_PER_DAY' | 'DAILY_TOKEN_BUDGET' | 'MCP_REQUIRE_KEY'>,
+): Limits {
   return {
     chatPerHour: numVar(env.CHAT_PER_HOUR, 30),
     chatPerDay: numVar(env.CHAT_PER_DAY, 120),
     fitPerDay: numVar(env.FIT_PER_DAY, 10),
+    fitGlobalPerDay: numVar(env.FIT_GLOBAL_PER_DAY, 150),
     mcpAnonPerDay: numVar(env.MCP_ANON_PER_DAY, 40),
     dailyTokenBudget: numVar(env.DAILY_TOKEN_BUDGET, 3_000_000),
     mcpRequireKey: String(env.MCP_REQUIRE_KEY) === 'true',

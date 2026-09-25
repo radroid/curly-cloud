@@ -29,6 +29,8 @@
     "CHAT_PER_HOUR": "30",
     "CHAT_PER_DAY": "120",
     "FIT_PER_DAY": "10",
+    // assess_fit calls per day across every client and channel (web, terminal, MCP).
+    "FIT_GLOBAL_PER_DAY": "150",
     "MCP_ANON_PER_DAY": "40",
     "DAILY_TOKEN_BUDGET": "3000000",
     "MCP_REQUIRE_KEY": "false"

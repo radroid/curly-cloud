@@ -12,6 +12,7 @@ import {
   cx,
   Empty,
   Eyebrow,
+  Field,
   input,
   KindMark,
   Notice,
@@ -22,7 +23,19 @@ import {
   VisibilityMark,
 } from '@/app/studio/_components/ui'
 import { studio, type ApiFailure } from '@/lib/studio/api'
-import { CHANNELS, LOGS_PAGE_SIZE, correctionText, fmtDateTime, fmtMs, fmtNum, fmtScore, readableAnswer, truncate } from '@/lib/studio/shared'
+import {
+  CHANNELS,
+  CORRECTION_TITLE_MAX,
+  LOGS_PAGE_SIZE,
+  correctionText,
+  correctionTitle,
+  fmtDateTime,
+  fmtMs,
+  fmtNum,
+  fmtScore,
+  readableAnswer,
+  truncate,
+} from '@/lib/studio/shared'
 import type { Channel, CorrectionResult, LogDetail, LogItem, LogSourceRef, Page } from '@/lib/studio/types'
 
 const PAGE_SIZE = LOGS_PAGE_SIZE
@@ -376,6 +389,8 @@ function LogDetailView({ id, onChange }: { id: string; onChange: (item: LogItem)
 
 function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrected: (res: CorrectionResult) => void }) {
   const [text, setText] = useState('')
+  // The citation label visitors see. Starts as the question minus any URLs or emails.
+  const [title, setTitle] = useState(() => correctionTitle(detail.question))
   const [loadingExisting, setLoadingExisting] = useState(!!detail.correctionSourceId)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<ApiFailure | null>(null)
@@ -385,7 +400,10 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
   useEffect(() => {
     if (!detail.correctionSourceId) return
     studio.sources.get(detail.correctionSourceId).then((res) => {
-      if (res.ok) setText(correctionText(res.data.body))
+      if (res.ok) {
+        setText(correctionText(res.data.body))
+        setTitle(res.data.title)
+      }
       setLoadingExisting(false)
     })
   }, [detail.correctionSourceId])
@@ -396,9 +414,11 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
     setBusy(true)
     setError(null)
     setDone(null)
-    const res = await studio.logs.correct(detail.id, text.trim())
+    const res = await studio.logs.correct(detail.id, text.trim(), title.trim() || undefined)
     setBusy(false)
     if (res.ok) {
+      // Show the label exactly as saved (the server applies the same cleanup).
+      setTitle(correctionTitle(title.trim() ? title : detail.question))
       setDone(res.data)
       onCorrected(res.data)
     } else setError(res)
@@ -417,6 +437,18 @@ function CorrectionForm({ detail, onCorrected }: { detail: LogDetail; onCorrecte
       <p className="mt-1 text-sm text-muted">
         Write how you’d actually answer. It’s saved as a private source the clone retrieves next time, and the flag clears.
       </p>
+      <div className="mt-3">
+        <Field label="Title" htmlFor={`correction-title-${detail.id}`} hint="Shown to visitors as the citation label. Links and emails are removed.">
+          <input
+            id={`correction-title-${detail.id}`}
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            maxLength={CORRECTION_TITLE_MAX}
+            placeholder="What the question was about"
+            className={input}
+          />
+        </Field>
+      </div>
       <label htmlFor={`correction-${detail.id}`} className="sr-only">
         How you’d actually answer
       </label>

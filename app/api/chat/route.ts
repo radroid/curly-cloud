@@ -3,11 +3,12 @@ import { sseResponse } from '@/lib/client/sse'
 import { getAppEnv, getLimits, type Limits } from '@/lib/env'
 import { answerStream } from '@/lib/rag'
 import { errorFromUnknown, readJsonBody, zodMessage } from '@/lib/rag/http'
-import { clientIdFromRequest, errorResponse, rateLimitAll, rateLimitedResponse } from '@/lib/security'
+import { clientIdFromRequest, errorResponse, publicPostGuard, rateLimitAll, rateLimitedResponse } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
-const MAX_BODY_BYTES = 64_000
+/** 12 turns of ≤4,000 chars fit comfortably; anything bigger is abuse. */
+const MAX_BODY_BYTES = 64 * 1024
 const MAX_ASSISTANT_CHARS = 4000
 
 function chatSchema(limits: Limits) {
@@ -25,9 +26,14 @@ function chatSchema(limits: Limits) {
   })
 }
 
-/** Clone answer stream (SSE): `sources` → `delta`* → `done` | `error`. */
+/**
+ * Clone answer stream (SSE): `sources` → `delta`* → `done` | `error`.
+ * Browsers must call it same-origin with a JSON body (see publicPostGuard).
+ */
 export async function POST(request: Request): Promise<Response> {
   try {
+    const refused = publicPostGuard(request)
+    if (refused) return refused
     const env = await getAppEnv()
     const limits = getLimits(env)
     const body = await readJsonBody(request, MAX_BODY_BYTES)

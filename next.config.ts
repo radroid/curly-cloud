@@ -8,6 +8,10 @@ const securityHeaders = [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Permissions-Policy', value: 'camera=(), geolocation=(), microphone=(self)' },
+  // No includeSubDomains: other curlycloud.dev hosts may not all serve HTTPS.
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000' },
+  // No script-src: Next's inline bootstrap scripts would need per-request nonces (middleware + dynamic rendering).
+  { key: 'Content-Security-Policy', value: "frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'" },
 ]
 
 const nextConfig: NextConfig = {

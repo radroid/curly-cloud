@@ -1,18 +1,34 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 import { createTestD1 } from '@/test/helpers/d1'
 import {
   SESSION_COOKIE,
   createApiKey,
   createSessionToken,
   getAdminAuth,
+  getSessionEpoch,
   listApiKeys,
+  readSessionToken,
   requireAdmin,
+  revokeAllSessions,
   revokeApiKey,
   verifyApiKey,
+  verifySession,
   verifySessionToken,
 } from '@/lib/auth'
+import { hmacSha256, toBase64Url } from '@/lib/security/crypto'
 
-const env = { ADMIN_TOKEN: 'admin-token-123', SESSION_SECRET: 'session-secret-xyz' }
+const secrets = { ADMIN_TOKEN: 'admin-token-123', SESSION_SECRET: 'session-secret-xyz' }
+let env: typeof secrets & { DB: D1Database }
+
+beforeEach(() => {
+  env = { ...secrets, DB: createTestD1() }
+})
+
+/** A correctly signed token with an arbitrary payload (e.g. the pre-v2 seconds format). */
+async function signed(payload: unknown): Promise<string> {
+  const body = toBase64Url(new TextEncoder().encode(JSON.stringify(payload)))
+  return `${body}.${toBase64Url(await hmacSha256(secrets.SESSION_SECRET, body))}`
+}
 
 describe('session tokens', () => {
   it('verifies a fresh token and rejects tampering and expiry', async () => {
@@ -21,8 +37,58 @@ describe('session tokens', () => {
     expect(await verifySessionToken(env.SESSION_SECRET, token, at + 1000)).toBe(true)
     expect(await verifySessionToken('other-secret', token, at)).toBe(false)
     expect(await verifySessionToken(env.SESSION_SECRET, token + 'x', at)).toBe(false)
+    expect(await verifySessionToken(env.SESSION_SECRET, token + '.extra', at)).toBe(false)
     expect(await verifySessionToken(env.SESSION_SECRET, token, at + 61_000)).toBe(false)
     expect(await verifySessionToken(env.SESSION_SECRET, null, at)).toBe(false)
+  })
+
+  it('carries the issue time in milliseconds (v2)', async () => {
+    const at = Date.UTC(2026, 8, 25, 12, 0, 0, 123)
+    const payload = await readSessionToken(env.SESSION_SECRET, await createSessionToken(env.SESSION_SECRET, 60, at), at)
+    expect(payload).toEqual({ v: 2, sub: 'owner', iat: at, exp: at + 60_000 })
+  })
+
+  it('rejects old-format tokens (seconds, no version) even when correctly signed', async () => {
+    const at = Date.UTC(2026, 8, 25)
+    const old = await signed({ sub: 'owner', iat: Math.floor(at / 1000), exp: Math.floor(at / 1000) + 3600 })
+    expect(await verifySessionToken(env.SESSION_SECRET, old, at)).toBe(false)
+    expect(await verifySessionToken(env.SESSION_SECRET, await signed({ v: 2, sub: 'owner', exp: at + 1000 }), at)).toBe(false)
+    expect(await verifySessionToken(env.SESSION_SECRET, await signed({ v: 2, sub: 'guest', iat: at, exp: at + 1000 }), at)).toBe(false)
+  })
+
+  it('verifySessionToken honours notBefore', async () => {
+    const at = Date.UTC(2026, 8, 25)
+    const token = await createSessionToken(env.SESSION_SECRET, 60, at)
+    expect(await verifySessionToken(env.SESSION_SECRET, token, at + 1, at - 1)).toBe(true)
+    expect(await verifySessionToken(env.SESSION_SECRET, token, at + 1, at)).toBe(false)
+  })
+})
+
+describe('session revocation (log out everywhere)', () => {
+  it('revokes every session issued at or before the epoch, not later ones', async () => {
+    const t = Date.UTC(2026, 8, 25, 12)
+    const before = await createSessionToken(env.SESSION_SECRET, 3600, t - 5_000)
+    const same = await createSessionToken(env.SESSION_SECRET, 3600, t)
+    const after = await createSessionToken(env.SESSION_SECRET, 3600, t + 1)
+    expect(await getSessionEpoch(env.DB)).toBe(0)
+    expect(await verifySession(env, before, t)).toBe(true)
+
+    await revokeAllSessions(env.DB, t)
+    expect(await getSessionEpoch(env.DB)).toBe(t)
+    expect(await verifySession(env, before, t + 10)).toBe(false)
+    expect(await verifySession(env, same, t + 10)).toBe(false)
+    expect(await verifySession(env, after, t + 10)).toBe(true)
+  })
+
+  it('getAdminAuth rejects a revoked cookie but still accepts the bearer token', async () => {
+    const cookie = `${SESSION_COOKIE}=${await createSessionToken(env.SESSION_SECRET, 3600, Date.now() - 1000)}`
+    const withCookie = new Request('https://x.test/api/admin/stats', { headers: { cookie } })
+    expect(await getAdminAuth(withCookie, env)).toEqual({ via: 'session' })
+    await revokeAllSessions(env.DB)
+    expect(await getAdminAuth(withCookie, env)).toBeNull()
+    expect((await requireAdmin(withCookie, env))?.status).toBe(401)
+    const bearer = new Request('https://x.test/api/admin/stats', { headers: { authorization: `Bearer ${env.ADMIN_TOKEN}` } })
+    expect(await getAdminAuth(bearer, env)).toEqual({ via: 'token' })
   })
 })
 

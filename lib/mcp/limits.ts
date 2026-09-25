@@ -9,7 +9,7 @@ import { RESUME } from '@/content/resume'
 import type { ApiKeyRecord } from '@/lib/auth'
 import { getLimits, type AppEnv } from '@/lib/env'
 import type { AnswerErrorCode } from '@/lib/rag/types'
-import { budgetRemaining, rateLimit, type RateLimitResult } from '@/lib/security'
+import { budgetRemaining, fitRateLimit, rateLimit, type RateLimitResult } from '@/lib/security'
 
 export const DAY_SECONDS = 86_400
 
@@ -17,6 +17,7 @@ export type LlmTool = 'ask_raj' | 'assess_fit'
 
 export interface CallerContext {
   env: AppEnv
+  /** Pseudonymous client id for anonymous callers, `key:<id>` for API keys (see lib/mcp/http.ts). */
   clientId: string
   key: ApiKeyRecord | null
 }
@@ -39,12 +40,14 @@ function inAbout(seconds: number): string {
   return h > 0 ? `${h}h ${m}m` : `${m}m`
 }
 
-function limitedResult(code: 'rate_limited' | 'fit_limited', what: string, r: RateLimitResult, keyed: boolean): CallToolResult {
+function limitedResult(code: 'rate_limited' | 'fit_limited', what: string, r: RateLimitResult, keyed: boolean, global = false): CallToolResult {
   const retryAfterSeconds = Math.max(1, Math.ceil((r.resetAt - Date.now()) / 1000))
   const resetsAt = new Date(r.resetAt).toISOString()
-  const upgrade = keyed
-    ? `If your company needs a higher limit, email Raj at ${RESUME.email}.`
-    : `For a higher limit, email Raj at ${RESUME.email} for an API key and send it as "Authorization: Bearer rc_…".`
+  const upgrade = global
+    ? `An API key doesn't raise this limit; email Raj at ${RESUME.email} if it's urgent.`
+    : keyed
+      ? `If your company needs a higher limit, email Raj at ${RESUME.email}.`
+      : `For a higher limit, email Raj at ${RESUME.email} for an API key and send it as "Authorization: Bearer rc_…".`
   return toolError(
     code,
     `Rate limited: ${what}. Retry in about ${inAbout(retryAfterSeconds)} (limits reset at ${resetsAt}). Meanwhile, ${FREE_TOOLS}. ${upgrade}`,
@@ -71,8 +74,13 @@ export async function gateLlmCall(ctx: CallerContext, tool: LlmTool): Promise<Ca
   }
 
   if (tool === 'assess_fit') {
-    const fit = await rateLimit(env.DB, `fit:${key?.id ?? clientId}`, limits.fitPerDay, DAY_SECONDS)
-    if (!fit.allowed) return limitedResult('fit_limited', `assess_fit is limited to ${limits.fitPerDay} calls per day`, fit, !!key)
+    // Same buckets as /api/fit: an anonymous agent shares its IP's allowance with the website.
+    const fit = await fitRateLimit(env.DB, key ? `key:${key.id}` : clientId, limits)
+    if (!fit.allowed) {
+      return fit.scope === 'client'
+        ? limitedResult('fit_limited', `assess_fit is limited to ${limits.fitPerDay} calls per day`, fit.result, !!key)
+        : limitedResult('fit_limited', `assess_fit has reached its daily limit of ${limits.fitGlobalPerDay} calls across all clients`, fit.result, !!key, true)
+    }
   }
   return null
 }
