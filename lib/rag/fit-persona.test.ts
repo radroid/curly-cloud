@@ -57,6 +57,20 @@ describe('fit assessment', () => {
     expect(out.sources.map((s) => s.n)).toEqual([1, 2])
   })
 
+  it('keeps culture free of technical items and strengths out of gaps', () => {
+    const out = finalizeFit(
+      wire({
+        technical: { score: 4, summary: 's', strengths: ['RAG', 'Python'], gaps: ['Kubernetes', 'python'], evidence: [] },
+        culture: { score: 3, summary: 's', strengths: ['Async-first', 'RAG'], gaps: ['Kubernetes', 'On-call'], evidence: [] },
+      }),
+      { roleTitle: 'X' },
+      [],
+    )
+    expect(out.technical.gaps).toEqual(['Kubernetes'])
+    expect(out.culture.strengths).toEqual(['Async-first'])
+    expect(out.culture.gaps).toEqual(['On-call'])
+  })
+
   it('withholds any field that copies private text', () => {
     const priv = FAKE_PRIVATE[0].body
     const ctx = [

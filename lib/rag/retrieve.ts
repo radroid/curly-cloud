@@ -17,6 +17,8 @@ const CANDIDATES = 40
 const RERANK_POOL = 20
 const RERANK_TIMEOUT_MS = 2500
 const RRF_K = 60
+/** Multi-query retrieval: each query's top hits that are always kept. */
+const TOP_PER_QUERY = 2
 
 // ── Dense index cache ────────────────────────────────────────────────────────
 
@@ -198,11 +200,18 @@ export async function retrieveForQueries(env: RetrieveEnv, queries: string[], li
   if (!qs.length) return []
   const [bm25Lists, denseLists] = await Promise.all([Promise.all(qs.map((q) => ftsSearch(env.DB, q, 20))), denseSafe(env, qs)])
   const perQuery = qs.map((_, i) => rrf([bm25Lists[i].map((h) => h.id), denseLists[i].slice(0, 20).map((h) => h.id)], RRF_K))
-  const fused = rrf(perQuery.map((list) => list.map((f) => f.id)), RRF_K).slice(0, limit)
-  const rows = await loadChunkRows(env.DB, fused.map((f) => f.id))
-  return fused.flatMap((f) => {
-    const row = rows.get(f.id)
-    return row ? [toRetrieved(row, { ...f, ranks: [null, null] }, null)] : []
+  const global = rrf(perQuery.map((list) => list.map((f) => f.id)), RRF_K)
+  // Chunks that match many queries dominate a plain cross-query RRF, so each query's own top hits
+  // are guaranteed a slot first (round-robin), then the rest fill in fused order.
+  const guaranteed: string[] = []
+  for (let rank = 0; rank < TOP_PER_QUERY; rank++) for (const list of perQuery) if (list[rank]) guaranteed.push(list[rank].id)
+  const byId = new Map(global.map((f) => [f.id, f]))
+  const order = [...new Set([...guaranteed, ...global.map((f) => f.id)])].slice(0, limit)
+  const rows = await loadChunkRows(env.DB, order)
+  return order.flatMap((id) => {
+    const row = rows.get(id)
+    const f = byId.get(id)
+    return row && f ? [toRetrieved(row, { ...f, ranks: [null, null] }, null)] : []
   })
 }
 

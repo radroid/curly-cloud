@@ -23,6 +23,16 @@ export function snippet(text: string, max = SNIPPET_CHARS): string {
   return `${(lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.-]+$/, '')}…`
 }
 
+/**
+ * Resume bodies repeat their role/build header ("Lead Software Developer at Eddy Solutions, Toronto,
+ * ON (Apr 2026 – Present). …"); the title already names it, so the snippet starts after it.
+ */
+export function snippetSource(kind: CitationSource['kind'], text: string): string {
+  if (kind !== 'resume') return text
+  const rest = text.replace(/^.{0,240}?\)\.\s+/s, '')
+  return rest.trim() ? rest : text
+}
+
 export function buildContext(chunks: RetrievedChunk[], maxSources = 8): ContextSource[] {
   const bySource = new Map<string, { first: RetrievedChunk; pieces: { ord: number; text: string }[] }>()
   for (const c of chunks) {
@@ -50,7 +60,7 @@ export function buildContext(chunks: RetrievedChunk[], maxSources = 8): ContextS
       title: first.title,
       topic: first.topic,
       anchor: isPublic ? first.anchor : null,
-      snippet: isPublic ? snippet(text) : null,
+      snippet: isPublic ? snippet(snippetSource(first.kind, text)) : null,
     }
     return { citation, text, visibility: first.visibility }
   })

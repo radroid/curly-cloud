@@ -5,7 +5,7 @@ import { chunkWords } from '@/lib/llm/fake'
 import { createWorkersAiLlm } from '@/lib/llm/workers-ai'
 import { answer, answerStream, ingestSources, RagError, seedPublicSources } from '@/lib/rag'
 import { collectAnswer, GUARD_LINE, REFUSAL_LINE, runAnswer } from '@/lib/rag/answer'
-import { buildContext } from '@/lib/rag/context'
+import { buildContext, snippetSource } from '@/lib/rag/context'
 import { buildMessages, buildSystemPrompt, sanitizeSourceText, trimHistory, unknownLine } from '@/lib/rag/prompt'
 import { retrievalQuery } from '@/lib/rag/retrieve'
 import { createTestEnv, FAKE_PRIVATE, withVars, type TestEnv } from '@/lib/rag/testing'
@@ -195,6 +195,13 @@ describe('prompt construction', () => {
     expect(ctx[0].citation.snippet).toBe('Body text.')
     expect(ctx[1].citation).toMatchObject({ id: 'interview:y', snippet: null, anchor: null })
     expect(ctx[1].text).toBe('first part\n…\nsecond part')
+  })
+
+  it('starts resume snippets after the repeated role header', () => {
+    expect(snippetSource('resume', 'Lead Software Developer at Eddy Solutions, Toronto, ON (Apr 2026 – Present). Built the tracker.')).toBe('Built the tracker.')
+    expect(snippetSource('resume', 'Independent build: X (Feb 2026; Python, OpenAI, Qdrant). Built search.')).toBe('Built search.')
+    expect(snippetSource('resume', 'Python; TypeScript.')).toBe('Python; TypeScript.')
+    expect(snippetSource('profile', 'A (b). c')).toBe('A (b). c')
   })
 
   it('wraps sources as untrusted data and neutralises delimiter injection', () => {
