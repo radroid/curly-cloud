@@ -57,6 +57,11 @@ export interface CitationSource {
 export interface ChatTurn {
   role: 'user' | 'assistant'
   content: string
+  /**
+   * Assistant turns only: the `sig` from that answer's `done` event, sent back unchanged.
+   * Assistant turns without a valid signature are dropped before prompting (lib/rag/turns.ts).
+   */
+  sig?: string
 }
 
 export interface AnswerRequest {
@@ -79,9 +84,11 @@ export type AnswerEvent =
       provider: 'anthropic' | 'workers-ai'
       model: string
       latencyMs: number
-      /** True when the verbatim guard cut the answer short. */
+      /** True when the verbatim guard cut the answer short, or the question was refused as prompt extraction. */
       guarded: boolean
       logId: string | null
+      /** Signature over the streamed text; send it back as `sig` on this assistant turn. */
+      sig?: string
     }
   | { type: 'error'; code: AnswerErrorCode; message: string }
 
@@ -94,6 +101,7 @@ export interface Answer {
   latencyMs: number
   guarded: boolean
   logId: string | null
+  sig?: string
 }
 
 export interface FitRequest {

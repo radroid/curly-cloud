@@ -5,15 +5,17 @@
  *   → citation filter (drops out-of-range markers) → verbatim guard → word holdback → client
  *   → usage + chat_logs row → done
  */
+import { resumeSources } from '@/content/resume'
 import { getMeta, newId, now, run } from '@/lib/db'
 import { getLimits, type AppEnv } from '@/lib/env'
 import { estimateTokens, getLlm, systemText, type Llm, type LlmStopReason, type LlmUsage } from '@/lib/llm'
 import { createCitationFilter } from '@/lib/rag/citations'
 import { buildContext, type ContextSource } from '@/lib/rag/context'
-import { createVerbatimGuard, DEFAULT_GUARD_WINDOW, PROMPT_MARKERS, releasableIndex } from '@/lib/rag/guard'
+import { buildGuardIndex, createVerbatimGuard, DEFAULT_GUARD_WINDOW, LETTER_HOLDBACK, PROMPT_MARKERS, releasableIndex } from '@/lib/rag/guard'
 import { EXTRACTION_REPLY, isPromptExtraction } from '@/lib/rag/injection'
 import { buildMessages, buildSystemPrompt, PUBLIC_EMAIL, sayableLines, unknownLine } from '@/lib/rag/prompt'
 import { retrievalQuery, retrieveChunks, type RetrieveOptions } from '@/lib/rag/retrieve'
+import { signTurn, trustedTurns, turnSecret } from '@/lib/rag/turns'
 import type { Answer, AnswerErrorCode, AnswerEvent, AnswerRequest, Channel, CitationSource } from '@/lib/rag/types'
 import { budgetRemaining, recordUsage, redactPii } from '@/lib/security'
 
@@ -28,11 +30,13 @@ export class RagError extends Error {
 }
 
 /**
- * Words held back from the client: the guard window. The guard only counts a word once it's
- * complete, so it can lag the buffer by one word; holding back a full window means no word of a
- * run it detects has been shown yet.
+ * Held back from the client: at least the verbatim window in words and the letters window in
+ * letters (the guard only counts a word once it's complete, so it can lag the buffer by one word;
+ * holding back both windows means no part of a run those checks detect has been shown yet), and
+ * never anything from the start of a live alignment on (`guard.holdFrom()`).
  */
 export const HOLDBACK_WORDS = DEFAULT_GUARD_WINDOW
+export const HOLDBACK_LETTERS = LETTER_HOLDBACK
 
 const MAX_TOKENS: Record<Channel, number> = { web: 700, terminal: 700, mcp: 900, studio: 900 }
 
@@ -106,20 +110,28 @@ export async function writeLog(db: D1Database, e: LogEntry): Promise<string | nu
   }
 }
 
+let publicTexts: string[] | null = null
+
+/** The public resume, which may be quoted verbatim (the minimal persona quotes it too). */
+export function publicResumeTexts(): string[] {
+  publicTexts ??= resumeSources().map((s) => s.body)
+  return publicTexts
+}
+
 /**
  * Text answers must not reproduce (private sources, and the system prompt with the persona) and
- * text that's fine to say verbatim (public sources, the clone's stock lines).
+ * text that's fine to say verbatim (public sources, the public resume, the clone's stock lines).
  */
 export function guardTexts(context: ContextSource[], systemPrompt: string): { protectedTexts: string[]; allowTexts: string[] } {
   const protectedTexts = [...context.filter((c) => c.visibility === 'private').map((c) => c.text), systemPrompt]
-  const allowTexts = [...context.filter((c) => c.visibility === 'public').map((c) => c.text), ...sayableLines()]
+  const allowTexts = [...context.filter((c) => c.visibility === 'public').map((c) => c.text), ...publicResumeTexts(), ...sayableLines()]
   return { protectedTexts, allowTexts }
 }
 
 export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: AnswerInternals = {}): AsyncGenerator<AnswerEvent> {
   const started = Date.now()
-  const turns = (req.messages ?? []).filter((t) => (t.role === 'user' || t.role === 'assistant') && typeof t.content === 'string')
-  const last = turns[turns.length - 1]
+  const received = (req.messages ?? []).filter((t) => (t.role === 'user' || t.role === 'assistant') && typeof t.content === 'string')
+  const last = received[received.length - 1]
   if (!last || last.role !== 'user' || !last.content.trim()) {
     yield { type: 'error', code: 'bad_request', message: 'The last message must be a question from the user.' }
     return
@@ -131,8 +143,15 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
     return
   }
 
-  // Obvious prompt-extraction requests get a fixed reply without a model call. `guarded` marks it.
-  if (isPromptExtraction(last.content)) {
+  // Replayed assistant turns count only if we signed them; the rest never reach the model.
+  const secret = turnSecret(env)
+  const turns = await trustedTurns(secret, received)
+  const sign = async (text: string): Promise<{ sig?: string }> => (secret ? { sig: await signTurn(secret, text) } : {})
+
+  // Prompt-extraction requests in any user turn (an earlier one, or MCP context) get a fixed reply
+  // without a model call. `guarded` marks it.
+  const extraction = turns.find((t) => t.role === 'user' && isPromptExtraction(t.content))
+  if (extraction) {
     const llm = internals.llm ?? getLlm(env)
     yield { type: 'sources', sources: [] }
     yield { type: 'delta', text: EXTRACTION_REPLY }
@@ -145,7 +164,7 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
             kind: 'ask',
             clientId: req.clientId,
             keyId: req.keyId ?? null,
-            question: last.content,
+            question: extraction.content === last.content ? last.content : `${last.content}\n\n(refused for an earlier turn: ${extraction.content})`,
             answer: EXTRACTION_REPLY,
             citations: [],
             retrieved: [],
@@ -155,7 +174,7 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
             latencyMs,
             guarded: true,
           })
-    yield { type: 'done', cited: [], provider: llm.provider, model: llm.model, latencyMs, guarded: true, logId }
+    yield { type: 'done', cited: [], provider: llm.provider, model: llm.model, latencyMs, guarded: true, logId, ...(await sign(EXTRACTION_REPLY)) }
     return
   }
 
@@ -180,12 +199,14 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   const system = buildSystemPrompt(persona)
   const messages = buildMessages(turns, context, req.channel)
   const { protectedTexts, allowTexts } = guardTexts(context, system.stable)
-  const guard = createVerbatimGuard(protectedTexts, { allowTexts, forbidden: PROMPT_MARKERS })
+  const guard = createVerbatimGuard(buildGuardIndex(protectedTexts, { allowTexts }), { forbidden: PROMPT_MARKERS })
   const citations = createCitationFilter(sources.length)
   const controller = new AbortController()
 
   let emitted = ''
   let pending = ''
+  /** Length of model text already released; `pending` starts here in the guard's offsets. */
+  let releasedModel = 0
   let guarded = false
   let usage: LlmUsage | null = null
   let stopReason: LlmStopReason = 'end'
@@ -193,10 +214,11 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   let failure: unknown = null
 
   const release = (): string => {
-    const cut = releasableIndex(pending, HOLDBACK_WORDS)
+    const cut = Math.min(releasableIndex(pending, HOLDBACK_WORDS, HOLDBACK_LETTERS), guard.holdFrom() - releasedModel)
     if (cut <= 0) return ''
     const out = pending.slice(0, cut)
     pending = pending.slice(cut)
+    releasedModel += cut
     return out
   }
 
@@ -289,7 +311,7 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
     yield { type: 'error', code: 'unavailable', message: 'The answer was cut short. Try asking again.' }
     return
   }
-  yield { type: 'done', cited, provider: llm.provider, model, latencyMs, guarded, logId }
+  yield { type: 'done', cited, provider: llm.provider, model, latencyMs, guarded, logId, ...(await sign(emitted)) }
 }
 
 /** Collect a full answer (MCP, evals). Throws RagError on an `error` event. */
@@ -310,6 +332,7 @@ export async function collectAnswer(env: AppEnv, req: AnswerRequest, internals: 
         latencyMs: ev.latencyMs,
         guarded: ev.guarded,
         logId: ev.logId,
+        ...(ev.sig ? { sig: ev.sig } : {}),
       }
     }
   }
