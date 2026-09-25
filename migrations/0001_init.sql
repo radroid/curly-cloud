@@ -17,8 +17,11 @@ CREATE TABLE sources (
 CREATE INDEX idx_sources_kind ON sources (kind);
 CREATE INDEX idx_sources_topic ON sources (topic);
 
+-- `rid` is an explicit INTEGER PRIMARY KEY so rowids stay stable (VACUUM may renumber implicit
+-- rowids), which the external-content FTS index below depends on.
 CREATE TABLE chunks (
-  id              TEXT PRIMARY KEY,
+  rid             INTEGER PRIMARY KEY,
+  id              TEXT NOT NULL UNIQUE,
   source_id       TEXT NOT NULL REFERENCES sources (id) ON DELETE CASCADE,
   ord             INTEGER NOT NULL,
   text            TEXT NOT NULL,
@@ -31,7 +34,7 @@ CREATE INDEX idx_chunks_source ON chunks (source_id);
 CREATE VIRTUAL TABLE chunks_fts USING fts5 (
   text,
   content = 'chunks',
-  content_rowid = 'rowid',
+  content_rowid = 'rid',
   tokenize = 'porter unicode61'
 );
 
