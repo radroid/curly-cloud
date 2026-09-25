@@ -146,7 +146,7 @@ export async function* runAnswer(env: AppEnv, req: AnswerRequest, internals: Ans
   // Replayed assistant turns count only if we signed them; the rest never reach the model.
   const secret = turnSecret(env)
   const turns = await trustedTurns(secret, received)
-  const sign = async (text: string): Promise<{ sig?: string }> => (secret ? { sig: await signTurn(secret, text) } : {})
+  const sign = async (text: string): Promise<{ sig?: string }> => (secret ? { sig: await signTurn(secret, last.content, text) } : {})
 
   // Prompt-extraction requests in any user turn (an earlier one, or MCP context) get a fixed reply
   // without a model call. `guarded` marks it.

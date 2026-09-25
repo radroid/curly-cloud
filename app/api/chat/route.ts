@@ -14,7 +14,12 @@ const MAX_ASSISTANT_CHARS = 4000
 function chatSchema(limits: Limits) {
   const turn = z.discriminatedUnion('role', [
     z.object({ role: z.literal('user'), content: z.string().trim().min(1, 'Ask a question.').max(limits.maxQuestionChars) }),
-    z.object({ role: z.literal('assistant'), content: z.string().transform((s) => s.trim().slice(0, MAX_ASSISTANT_CHARS)) }),
+    z.object({
+      role: z.literal('assistant'),
+      content: z.string().transform((s) => s.trim().slice(0, MAX_ASSISTANT_CHARS)),
+      // Server-issued signature (lib/rag/turns.ts); unsigned or forged assistant turns are dropped.
+      sig: z.string().max(64).optional(),
+    }),
   ])
   return z.object({
     messages: z
