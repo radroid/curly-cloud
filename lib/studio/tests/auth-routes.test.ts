@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth'
+import { SESSION_COOKIE, getAdminAuth, verifySessionToken } from '@/lib/auth'
 import { ADMIN_PASSWORD, ORIGIN, SESSION_SECRET, json, resetEnv, state } from '@/lib/studio/tests/harness'
 
 vi.mock('@/lib/env', async (importOriginal) => {
@@ -125,4 +125,38 @@ describe('POST /api/auth/logout', () => {
     expect(res.status).toBe(403)
   })
 
+  it('logs out everywhere: a copied cookie stops working, a fresh login works', async () => {
+    const first = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    const second = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD }, { 'x-real-ip': '198.51.100.2' })))
+    const adminReq = (token: string | null) => new Request(`${ORIGIN}/api/admin/stats`, { headers: { cookie: `${SESSION_COOKIE}=${token}` } })
+    expect(await getAdminAuth(adminReq(first), state.env)).toEqual({ via: 'session' })
+    expect(await getAdminAuth(adminReq(second), state.env)).toEqual({ via: 'session' })
+
+    await new Promise((r) => setTimeout(r, 2))
+    const res = await logout(
+      new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers: { 'sec-fetch-site': 'same-origin', cookie: `${SESSION_COOKIE}=${first}` } }),
+    )
+    expect(res.status).toBe(200)
+    // Both the logged-out cookie and the one on "another device" are dead.
+    expect(await getAdminAuth(adminReq(first), state.env)).toBeNull()
+    expect(await getAdminAuth(adminReq(second), state.env)).toBeNull()
+
+    await new Promise((r) => setTimeout(r, 2))
+    const fresh = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    expect(await getAdminAuth(adminReq(fresh), state.env)).toEqual({ via: 'session' })
+  })
+
+  it('without a valid session, logout only clears the cookie (strangers cannot sign the owner out)', async () => {
+    const owner = cookieValue(await login(loginRequest({ password: ADMIN_PASSWORD })))
+    await new Promise((r) => setTimeout(r, 2))
+    for (const cookie of [undefined, `${SESSION_COOKIE}=forged.token`]) {
+      const headers: Record<string, string> = { 'sec-fetch-site': 'same-origin' }
+      if (cookie) headers.cookie = cookie
+      const res = await logout(new Request(`${ORIGIN}/api/auth/logout`, { method: 'POST', headers }))
+      expect(res.status).toBe(200)
+      expect(res.headers.get('set-cookie')).toContain('Max-Age=0')
+    }
+    const adminReq = new Request(`${ORIGIN}/api/admin/stats`, { headers: { cookie: `${SESSION_COOKIE}=${owner}` } })
+    expect(await getAdminAuth(adminReq, state.env)).toEqual({ via: 'session' })
+  })
 })

@@ -1,13 +1,13 @@
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { SESSION_COOKIE, verifySessionToken } from '@/lib/auth'
+import { SESSION_COOKIE, verifySession } from '@/lib/auth'
 import { getAppEnv } from '@/lib/env'
 
-/** True when the request carries a valid studio session cookie. For server components. */
+/** True when the request carries a valid, unrevoked studio session cookie. For server components. */
 export async function hasStudioSession(): Promise<boolean> {
   const env = await getAppEnv()
   const store = await cookies()
-  return verifySessionToken(env.SESSION_SECRET, store.get(SESSION_COOKIE)?.value)
+  return verifySession(env, store.get(SESSION_COOKIE)?.value)
 }
 
 /**

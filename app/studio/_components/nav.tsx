@@ -20,9 +20,10 @@ function isActive(pathname: string, href: string): boolean {
 
 function LogoutButton({ className }: { className: string }) {
   // A plain form: works without JS, and the route answers form posts with a redirect to login.
+  // Logging out revokes every studio session, not just this browser's.
   return (
     <form method="post" action="/api/auth/logout">
-      <button type="submit" className={className}>
+      <button type="submit" className={className} title="Log out everywhere: ends every studio session on every device">
         Log out
       </button>
     </form>
