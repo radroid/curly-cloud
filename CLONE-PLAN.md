@@ -146,8 +146,10 @@ Raj's own `bun run dev` owns 3000 — never start anything there.
 
 Secrets (`.dev.vars` locally, `wrangler secret put` in prod): `ANTHROPIC_API_KEY` (optional),
 `ADMIN_PASSWORD`, `ADMIN_TOKEN`, `SESSION_SECRET`.
-Vars (`wrangler.jsonc`): model ids, limits (`CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FIT_PER_DAY`,
-`MCP_ANON_PER_DAY`, `DAILY_TOKEN_BUDGET`), `MCP_REQUIRE_KEY`.
+Vars (`wrangler.jsonc`): model ids, limits (`CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FIT_PER_DAY` per client,
+`FIT_GLOBAL_PER_DAY` across everyone, `MCP_ANON_PER_DAY`, `DAILY_TOKEN_BUDGET`), `MCP_REQUIRE_KEY`.
+Per-client limits key on a daily-salted hash of the IP (IPv6 grouped by /64). Web and MCP share the
+per-client fit bucket. `/api/chat` and `/api/fit` accept same-origin `application/json` only.
 
 ## 7. Status
 

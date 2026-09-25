@@ -85,4 +85,4 @@ CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:persona
 
 Recommended: put `/studio*` and `/api/admin/*` behind **Cloudflare Access** as a second lock on top of the studio passphrase.
 
-Cost controls are set in `wrangler.jsonc` vars: `CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FIT_PER_DAY`, `MCP_ANON_PER_DAY`, `DAILY_TOKEN_BUDGET`. Set `MCP_REQUIRE_KEY=true` to turn off anonymous MCP access.
+Cost controls are set in `wrangler.jsonc` vars: `CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FIT_PER_DAY`, `FIT_GLOBAL_PER_DAY`, `MCP_ANON_PER_DAY`, `DAILY_TOKEN_BUDGET`. Studio logout signs out every session. Set `MCP_REQUIRE_KEY=true` to turn off anonymous MCP access.
