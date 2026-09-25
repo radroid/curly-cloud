@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { ModeSwitch } from './mode-switch'
+import { TerminalTopBar } from './mode-switch'
 import { Terminal } from './terminal'
 import { ViewportFrame } from './viewport-frame'
 
@@ -17,7 +17,7 @@ export const viewport: Viewport = { colorScheme: 'dark', interactiveWidget: 'res
 export default function TerminalPage() {
   return (
     <ViewportFrame className="flex flex-col overflow-hidden bg-term-bg font-mono text-term-text">
-      <ModeSwitch />
+      <TerminalTopBar />
       <noscript>
         <p className="mx-auto w-full max-w-5xl px-4 pt-6 text-sm text-term-dim sm:px-8">
           Terminal mode runs on JavaScript, which is turned off in this browser.{' '}
