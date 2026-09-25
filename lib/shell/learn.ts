@@ -104,12 +104,12 @@ export const LESSONS: Lesson[] = [
         attempted: (i) => usedAny(i, 'cd'),
         hint: (i) =>
           ran(i, 'cd').some((t) => t.status !== 0)
-            ? ['That directory does not exist from here. Run ', code('cd ~'), ' first, then ', code('cd experience'), '.']
+            ? ['cd could not find that directory. Check the spelling (Tab completes names), or go home first with ', code('cd ~'), '.']
             : ['Type ', code('cd experience'), '.'],
         success: () => ['The prompt now says ~/experience. Relative names like aro.md are looked up here now; try ', code('ls'), ' later.'],
       },
       {
-        goal: () => ['Go back up one level with ', code('cd ..'), '.'],
+        goal: () => ['Go back up one level: ', code('cd ..')],
         check: (i, shell) => usedAny(i, 'cd', '..') && shell.cwd === HOME,
         attempted: (i) => usedAny(i, 'cd'),
         hint: () => [code('..'), ' means the parent directory. From ~/experience, ', code('cd ..'), ' goes home.'],

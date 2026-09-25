@@ -158,7 +158,7 @@ describe('learn', () => {
     expect(ok.out).toMatch(/Step 2\/4/)
     await run(sh, 'ls')
     const cdWrong = await run(sh, 'cd experiance')
-    expect(cdWrong.out).toMatch(/does not exist from here/)
+    expect(cdWrong.out).toMatch(/could not find that directory/)
     await run(sh, 'cd experience')
     expect(sh.learn.step).toBe(3)
     const done = await run(sh, 'cd ..')

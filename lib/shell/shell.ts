@@ -458,13 +458,13 @@ export class Shell {
     }
     const width = Math.max(...WELCOME_SUGGESTIONS.map(([c]) => c.length)) + 2
     const narrow = this.columns() < width + 24
-    const lines: Line[] = []
+    const lines: Line[] = [[]]
     if (motd[0]) lines.push([strong(motd[0])])
     if (motd[1]) lines.push([dim(motd[1])])
     lines.push([])
     lines.push([seg('A real (small) shell: files, pipes, variables, quoting, redirects. Click or type:')])
     for (const [c, d] of WELCOME_SUGGESTIONS) {
-      if (narrow) lines.push([seg('  '), cmd(c), seg('  '), dim(d)])
+      if (narrow) lines.push([seg('  '), cmd(c)], [dim(`    ${d}`)])
       else lines.push([seg('  '), cmd(c), seg(pad('', width - c.length)), dim(d)])
     }
     lines.push([])

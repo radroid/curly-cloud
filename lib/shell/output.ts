@@ -110,3 +110,18 @@ export function padStart(text: string, width: number): string {
   const len = [...text].length
   return len >= width ? text : ' '.repeat(width - len) + text
 }
+
+/** Word-wrap text to `width` columns. Words longer than the width are left whole. */
+export function wrapText(text: string, width: number): string[] {
+  if (width < 8 || [...text].length <= width) return [text]
+  const lines: string[] = []
+  let cur = ''
+  for (const word of text.split(/ +/)) {
+    if (cur && [...cur].length + 1 + [...word].length > width) {
+      lines.push(cur)
+      cur = word
+    } else cur = cur ? `${cur} ${word}` : word
+  }
+  if (cur) lines.push(cur)
+  return lines
+}

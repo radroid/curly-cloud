@@ -2,7 +2,7 @@ import { fail, outln, usage, type CommandContext, type CommandDef, type CommandG
 import { explainLine, type ExplainRow } from '../explain'
 import { runLearn, LESSONS } from '../learn'
 import { TOPIC_PAGES } from '../man'
-import { accent, cmd, dim, err, hi, pad, seg, strong, writeln, type Printable } from '../output'
+import { accent, cmd, dim, err, hi, pad, seg, strong, wrapText, writeln, type Printable } from '../output'
 import type { Segment } from '../types'
 
 const GROUPS: [CommandGroup, string][] = [
@@ -82,7 +82,7 @@ function renderMan(ctx: CommandContext, name: string, summary: string, page: Man
   section('DESCRIPTION')
   page.description.forEach((p, i) => {
     if (i) outln(ctx)
-    outln(ctx, '    ', p)
+    for (const line of wrapText(p, ctx.shell.columns() - 4)) outln(ctx, '    ', line)
   })
   if (page.options?.length) {
     section('OPTIONS')
@@ -207,19 +207,26 @@ const explain: CommandDef = {
     const narrow = ctx.shell.columns() < 72
     const tw = Math.min(22, Math.max(...ex.rows.map((r) => [...r.token].length)) + 2)
     const lw = Math.max(...ex.rows.map((r) => r.label.length)) + 2
+    const cols = ctx.shell.columns()
+    // Continuation lines hang under the text column instead of wrapping back to the margin.
+    const hanging = (text: string, indent: number): string[] => {
+      const [first, ...rest] = wrapText(text, cols - indent)
+      return [first, ...rest.map((l) => '\n' + ' '.repeat(indent) + l)]
+    }
     for (const r of ex.rows) {
       const token = seg(r.token, KIND_STYLE[r.kind])
       if (narrow) {
         outln(ctx, '  ', token, dim(`  ${r.label}`))
-        outln(ctx, '      ', r.text)
+        outln(ctx, '      ', hanging(r.text, 6))
       } else {
         const tlen = [...r.token].length
-        outln(ctx, '  ', token, tlen < tw ? pad('', tw - tlen) : '  ', dim(pad(r.label, lw)), r.text)
+        outln(ctx, '  ', token, tlen < tw ? pad('', tw - tlen) : '  ', dim(pad(r.label, lw)), hanging(r.text, 2 + Math.max(tw, tlen + 2) + lw))
       }
     }
     outln(ctx)
-    if (ex.expanded) outln(ctx, '  ', dim(narrow ? 'expands to  ' : pad('expands to', tw + lw - 2) + '  '), accent(ex.expanded))
-    if (ex.summary.length) outln(ctx, '  ', dim(narrow ? 'in words    ' : pad('in words', tw + lw - 2) + '  '), ex.summary.join(' '))
+    const labelWidth = narrow ? 12 : tw + lw
+    if (ex.expanded) outln(ctx, '  ', dim(pad('expands to', labelWidth)), accent(ex.expanded))
+    if (ex.summary.length) outln(ctx, '  ', dim(pad('in words', labelWidth)), hanging(ex.summary.join(' '), 2 + labelWidth))
     return 0
   },
 }

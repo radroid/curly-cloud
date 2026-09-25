@@ -133,6 +133,9 @@ function redirectText(shell: Shell, r: Redirect, target: string): string {
     : `${stream} goes to ${where}, replacing its contents (created if missing)${perm}`
 }
 
+/** Connector marker for pipeline stages after the first. */
+const PIPED = '\u0000piped'
+
 interface Walker {
   rows: ExplainRow[]
   summary: string[]
@@ -208,7 +211,8 @@ async function explainSimple(shell: Shell, cmd: SimpleCommand, w: Walker, connec
       operandIndex++
       const pieces: string[] = []
       if (role) pieces.push(role.label)
-      if (role && ['path', 'file', 'dir'].includes(role.kind)) {
+      const globbed = word.parts.some((p) => p.type === 'text' && p.quote === 'none' && /[*?[]/.test(p.text))
+      if (role && ['path', 'file', 'dir'].includes(role.kind) && !globbed) {
         for (const v of values.slice(0, 3)) pieces.push(pathNote(shell, v))
       }
       pieces.push(...notes)
@@ -233,14 +237,19 @@ async function explainSimple(shell: Shell, cmd: SimpleCommand, w: Walker, connec
   else if (name) sentence = `${name} is not a known command, so this part would fail with exit code 127.`
   else if (cmd.assigns.length) sentence = `Sets ${cmd.assigns.map((a) => a.name).join(', ')} as shell variable${cmd.assigns.length > 1 ? 's' : ''}.`
   const full = [sentence, ...redirectSentences].filter(Boolean).join(' ')
-  if (full) w.summary.push(connector ? `${connector} ${full.charAt(0).toLowerCase()}${full.slice(1)}` : full)
+  if (!full) return { name, expanded: expandedParts.join(' ') }
+  if (connector === PIPED) {
+    // "grep prints …" → "Its output is piped to grep, which prints …"
+    w.summary.push(full.startsWith(`${name} `) ? `Its output is piped to ${name}, which ${full.slice(name.length + 1)}` : `Its output is piped to ${name}: ${full}`)
+  } else w.summary.push(connector ? `${connector} ${full.charAt(0).toLowerCase()}${full.slice(1)}` : full)
   return { name, expanded: expandedParts.join(' ') }
 }
 
 async function explainCommand(shell: Shell, c: Command, w: Walker, connector: string): Promise<{ name: string; expanded: string }> {
   if (c.type === 'simple') return explainSimple(shell, c, w, connector)
   w.rows.push({ token: '( … )', kind: 'subshell', label: 'subshell', text: "runs inside a subshell: cd and variables inside don't leak out" })
-  const inner = await explainList(shell, c.body, w, connector ? `${connector} in a subshell,` : 'In a subshell,')
+  const lead = connector === PIPED ? 'Its output is piped into a subshell, where' : connector ? `${connector} in a subshell,` : 'In a subshell,'
+  const inner = await explainList(shell, c.body, w, lead)
   return { name: '(', expanded: `( ${inner} )` }
 }
 
@@ -266,7 +275,7 @@ async function explainList(shell: Shell, list: List, w: Walker, lead = ''): Prom
       }
       const stages: string[] = []
       for (let i = 0; i < pipeline.commands.length; i++) {
-        const res = await explainCommand(shell, pipeline.commands[i], w, i === 0 ? connector : 'That output is piped into')
+        const res = await explainCommand(shell, pipeline.commands[i], w, i === 0 ? connector : PIPED)
         stages.push(res.expanded)
         if (i < pipeline.commands.length - 1) {
           const next = pipeline.commands[i + 1]
