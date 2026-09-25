@@ -147,9 +147,10 @@ describe('verbatim guard', () => {
 
   it('ignores citation markers and case when matching', () => {
     const guard = createVerbatimGuard([secret])
-    // 14 complete words; "cod" is held until the word ends.
-    expect(guard.push('MY FAVOURITE debugging approach is to write [2] down the smallest reproduction before touching any cod')).toBe(false)
-    expect(guard.push('e, then')).toBe(true)
+    // 10 complete words; "reproduc" is held until the word ends. The 12th word trips the alignment.
+    expect(guard.push('MY FAVOURITE debugging approach is to write [2] down the smallest reproduc')).toBe(false)
+    expect(guard.push('tion before')).toBe(false)
+    expect(guard.push(' touching')).toBe(true)
   })
 
   it('does not protect text that is also public', () => {
