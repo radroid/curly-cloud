@@ -129,8 +129,14 @@ async function askOnce(ctx: CommandContext, question: string): Promise<number> {
   }
   if (done?.guarded) writeln(ctx.stderr, dim('(The answer stopped early: it was about to repeat a private source word for word.)'))
 
-  shell.conversation.push({ role: 'user', content: question }, { role: 'assistant', content: text })
-  if (shell.conversation.length > MAX_TURNS) shell.conversation = shell.conversation.slice(-MAX_TURNS)
+  // Remember the exchange for follow-ups. The answer goes back only with the server's signature
+  // (unsigned assistant turns are dropped server-side); a refused or cut-short exchange is not
+  // replayed, since the server checks every user turn it receives.
+  if (!done?.guarded) {
+    shell.conversation.push({ role: 'user', content: question })
+    if (done?.sig) shell.conversation.push({ role: 'assistant', content: text, sig: done.sig })
+    if (shell.conversation.length > MAX_TURNS) shell.conversation = shell.conversation.slice(-MAX_TURNS)
+  }
   return 0
 }
 
