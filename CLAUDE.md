@@ -23,8 +23,14 @@ bun run cf-typegen       # Regenerate cloudflare-env.d.ts after editing wrangler
 bun run clone:seed       # Load the public resume into the knowledge base
 bun run clone:ingest <file.json>   # Ingest answers exported from interview/raj-interview.html
 bun run clone:persona    # Rebuild the distilled persona after a batch of answers
-bun run clone:eval       # Retrieval + answer evals
+bun run clone:eval       # Retrieval + answer evals (--only retrieval is cheap; --no-rerank to A/B)
+bun run clone ask "…"    # Spot-check the clone (admin debug route)
+bun run clone validate <file|dir>   # Check an answers export or question pack without a server
+bun scripts/build-interview.ts      # Rebuild interview/raj-interview.html after editing content/questions or interview/src
 ```
+
+CLI commands target `CLONE_URL` (default `http://localhost:3000`) with `ADMIN_TOKEN` from `.dev.vars`.
+Writes to a non-local `CLONE_URL` require `--yes`.
 
 ### Dev server is usually running
 Raj keeps `bun run dev` running in another terminal. Don't start a second one on port 3000. For an
@@ -60,4 +66,8 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 - **Workers AI is always remote**, even in dev. It needs `wrangler login` and costs neurons.
 - **`database_id` in wrangler.jsonc is a placeholder** until `wrangler d1 create raj-clone` is run for production.
 - **Bindings in route handlers** come from `getAppEnv()` (`lib/env.ts`), not `process.env`.
+- **`interview/raj-interview.html` is generated.** Edit `content/questions/` or `interview/src/`, then rebuild; a test fails if the committed HTML is stale. Shared export/XP logic lives in `lib/interview/core.ts` (compiled into the page).
+- **Stale `.next/types` after merging routes.** With a dev server running, `tsc` can report unknown routes until the dev server compiles them. Hit the route once or delete `.next/types`.
+- **Worker size.** The OpenNext bundle is ~2.3 MiB gzipped (free plan limit 3 MiB). Check `bunx wrangler deploy --dry-run` before adding heavy dependencies.
+- **Rerank is a vote, not a verdict.** `bge-reranker-base` scores long chunks near zero; it's fused into RRF with BM25 and dense. Keep it that way unless evals say otherwise.
 - **Mac theme is scoped** to `.mac-root` (set by `app/mac/layout.tsx`). Don't style `body` for it.

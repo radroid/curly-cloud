@@ -152,10 +152,19 @@ Vars (`wrangler.jsonc`): model ids, limits (`CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FI
 ## 7. Status
 
 - [x] Foundation
-- [ ] RAG core + chat/fit APIs + evals
-- [ ] MCP server
-- [ ] Studio
-- [ ] Terminal
-- [ ] Interview stack + ingest skill
-- [ ] Website
-- [ ] Integration: build, typecheck, tests, end-to-end smoke on `wrangler dev`
+- [x] RAG core + chat/fit APIs + evals (reranker fused as a third RRF list; see `lib/rag/retrieve.ts`)
+- [x] MCP server (+ `/llms.txt`)
+- [x] Studio
+- [x] Terminal
+- [x] Interview stack + ingest skill (211 questions)
+- [x] Website
+- [x] Integration: typecheck, 440 tests, `next build`, OpenNext build, smoke on `wrangler dev` (chat SSE, fit, MCP tools, admin auth, refusal + injection evals)
+
+### Next (needs Raj)
+- Answer interview cards → `ingest my answers` in Claude Code. The persona builds from them.
+- Optional `ANTHROPIC_API_KEY` for Claude-quality voice (Workers AI Llama 4 Scout is the default).
+- Production: `wrangler d1 create raj-clone`, secrets, deploy (see README).
+
+### Latest eval baseline (Workers AI, resume-only corpus, 2026-09-25)
+Retrieval (37 cases): hit@1 91.9%, hit@3 97.3%, hit@8 100%, MRR 0.950. Refusal 10/10, injection 5/5
+on the production worker. Re-run after each batch of answers: `bun run clone:eval`.
