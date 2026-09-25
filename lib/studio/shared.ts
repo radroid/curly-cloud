@@ -117,3 +117,26 @@ export function citedNumbers(text: string): Set<number> {
   for (const part of splitCitations(text)) if (part.type === 'cite') set.add(part.n)
   return set
 }
+
+/** Fit checks log their assessment as JSON; show it as prose in the studio. */
+export function readableAnswer(kind: 'ask' | 'fit', answer: string): string {
+  if (kind !== 'fit') return answer
+  try {
+    const a = JSON.parse(answer) as {
+      overall?: { verdict?: string; score?: number; summary?: string }
+      technical?: { score?: number; summary?: string }
+      culture?: { score?: number; summary?: string }
+      unknowns?: string[]
+    }
+    return [
+      `${a.overall?.verdict ?? 'unknown'} (${a.overall?.score ?? '?'}/5): ${a.overall?.summary ?? ''}`,
+      a.technical ? `Technical ${a.technical.score}/5: ${a.technical.summary}` : '',
+      a.culture ? `Culture ${a.culture.score}/5: ${a.culture.summary}` : '',
+      a.unknowns?.length ? `Unknowns: ${a.unknowns.join('; ')}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+  } catch {
+    return answer
+  }
+}

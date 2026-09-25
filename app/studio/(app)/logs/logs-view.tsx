@@ -22,7 +22,7 @@ import {
   VisibilityMark,
 } from '@/app/studio/_components/ui'
 import { studio, type ApiFailure } from '@/lib/studio/api'
-import { CHANNELS, LOGS_PAGE_SIZE, correctionText, fmtDateTime, fmtMs, fmtNum, fmtScore, truncate } from '@/lib/studio/shared'
+import { CHANNELS, LOGS_PAGE_SIZE, correctionText, fmtDateTime, fmtMs, fmtNum, fmtScore, readableAnswer, truncate } from '@/lib/studio/shared'
 import type { Channel, CorrectionResult, LogDetail, LogItem, LogSourceRef, Page } from '@/lib/studio/types'
 
 const PAGE_SIZE = LOGS_PAGE_SIZE
@@ -197,7 +197,7 @@ function LogRow({ log, active, onOpen }: { log: LogItem; active: boolean; onOpen
         </span>
       </span>
       <span className="mt-1.5 block text-[15px] font-medium leading-snug text-ink">{truncate(log.question, 220)}</span>
-      <span className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{log.answer ? truncate(log.answer, 320) : '(no answer)'}</span>
+      <span className="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{log.answer ? truncate(readableAnswer(log.kind, log.answer), 320) : '(no answer)'}</span>
       <span className="mt-1.5 flex flex-wrap gap-x-3 font-mono text-[10.5px] text-muted">
         <span>{fmtMs(log.latencyMs)}</span>
         {log.provider ? <span>{log.provider}</span> : null}
@@ -319,7 +319,7 @@ function LogDetailView({ id, onChange }: { id: string; onChange: (item: LogItem)
           </Notice>
         ) : null}
         <div className="mt-2 rounded-md border border-rule bg-white p-4">
-          {detail.answer ? <CitedAnswer text={detail.answer} titles={titles} anchorPrefix={`n-${detail.id}`} /> : <p className="text-sm text-muted">(no answer)</p>}
+          {detail.answer ? <CitedAnswer text={readableAnswer(detail.kind, detail.answer)} titles={titles} anchorPrefix={`n-${detail.id}`} /> : <p className="text-sm text-muted">(no answer)</p>}
         </div>
       </section>
 
