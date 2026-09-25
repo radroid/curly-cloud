@@ -54,7 +54,7 @@ Manual equivalent:
 
 ```bash
 bun run clone:ingest private/answers/raj-clone-answers-2026-09-25.json
-bun run clone:persona
+bun run clone:persona --yes
 bun run clone ask "What do you refuse to compromise on?"
 ```
 
@@ -78,9 +78,9 @@ Each release:
 
 ```bash
 bun run deploy
-CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:seed
-CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:ingest private/answers/<file>.json
-CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:persona
+CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:seed --yes
+CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:ingest private/answers/<file>.json --yes
+CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:persona --yes
 ```
 
 Recommended: put `/studio*` and `/api/admin/*` behind **Cloudflare Access** as a second lock on top of the studio passphrase.
