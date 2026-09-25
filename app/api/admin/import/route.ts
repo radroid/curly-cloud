@@ -4,7 +4,7 @@ import { getAppEnv } from '@/lib/env'
 import { answersToSources, parseExport } from '@/lib/interview'
 import { ingestSources } from '@/lib/rag'
 import type { IngestResult, SourceInput } from '@/lib/rag/types'
-import { errorResponse, jsonResponse } from '@/lib/security'
+import { errorResponse, jsonResponse, readCapped } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,31 +16,6 @@ const BATCH = 250
 function tooLarge(): Response {
   const res = errorResponse('bad_request', `Export is larger than ${MAX_IMPORT_BYTES / 1024 / 1024} MB.`, { limitBytes: MAX_IMPORT_BYTES })
   return new Response(res.body, { status: 413, headers: res.headers })
-}
-
-/** Read the body without trusting Content-Length, stopping as soon as it passes the cap. */
-async function readCapped(request: Request, max: number): Promise<string | null> {
-  if (!request.body) return ''
-  const reader = request.body.getReader()
-  const chunks: Uint8Array[] = []
-  let size = 0
-  for (;;) {
-    const { done, value } = await reader.read()
-    if (done) break
-    size += value.byteLength
-    if (size > max) {
-      await reader.cancel()
-      return null
-    }
-    chunks.push(value)
-  }
-  const all = new Uint8Array(size)
-  let offset = 0
-  for (const c of chunks) {
-    all.set(c, offset)
-    offset += c.byteLength
-  }
-  return new TextDecoder().decode(all)
 }
 
 function mergeResults(results: IngestResult[], fallbackVersion: number): IngestResult {

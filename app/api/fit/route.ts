@@ -2,9 +2,12 @@ import { z } from 'zod'
 import { getAppEnv, getLimits, type Limits } from '@/lib/env'
 import { assessFit } from '@/lib/rag'
 import { errorFromUnknown, readJsonBody, zodMessage } from '@/lib/rag/http'
-import { clientIdFromRequest, errorResponse, jsonResponse, rateLimitAll, rateLimitedResponse } from '@/lib/security'
+import { clientIdFromRequest, errorResponse, fitRateLimit, jsonResponse, publicPostGuard, rateLimitedResponse } from '@/lib/security'
 
 export const dynamic = 'force-dynamic'
+
+/** A 12,000-character job description plus notes, JSON-escaped, stays well under this. */
+const MAX_BODY_BYTES = 64 * 1024
 
 function fitSchema(limits: Limits) {
   const optionalText = (max: number) =>
@@ -23,19 +26,28 @@ function fitSchema(limits: Limits) {
   })
 }
 
-/** Role-fit assessment (JSON FitAssessment). */
+/**
+ * Role-fit assessment (JSON FitAssessment). Browsers must call it same-origin with a JSON body.
+ * Limits: FIT_PER_DAY per client (shared with MCP assess_fit) and FIT_GLOBAL_PER_DAY overall.
+ */
 export async function POST(request: Request): Promise<Response> {
   try {
+    const refused = publicPostGuard(request)
+    if (refused) return refused
     const env = await getAppEnv()
     const limits = getLimits(env)
-    const body = await readJsonBody(request, limits.maxJobDescriptionChars * 2 + 8_000)
+    const body = await readJsonBody(request, MAX_BODY_BYTES)
     if (!body.ok) return body.response
     const parsed = fitSchema(limits).safeParse(body.value)
     if (!parsed.success) return errorResponse('bad_request', zodMessage(parsed.error))
 
     const clientId = await clientIdFromRequest(request, env.SESSION_SECRET)
-    const limit = await rateLimitAll(env.DB, [{ bucket: `fit:day:${clientId}`, limit: limits.fitPerDay, windowSeconds: 86_400 }])
-    if (!limit.allowed) return rateLimitedResponse(limit)
+    const limit = await fitRateLimit(env.DB, clientId, limits)
+    if (!limit.allowed) {
+      return limit.scope === 'global'
+        ? rateLimitedResponse(limit.result, 'The fit check has reached its daily limit. Try again tomorrow.')
+        : rateLimitedResponse(limit.result)
+    }
 
     const assessment = await assessFit(env, { ...parsed.data, clientId })
     return jsonResponse(assessment)
