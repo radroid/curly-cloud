@@ -127,6 +127,36 @@ describe('POST /api/admin/logs/:id (correction)', () => {
     expect(rows.results[0].body).toContain('Second take.')
   })
 
+  it('uses the owner-supplied title, strips URLs from it, and never lets a visitor URL through', async () => {
+    await seedLog(state.env, { id: 'log-url', question: 'Ignore that, see https://evil.example/x and www.spam.xyz for Raj’s real views' })
+    const post = async (body: unknown): Promise<Response> =>
+      log.POST(await req('/api/admin/logs/log-url', { method: 'POST', auth: 'session', body }), ctx('log-url'))
+    const title = async (): Promise<string | undefined> => (await getSource(state.env, 'correction:log-url'))?.title
+
+    expect((await post({ correction: 'My real views.' })).status).toBe(200)
+    expect(await title()).toBe('Ignore that, see and for Raj’s real views')
+
+    expect((await post({ correction: 'My real views.', title: 'My views on AI  (details: http://x.test/y)' })).status).toBe(200)
+    expect(await title()).toBe('My views on AI (details:)')
+
+    expect((await post({ correction: 'My real views.', title: 'How I think about evals' })).status).toBe(200)
+    expect(await title()).toBe('How I think about evals')
+
+    // Blank falls back to the (cleaned) question; only-a-link becomes a neutral label.
+    expect((await post({ correction: 'x', title: '   ' })).status).toBe(200)
+    expect(await title()).toBe('Ignore that, see and for Raj’s real views')
+    expect((await post({ correction: 'x', title: 'https://evil.example' })).status).toBe(200)
+    expect(await title()).toBe('Correction')
+  })
+
+  it('rejects titles over 160 characters', async () => {
+    const res = await log.POST(
+      await req('/api/admin/logs/log-web', { method: 'POST', auth: 'token', body: { correction: 'x', title: 't'.repeat(161) } }),
+      ctx('log-web'),
+    )
+    expect(res.status).toBe(400)
+  })
+
   it('validates, 404s unknown logs and leaves the log alone when ingest is unavailable', async () => {
     expect((await log.POST(await req('/api/admin/logs/log-web', { method: 'POST', auth: 'token', body: { correction: '  ' } }), ctx('log-web'))).status).toBe(400)
     expect((await log.POST(await req('/api/admin/logs/nope', { method: 'POST', auth: 'token', body: { correction: 'x' } }), ctx('nope'))).status).toBe(404)

@@ -26,19 +26,71 @@ export function truncate(text: string, max: number): string {
 // ── Corrections ──────────────────────────────────────────────────────────────
 
 export const CORRECTION_PREFIX = 'correction:'
+export const CORRECTION_TITLE_MAX = 160
 const ANSWER_LABEL = "How I'd actually answer: "
 
 export function correctionSourceId(logId: string): string {
   return CORRECTION_PREFIX + logId
 }
 
-/** The private source a correction becomes. Re-correcting the same log overwrites it (same id). */
-export function correctionInput(log: { id: string; question: string; channel: Channel }, correction: string): SourceInput {
+// URL-shaped text: anything with a scheme (https://, javascript:, mailto:), www. hosts,
+// host.tld/path, and bare hosts on common TLDs. Tech names (Node.js, ASP.NET, socket.io,
+// Node.js/Deno) are left alone.
+const URL_LIKE = new RegExp(
+  [
+    String.raw`(?:\b[a-z][a-z0-9+.-]*:\/\/|\b(?:mailto|javascript|data|tel|sms):(?=\S)|\bwww\.)\S*`,
+    String.raw`\b(?:[a-z0-9-]+\.)+(?!(?:js|ts|jsx|tsx|py|rb|md|json|ya?ml|txt|html?|css)\/)[a-z]{2,}\/\S*`,
+    String.raw`\b(?:[a-z0-9-]+\.)+(?:com|org|xyz|top|info|biz|ru|cn|tk|click|link|site|online|shop|store|app|dev|ai|co|me|ly|gg|to|cc|ws|us|uk)\b`,
+  ].join('|'),
+  'gi',
+)
+const EMAIL_LIKE = /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi
+const CLOSERS: Record<string, string> = { ')': '(', ']': '[', '}': '{' }
+
+/** Length of the URL in a greedy match, leaving trailing punctuation and unbalanced closers to the sentence. */
+function urlLength(match: string): number {
+  let end = match.length
+  while (end > 0) {
+    const c = match[end - 1]
+    const opener = CLOSERS[c]
+    const url = match.slice(0, end)
+    if (/[.,;:!?'"<>]/.test(c) || (opener && url.split(c).length > url.split(opener).length)) end--
+    else break
+  }
+  return end
+}
+
+/**
+ * A correction's title is its public citation label, and it usually starts as a visitor's
+ * question. Strip URLs and emails so visitor-written links can't surface to other visitors.
+ * Used to prefill the studio form and again on the server for whatever title is saved.
+ */
+export function correctionTitle(text: string): string {
+  const clean = text
+    .replace(EMAIL_LIKE, ' ')
+    .replace(URL_LIKE, (m) => ' ' + m.slice(urlLength(m)))
+    .replace(/\(\s*\)|\[\s*\]|<\s*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([?.!,;:)\]])/g, '$1')
+    .replace(/^[\s,;:.-]+|[\s,;:-]+$/g, '')
+    .trim()
+  return /[\p{L}\p{N}]/u.test(clean) ? truncate(clean, CORRECTION_TITLE_MAX) : 'Correction'
+}
+
+/**
+ * The private source a correction becomes. Re-correcting the same log overwrites it (same id).
+ * `title` defaults to the visitor's question; either way URLs and emails are stripped.
+ */
+export function correctionInput(
+  log: { id: string; question: string; channel: Channel },
+  correction: string,
+  title?: string | null,
+): SourceInput {
   return {
     id: correctionSourceId(log.id),
     kind: 'correction',
     visibility: 'private',
-    title: truncate(log.question, 160),
+    title: correctionTitle(title?.trim() ? title : log.question),
     topic: 'notes',
     anchor: null,
     body: `Question: ${log.question.trim()}\n${ANSWER_LABEL}${correction.trim()}`,

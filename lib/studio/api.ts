@@ -125,7 +125,8 @@ export const studio = {
       api<Page<LogItem>>(`/api/admin/logs${qs({ ...q, flagged: q.flagged == null ? undefined : q.flagged ? 1 : 0 })}`, { signal }),
     get: (id: string, signal?: AbortSignal) => api<LogDetail>(`/api/admin/logs/${enc(id)}`, { signal }),
     flag: (id: string, flagged: boolean) => api<LogItem>(`/api/admin/logs/${enc(id)}`, { method: 'PATCH', body: { flagged } }),
-    correct: (id: string, correction: string) => api<CorrectionResult>(`/api/admin/logs/${enc(id)}`, { method: 'POST', body: { correction } }),
+    correct: (id: string, correction: string, title?: string) =>
+      api<CorrectionResult>(`/api/admin/logs/${enc(id)}`, { method: 'POST', body: { correction, title } }),
   },
 
   keys: {
