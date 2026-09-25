@@ -114,7 +114,7 @@ owned by another stream; if a contract needs to change, note it in the stream's 
 | MCP | `feat/clone-mcp` | `lib/mcp/**`, `app/api/mcp/**`, `app/llms.txt/**` |
 | Studio | `feat/clone-studio` | `app/studio/**`, `lib/studio/**`, `app/api/auth/**`, `app/api/admin/{sources,logs,keys,stats}` |
 | Terminal | `feat/clone-terminal` | `lib/shell/**`, `app/terminal/**` |
-| Interview | `feat/clone-interview` | `interview/**`, `content/questions/**`, `lib/interview/**`, `scripts/clone.ts`, `scripts/build-interview.ts`, `.claude/skills/ingest-answers/**` |
+| Interview | `feat/clone-interview` | `interview/**`, `content/questions/**`, `lib/interview/**`, `app/api/admin/import`, `scripts/clone.ts`, `scripts/build-interview.ts`, `.claude/skills/ingest-answers/**` |
 | Website | `feat/clone-site` (lead) | `app/page.tsx`, `app/components/site/**`, integration of all streams |
 
 ### 5.1 Admin API contracts (all require `requireAdmin`)
@@ -123,6 +123,7 @@ owned by another stream; if a contract needs to change, note it in the stream's 
 |-------|-----------------|
 | `POST /api/admin/seed` | — → `IngestResult` (public resume sources, `replaceKind: 'resume'`) |
 | `POST /api/admin/ingest` | `{ sources: SourceInput[], replaceKind?: SourceKind }` → `IngestResult` (max 500 sources per call) |
+| `POST /api/admin/import` | a `raj-clone-answers` v1 export (from the interview stack) → `{ result: IngestResult, answers: number }`; mapping lives in `lib/interview` |
 | `GET /api/admin/persona` | → `{ text, updatedAt } \| null` |
 | `POST /api/admin/persona` | — → `{ text, sourcesUsed }` (rebuild) |
 | `POST /api/admin/debug/retrieve` | `{ query, k? }` → `{ chunks: RetrievedChunk[] }` |
