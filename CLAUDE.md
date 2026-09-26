@@ -17,7 +17,7 @@ bun run dev              # Next dev server with Cloudflare bindings (D1 local, W
 bun run test             # Vitest (D1 emulated with node:sqlite)
 bun run typecheck        # tsc --noEmit
 bun run preview          # OpenNext build + wrangler dev (closest to production)
-bun run deploy           # Build and deploy to Cloudflare
+bun run deploy           # Build and deploy to Cloudflare (curlycloud.dev, live)
 bun run db:migrate:local # Apply migrations/ to the local D1
 bun run cf-typegen       # Regenerate cloudflare-env.d.ts after editing wrangler.jsonc
 bun run clone:seed       # Load the public resume into the knowledge base
@@ -64,7 +64,7 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 - **TypeScript is `strict: false` + `strictNullChecks: true`.** `const xs = []` infers `never[]` — annotate empty arrays.
 - **Tailwind v4 (stable), no config file.** Tokens live in `@theme` in `app/global.css`.
 - **Workers AI is always remote**, even in dev. It needs `wrangler login` and costs neurons.
-- **`database_id` in wrangler.jsonc is a placeholder** until `wrangler d1 create raj-clone` is run for production.
+- **Production D1 is `raj-clone`** (`database_id` in wrangler.jsonc). `bun run db:migrate:remote` changes the live database; new migrations must be additive.
 - **Bindings in route handlers** come from `getAppEnv()` (`lib/env.ts`), not `process.env`.
 - **`interview/raj-interview.html` is generated.** Edit `content/questions/` or `interview/src/`, then rebuild; a test fails if the committed HTML is stale. Shared export/XP logic lives in `lib/interview/core.ts` (compiled into the page).
 - **Stale `.next/types` after merging routes.** With a dev server running, `tsc` can report unknown routes until the dev server compiles them. Hit the route once or delete `.next/types`.

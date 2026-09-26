@@ -15,7 +15,7 @@
     {
       "binding": "DB",
       "database_name": "raj-clone",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "67f57fe2-6e73-41eb-81d7-c401c96605ea",
       "migrations_dir": "migrations"
     }
   ],

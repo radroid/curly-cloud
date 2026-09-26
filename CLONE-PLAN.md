@@ -171,7 +171,8 @@ per-client fit bucket. `/api/chat` and `/api/fit` accept same-origin `applicatio
 ### Next (needs Raj)
 - Answer interview cards → `ingest my answers` in Claude Code. The persona builds from them.
 - Optional `ANTHROPIC_API_KEY` for Claude-quality voice (Workers AI Llama 4 Scout is the default).
-- Production: `wrangler d1 create raj-clone`, secrets, deploy (see README).
+- ~~Production~~ Deployed 2026-09-26: D1 `raj-clone` migrated, secrets set, resume seeded (40 sources), baseline persona built.
+- Cloudflare Access on `/studio*` and `/api/admin/*` (recommended second lock).
 
 ### Latest eval baseline (Workers AI, resume-only corpus, production worker, 2026-09-25)
 Retrieval (47 cases incl. answer-case expectations): hit@1 93.6%, hit@3 97.9%, hit@8 100%, MRR 0.961.

@@ -62,7 +62,7 @@ Commands default to `CLONE_URL=http://localhost:3000`.
 
 ## Deploy (Cloudflare Workers via OpenNext)
 
-One-time setup:
+One-time setup (done for curlycloud.dev on 2026-09-26; needed again only for a fresh account):
 
 ```bash
 bunx wrangler login
