@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" shape-rendering="crispEdges">
+  <!-- Roof: stairstepped triangle, apex at col 8 row 2 -->
+  <rect x="8" y="2" width="1" height="1" fill="#000"/>
+  <rect x="7" y="3" width="3" height="1" fill="#000"/>
+  <rect x="6" y="4" width="5" height="1" fill="#000"/>
+  <rect x="5" y="5" width="7" height="1" fill="#000"/>
+  <rect x="4" y="6" width="9" height="1" fill="#000"/>
+  <rect x="3" y="7" width="11" height="1" fill="#000"/>
+  <!-- Body: full-width block rows 8–13 -->
+  <rect x="4" y="8" width="9" height="6" fill="#000"/>
+  <!-- Door cutout (white): centered, cols 7–9, rows 11–13 -->
+  <rect x="7" y="11" width="3" height="3" fill="#fff"/>
+  <!-- Window cutout (white): left, cols 5–6, rows 9–10 -->
+  <rect x="5" y="9" width="2" height="2" fill="#fff"/>
+  <!-- Window cutout (white): right, cols 10–11, rows 9–10 -->
+  <rect x="10" y="9" width="2" height="2" fill="#fff"/>
+</svg>

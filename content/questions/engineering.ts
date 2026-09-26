@@ -1,0 +1,248 @@
+import type { Question } from './types'
+
+export const ENGINEERING: Question[] = [
+  {
+    id: 'engineering-001',
+    topic: 'engineering',
+    type: 'this-or-that',
+    depth: 1,
+    prompt: 'You are starting a new product with a team of five engineers. Which shape do you pick?',
+    options: ['One well-structured monolith', 'A few services from day one'],
+    hint: 'Anchor it in a system you have actually run, not a blog post.',
+    followUps: [
+      'What is the first concrete signal that tells you it is time to split something out?',
+      'Where did the service boundaries at Pinhous come from, and would you draw them the same way again?',
+    ],
+    why: 'His default architecture instinct and what evidence moves him off it.',
+  },
+  {
+    id: 'engineering-002',
+    topic: 'engineering',
+    type: 'open',
+    depth: 2,
+    prompt:
+      "In code review, where's your line between 'this blocks the merge' and 'nit, ship it'? Give me real examples from each side.",
+    hint: 'Pull from PRs you reviewed at Pinhous, Create Club or Eddy.',
+    followUps: [
+      'Is a bad name ever a blocker for you?',
+      'Since you added AI-assisted review to the delivery workflow, what do you still insist on catching yourself?',
+      'How do you review a PR from someone more senior than you?',
+    ],
+    why: 'What he treats as load-bearing in a codebase versus personal taste, and how AI review changed his role as a reviewer.',
+  },
+  {
+    id: 'engineering-003',
+    topic: 'engineering',
+    type: 'rapid',
+    depth: 1,
+    prompt: 'One language for the next five years: TypeScript, Python or C#?',
+    hint: 'Gut answer first.',
+    followUps: ['What would you miss most from the other two?'],
+    why: 'His honest language preference, stripped of context.',
+  },
+  {
+    id: 'engineering-004',
+    topic: 'engineering',
+    type: 'open',
+    depth: 2,
+    prompt:
+      "What do you actually write tests for, and what do you knowingly leave untested? I'm more interested in what you do than what you'd recommend.",
+    hint: 'Pick one real codebase, like the Eddy tracker or a Create Club client app, and describe its test suite honestly.',
+    followUps: [
+      'Where does a test end and an eval begin for an LLM feature?',
+      'What is a bug a test caught that made the whole suite worth it?',
+      'Do you ask Claude Code to write tests, and do you trust the ones it writes?',
+    ],
+    why: 'His real testing practice and where he consciously accepts risk.',
+  },
+  {
+    id: 'engineering-005',
+    topic: 'engineering',
+    type: 'scenario',
+    depth: 3,
+    prompt:
+      "You hosted Eddy's MCP server in-process in the Next.js app rather than as a sidecar. Suppose agent traffic grows 20x and a heavy tool call starts slowing page loads for people using the tracker in the browser. Do you split it out, and what would have to be true before you did?",
+    hint: "Name the cheapest fix you'd try before a new service, and what in-process bought you that you'd lose.",
+    followUps: [
+      'If you did split it, how would you stop the auth and write paths from forking into two versions?',
+      'Was in-process a principled choice or the fastest one at the time?',
+      'What would you monitor to see this problem coming a month early?',
+    ],
+    why: 'How he reasons about monolith versus service boundaries under real load, and whether he can defend a past architecture choice.',
+  },
+  {
+    id: 'engineering-006',
+    topic: 'engineering',
+    type: 'scale',
+    depth: 1,
+    prompt: 'How much cleverness do you tolerate in production code?',
+    scale: { min: 1, max: 5, minLabel: 'None, boring always wins', maxLabel: 'Plenty, if it pays for itself' },
+    hint: 'Think of the last clever thing you merged, or refused to merge.',
+    followUps: [
+      'What is the most boring solution you are proud of?',
+      'Does your answer change when a coding agent will be the next one to read the code?',
+    ],
+    why: 'His taste for simplicity versus elegance, and whether AI readers change it.',
+  },
+  {
+    id: 'engineering-007',
+    topic: 'engineering',
+    type: 'open',
+    depth: 2,
+    prompt:
+      'You introduced Kafka at Pinhous so producers and consumers could scale and fail independently. When is event-driven architecture overkill, and what do you reach for instead?',
+    hint: 'Name a system where a Postgres table and a scheduled job would have beaten a message broker.',
+    followUps: [
+      'What operational cost of Kafka did the Pinhous team feel most?',
+      "Eddy's telemetry from 150,000+ devices comes in through Azure Storage Queues rather than Kafka. Right call at that scale?",
+      'How do you debug something that went wrong three hops downstream in an event flow?',
+    ],
+    why: 'When he thinks event-driven complexity earns its keep, and what his simpler defaults are.',
+  },
+  {
+    id: 'engineering-008',
+    topic: 'engineering',
+    type: 'story',
+    depth: 3,
+    prompt:
+      "Eddy's work tracker replaced a shared Excel sheet, and you built it from scratch rather than adopting an off-the-shelf tracker. Take me through that build versus buy call: what did you compare, and did anyone push to buy instead?",
+    hint: 'Situation · the options you weighed · what tipped it · what you would do differently.',
+    followUps: [
+      'What would have had to be true for you to buy instead?',
+      'How much did the later MCP server and RAG work depend on owning the data model?',
+      'What does the tracker cost to maintain now that it is yours?',
+    ],
+    why: 'How he makes build versus buy decisions and what owning a system is worth to him.',
+  },
+  {
+    id: 'engineering-009',
+    topic: 'engineering',
+    type: 'this-or-that',
+    depth: 1,
+    prompt: 'Talking to Postgres from a TypeScript app, what is your default?',
+    options: ['Raw SQL or a thin query builder', 'A full ORM'],
+    hint: 'Think about the tracker on self-hosted PostgreSQL.',
+    followUps: [
+      'Where has an ORM bitten you, or saved you?',
+      'How do you run schema migrations on a self-hosted Postgres with real users on it?',
+    ],
+    why: 'How close to the database he likes to work and what he values in a data layer.',
+  },
+  {
+    id: 'engineering-010',
+    topic: 'engineering',
+    type: 'open',
+    depth: 2,
+    prompt:
+      "At Eddy you run structured logging and monitoring on the paths you own. Pick one of those paths: what goes into every log line, and what's the one alert you'd want to be woken up for?",
+    hint: 'Be concrete: field names, one alert worth a page, one that is just noise.',
+    followUps: [
+      'At Create Club the dashboards let ops catch failures without opening the files. Who is observability really for, in your view?',
+      'When does something deserve a metric rather than a log line?',
+      'What is never allowed in a log line?',
+    ],
+    why: 'His observability taste: what he instruments, what he alerts on, and who he builds it for.',
+  },
+  {
+    id: 'engineering-011',
+    topic: 'engineering',
+    type: 'scenario',
+    depth: 3,
+    prompt:
+      'A junior engineer opens a 1,200-line PR that was mostly written by Claude Code or Copilot. CI is green and the feature works in the demo. How do you review it, and what do you say to them?',
+    hint: 'Would you review it differently from a 1,200-line PR they typed by hand?',
+    followUps: [
+      'Would you ask them to split it, and how would you explain why?',
+      'What norms for AI-written code did you set when you rolled the tools out at Eddy, if any?',
+      'How do you tell whether they understand the code they are shipping?',
+    ],
+    why: 'His review standards for AI-generated code and how he coaches engineers who lean on it.',
+  },
+  {
+    id: 'engineering-012',
+    topic: 'engineering',
+    type: 'open',
+    depth: 3,
+    prompt:
+      'Walk me through how you use Claude Code on a normal working day, interactive and headless. What do you never hand to it, even when it would be faster?',
+    hint: 'One task you delegate end to end, one you always do yourself, and why.',
+    followUps: [
+      'What do you run headless, and what stops it doing damage while nobody is watching?',
+      'What is in your project instructions that a newcomer would find surprising?',
+      'How has your own code reading changed now that you write less of the first draft?',
+    ],
+    why: 'His real AI-assisted workflow and the boundaries he keeps on delegation.',
+  },
+  {
+    id: 'engineering-013',
+    topic: 'engineering',
+    type: 'scale',
+    depth: 1,
+    prompt: 'How much written documentation does a healthy codebase need?',
+    scale: { min: 1, max: 5, minLabel: 'The code is the doc', maxLabel: 'Write everything down' },
+    hint: 'You owned the technical documentation repository at ARO. Let that experience answer.',
+    followUps: [
+      'What did owning the ARO docs teach you about what people actually read?',
+      'What is the one document every repo you own has?',
+      'Do you now write docs for humans, for coding agents, or both?',
+    ],
+    why: 'His documentation philosophy, grounded in having owned a documentation repository.',
+  },
+  {
+    id: 'engineering-014',
+    topic: 'engineering',
+    type: 'story',
+    depth: 3,
+    prompt:
+      'Tell me about a time you argued to pay down tech debt when the people around you wanted the next feature. What was the debt, and how did you make the case?',
+    hint: 'Situation · the debt and what it was costing · how you argued it · what happened · what you would do differently.',
+    followUps: [
+      'How did you show afterwards that it was worth it?',
+      'What debt are you knowingly carrying right now, and why is that the right call?',
+    ],
+    why: 'How he weighs debt against delivery and how he sells invisible work to people who want features.',
+  },
+  {
+    id: 'engineering-015',
+    topic: 'engineering',
+    type: 'open',
+    depth: 2,
+    prompt: 'What does a deploy pipeline have to prove before you would trust it to ship on a Friday afternoon?',
+    hint: 'Think about health checks, what counts as healthy, and when a rollback fires on its own.',
+    followUps: [
+      'Where do AI review and automated tests sit in your pipeline, and which do you trust more?',
+      'What is the slowest pipeline you would tolerate before you start cutting steps?',
+      'Preview environments per PR: worth it or not?',
+    ],
+    why: 'What he considers a trustworthy delivery pipeline and how much automation he wants between merge and production.',
+  },
+  {
+    id: 'engineering-016',
+    topic: 'engineering',
+    type: 'story',
+    depth: 2,
+    prompt:
+      'Think of the last codebase you had to get productive in that someone else wrote. How did you read your way in, and how long before you trusted yourself to change it?',
+    hint: 'Situation · where you started reading · what tripped you up · what you would do faster now.',
+    followUps: [
+      'What is the first file you open or command you run in an unfamiliar repo?',
+      'Do you use Claude Code to explain unfamiliar code, and when do you stop trusting its summary?',
+    ],
+    why: 'How he builds understanding of code he did not write, and how quickly.',
+  },
+  {
+    id: 'engineering-017',
+    topic: 'engineering',
+    type: 'scenario',
+    depth: 3,
+    prompt:
+      'A VP catches you in the hallway: how long to add single sign-on to the work tracker? You have never used the identity provider they use. What number do you give, and what do you say in the next 30 seconds?',
+    hint: 'A number, a range or a refusal, and why that one.',
+    followUps: [
+      'How do you check afterwards whether your estimates were any good?',
+      'Has AI-assisted coding changed how you estimate, or just how fast you finish?',
+      'What do you do when an estimate quietly doubles halfway through?',
+    ],
+    why: 'How he estimates under uncertainty and manages expectations with senior stakeholders.',
+  },
+]

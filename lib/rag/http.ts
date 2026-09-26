@@ -1,0 +1,71 @@
+/** Small helpers shared by the clone's route handlers (chat, fit, profile, admin). */
+import type { z } from 'zod'
+import { requireAdmin } from '@/lib/auth'
+import { getAppEnv, type AppEnv } from '@/lib/env'
+import { RagError } from '@/lib/rag/answer'
+import { IngestLimitError } from '@/lib/rag/ingest'
+import { errorResponse, isJsonContentType, readCapped, type ApiErrorCode } from '@/lib/security'
+
+export type BodyResult = { ok: true; value: unknown } | { ok: false; response: Response }
+
+/**
+ * Read and parse a JSON body. Never throws. Requires `Content-Type: application/json` (415
+ * otherwise) and reads at most `maxBytes` from the stream whatever Content-Length says (413).
+ */
+export async function readJsonBody(request: Request, maxBytes: number): Promise<BodyResult> {
+  if (!isJsonContentType(request)) {
+    return { ok: false, response: errorResponse('unsupported_media_type', 'Send the body as JSON with Content-Type: application/json.') }
+  }
+  let text: string | null
+  try {
+    text = await readCapped(request, maxBytes)
+  } catch {
+    return { ok: false, response: errorResponse('bad_request', 'Could not read the request body.') }
+  }
+  if (text === null) {
+    return { ok: false, response: errorResponse('payload_too_large', `Request body is larger than ${Math.round(maxBytes / 1024)} KB.`) }
+  }
+  try {
+    return { ok: true, value: text ? JSON.parse(text) : {} }
+  } catch {
+    return { ok: false, response: errorResponse('bad_request', 'Request body must be JSON.') }
+  }
+}
+
+/** First few validation issues as one readable line. */
+export function zodMessage(error: z.ZodError): string {
+  return error.issues
+    .slice(0, 4)
+    .map((i) => (i.path.length ? `${i.path.join('.')}: ${i.message}` : i.message))
+    .join('; ')
+}
+
+const RAG_CODES: Record<RagError['code'], ApiErrorCode> = {
+  bad_request: 'bad_request',
+  rate_limited: 'rate_limited',
+  budget_exceeded: 'budget_exceeded',
+  unavailable: 'unavailable',
+  internal: 'internal',
+}
+
+/** Map known errors to API errors; everything else becomes a generic 500 (no stack traces). */
+export function errorFromUnknown(err: unknown, fallback = 'Something went wrong.'): Response {
+  if (err instanceof RagError) return errorResponse(RAG_CODES[err.code], err.message)
+  if (err instanceof IngestLimitError) return errorResponse('bad_request', err.message)
+  console.error(err)
+  return errorResponse('internal', fallback)
+}
+
+/** Wrap an /api/admin handler: resolve env, require admin, map errors. */
+export function adminHandler(handler: (request: Request, env: AppEnv) => Promise<Response>): (request: Request) => Promise<Response> {
+  return async (request: Request): Promise<Response> => {
+    try {
+      const env = await getAppEnv()
+      const denied = await requireAdmin(request, env)
+      if (denied) return denied
+      return await handler(request, env)
+    } catch (err) {
+      return errorFromUnknown(err)
+    }
+  }
+}

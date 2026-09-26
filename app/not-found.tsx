@@ -2,57 +2,15 @@ import Link from 'next/link'
 
 export default function NotFound() {
   return (
-    <div
-      className="min-h-screen flex items-center justify-center"
-    >
-      <div className="mac-dialog" style={{ maxWidth: 360 }}>
-        <div
-          style={{
-            fontSize: 48,
-            marginBottom: 16,
-            lineHeight: 1,
-          }}
-        >
-          ☹
-        </div>
-        <h1
-          style={{
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 16,
-            fontWeight: 'bold',
-            marginBottom: 12,
-          }}
-        >
-          Sorry, a system error occurred.
-        </h1>
-        <p
-          style={{
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 13,
-            color: '#555',
-            marginBottom: 20,
-          }}
-        >
-          The requested page could not be found.
+    <main className="min-h-dvh grid place-items-center px-6">
+      <div className="max-w-md">
+        <p className="font-mono text-sm text-muted">404</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">This page doesn’t exist.</h1>
+        <p className="mt-3 text-muted">
+          The resume is on the <Link className="text-forest underline underline-offset-4" href="/">home page</Link>, or try the{' '}
+          <Link className="text-forest underline underline-offset-4" href="/terminal">terminal</Link>.
         </p>
-        <Link
-          href="/"
-          style={{
-            display: 'inline-block',
-            fontFamily: 'var(--font-chicago)',
-            fontSize: 13,
-            padding: '6px 24px',
-            border: '2px solid #000',
-            borderRadius: 6,
-            background: '#fff',
-            color: '#000',
-            textDecoration: 'none',
-            boxShadow: '2px 2px 0px #000',
-          }}
-        >
-          Restart
-        </Link>
       </div>
-    </div>
+    </main>
   )
 }

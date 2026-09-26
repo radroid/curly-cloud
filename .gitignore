@@ -42,6 +42,17 @@ next-env.d.ts
 
 # wrangler
 .wrangler/
+.dev.vars
+.dev.vars.*
 
 github-banner.html
 clash-api-player-response.json
+
+
+# Raj's private answers, question packs and eval cases — never commit.
+/private/*
+!/private/README.md
+
+# Local Claude Code state; project skills are committed.
+.claude/*
+!.claude/skills/
