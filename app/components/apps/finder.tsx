@@ -86,35 +86,37 @@ function FileThumbnail({ entry, size = 36 }: { entry: FileEntry; size?: number }
 // ─── File system tree ────────────────────────────────────────────────────────
 
 const FILE_TREE: FSEntry[] = [
+  { kind: 'file', label: 'Resume', path: '/cv/Raj_Dholakia_Resume_FullStack.pdf', ext: '.pdf' },
   {
-    kind: 'folder', label: 'Applications', id: 'app-icons',
+    kind: 'folder', label: 'Assets', id: 'assets',
     children: [
-      { kind: 'file', label: 'Browser',       path: '/app-icons/browser.svg',       ext: '.svg' },
-      { kind: 'file', label: 'Calculator',    path: '/app-icons/calculator.svg',    ext: '.svg' },
-      { kind: 'file', label: 'Control Panel', path: '/app-icons/control-panel.svg', ext: '.svg' },
-      { kind: 'file', label: 'Documents',     path: '/app-icons/finder.svg',        ext: '.svg' },
-      { kind: 'file', label: 'Journal',       path: '/app-icons/journal.svg',       ext: '.svg' },
-      { kind: 'file', label: 'Music',         path: '/app-icons/music.svg',         ext: '.svg' },
-      { kind: 'file', label: 'Note Pad',      path: '/app-icons/notepad.svg',       ext: '.svg' },
-      { kind: 'file', label: 'Trash',         path: '/app-icons/trash.svg',         ext: '.svg' },
-      { kind: 'file', label: 'World Map',     path: '/app-icons/world-map.svg',     ext: '.svg' },
+      {
+        kind: 'folder', label: 'Applications', id: 'app-icons',
+        children: [
+          { kind: 'file', label: 'Browser',       path: '/app-icons/browser.svg',       ext: '.svg' },
+          { kind: 'file', label: 'Calculator',    path: '/app-icons/calculator.svg',    ext: '.svg' },
+          { kind: 'file', label: 'Control Panel', path: '/app-icons/control-panel.svg', ext: '.svg' },
+          { kind: 'file', label: 'Documents',     path: '/app-icons/finder.svg',        ext: '.svg' },
+          { kind: 'file', label: 'Journal',       path: '/app-icons/journal.svg',       ext: '.svg' },
+          { kind: 'file', label: 'Music',         path: '/app-icons/music.svg',         ext: '.svg' },
+          { kind: 'file', label: 'Note Pad',      path: '/app-icons/notepad.svg',       ext: '.svg' },
+          { kind: 'file', label: 'Trash',         path: '/app-icons/trash.svg',         ext: '.svg' },
+          { kind: 'file', label: 'World Map',     path: '/app-icons/world-map.svg',     ext: '.svg' },
+        ],
+      },
+      {
+        kind: 'folder', label: 'Fonts', id: 'fonts',
+        children: [{ kind: 'file', label: 'Chicago', path: '/fonts/ChicagoFLF.woff', ext: '.woff' }],
+      },
+      { kind: 'file', label: 'Apple Logo',    path: '/apple-icon.svg',          ext: '.svg' },
+      { kind: 'file', label: 'Mac Icon',      path: '/mac-icon.svg',            ext: '.svg' },
+      { kind: 'file', label: 'Curly OS Logo', path: '/mac-os-curly.svg',        ext: '.svg' },
+      { kind: 'file', label: 'Corner Logo',   path: '/top-corner-mac-logo.svg', ext: '.svg' },
+      { kind: 'file', label: 'Avatar',        path: '/raj-avatar.webp',         ext: '.webp' },
+      { kind: 'file', label: 'World Map',     path: '/worldmap.png',            ext: '.png' },
+      { kind: 'file', label: 'Startup Sound', path: '/StartupMacI.wav',         ext: '.wav' },
     ],
   },
-  {
-    kind: 'folder', label: 'Documents', id: 'cv',
-    children: [{ kind: 'file', label: 'Resume', path: '/cv/Raj_Dholakia_Resume_FullStack.pdf', ext: '.pdf' }],
-  },
-  {
-    kind: 'folder', label: 'Fonts', id: 'fonts',
-    children: [{ kind: 'file', label: 'Chicago', path: '/fonts/ChicagoFLF.woff', ext: '.woff' }],
-  },
-  { kind: 'file', label: 'Apple Logo',       path: '/apple-icon.svg',          ext: '.svg' },
-  { kind: 'file', label: 'Mac Icon',         path: '/mac-icon.svg',            ext: '.svg' },
-  { kind: 'file', label: 'Curly OS Logo',    path: '/mac-os-curly.svg',        ext: '.svg' },
-  { kind: 'file', label: 'Corner Logo',      path: '/top-corner-mac-logo.svg', ext: '.svg' },
-  { kind: 'file', label: 'Avatar',           path: '/raj-avatar.webp',         ext: '.webp' },
-  { kind: 'file', label: 'World Map',        path: '/worldmap.png',            ext: '.png' },
-  { kind: 'file', label: 'Startup Sound',    path: '/StartupMacI.wav',         ext: '.wav' },
 ]
 
 // ─── Download helper ─────────────────────────────────────────────────────────
@@ -272,12 +274,17 @@ export function FinderApp() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { openWindow } = useWindowManager()
 
-  // Current folder — only one level of depth exists in FILE_TREE
-  const topFolder = pathStack.length
-    ? FILE_TREE.find((e): e is FolderEntry => e.kind === 'folder' && e.id === pathStack[0])
-    : null
-  const currentEntries: FSEntry[] = topFolder?.children ?? FILE_TREE
-  const breadcrumb = topFolder ? `${ROOT_LABEL} > ${topFolder.label}` : ROOT_LABEL
+  // Walk pathStack down the tree to support arbitrary folder depth.
+  const trail: FolderEntry[] = []
+  let level: FSEntry[] = FILE_TREE
+  for (const id of pathStack) {
+    const next = level.find((e): e is FolderEntry => e.kind === 'folder' && e.id === id)
+    if (!next) break
+    trail.push(next)
+    level = next.children
+  }
+  const currentEntries: FSEntry[] = level
+  const breadcrumb = [ROOT_LABEL, ...trail.map((f) => f.label)].join(' > ')
 
   const handleOpen = useCallback((entry: FSEntry) => {
     if (entry.kind === 'folder') {
