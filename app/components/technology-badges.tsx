@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/app/components/ui/hover-card'
 import { useIsDarkTheme } from '@/app/lib/theme-utils'
 

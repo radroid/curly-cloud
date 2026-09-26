@@ -1,0 +1,56 @@
+project_root: .
+workspace: null
+base_url: null
+worktree_mode: sibling
+capture_mode: dev
+history_mode: first-parent
+viewport:
+  width: 1440
+  height: 900
+install: null
+dev: pnpm dev
+build: null
+start: null
+port: 3000
+ready:
+  url: http://localhost:3000
+  timeout_ms: 120000
+frontend_paths:
+  - src/**
+  - app/**
+  - components/**
+  - public/**
+  - "**/*.{ts,tsx,js,jsx,css,scss,html,svg}"
+output_dir: .timelapse
+annotate: true
+full_page: false
+gif:
+  fps: 1.5
+  width: 1200
+  hold_skipped_ms: 400
+mp4:
+  fps: 1.5
+  crf: 22
+max_commits: 80
+cache_max_gb: 20
+min_free_gb: 5
+settle_ms: 500
+env_file: .env.timelapse
+env_sync_files:
+  - .env
+  - .env.local
+  - .env.development
+  - .env.development.local
+env_load_files: null
+required_env: []
+use_historical_env: false
+pages:
+  - name: home
+    path: /
+    wait_for: main
+  - name: history
+    path: /history
+    wait_for: main
+  - name: blog
+    path: /blog
+    wait_for: main
