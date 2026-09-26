@@ -97,6 +97,7 @@ function readme(data: ResumeData): string {
     '    education.md         degrees and certificates',
     '    experience/          one file per role',
     '    builds/              independent projects',
+    '    community/           Open Invite: community events in Toronto',
     '    skills/              skills by area',
     '    .profile             where your environment variables come from (ls -a)',
     '',
@@ -223,6 +224,8 @@ export function buildBaseTree(bins: BinEntry[], data: ResumeData = RESUME): Map<
   for (const role of data.experience) file(`${HOME}/experience/${companySlug(role.company)}.md`, roleFile(role))
   dir(`${HOME}/builds`, 'raj')
   for (const build of data.builds) file(`${HOME}/builds/${build.id}.md`, buildFile(build))
+  dir(`${HOME}/community`, 'raj')
+  for (const c of data.community) file(`${HOME}/community/${companySlug(c.company)}.md`, roleFile(c))
   dir(`${HOME}/skills`, 'raj')
   for (const group of data.skills) file(`${HOME}/skills/${group.id}.txt`, skillFile(group))
 

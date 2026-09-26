@@ -17,6 +17,7 @@ export const TOPICS: TopicDef[] = [
   { id: 'experience', label: 'Experience', origin: 'resume', blurb: 'Roles from 2020 to now, with outcomes.' },
   { id: 'builds', label: 'Independent builds', origin: 'resume', blurb: 'Projects shipped end to end on his own.' },
   { id: 'skills', label: 'Skills', origin: 'resume', blurb: 'Languages, platforms, GenAI tooling.' },
+  { id: 'community', label: 'Community', origin: 'resume', blurb: 'Open Invite: hosting small community events in Toronto.' },
   { id: 'education', label: 'Education', origin: 'resume', blurb: 'Degrees and certificates.' },
   { id: 'profile', label: 'Profile', origin: 'resume', blurb: 'Location, links and how to reach him.' },
 

@@ -50,6 +50,7 @@ export function buildLlmsTxt(origin: string, limits: Limits): string {
 ${RESUME.links.map((l) => `- ${l.label}: ${l.href}`).join('\n')}
 
 ${RESUME.summary.join('\n\n')}
+${RESUME.community.map((c) => `\nOutside work: ${c.company} (${c.role}). ${c.blurb ?? ''}`).join('')}
 
 ## What this site offers
 

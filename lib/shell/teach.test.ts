@@ -38,7 +38,7 @@ describe('completion', () => {
 
   it('completes only directories after cd', async () => {
     const sh = await makeShell()
-    expect(complete(sh, 'cd ')).toMatchObject({ options: ['builds/', 'experience/', 'skills/'] })
+    expect(complete(sh, 'cd ')).toMatchObject({ options: ['builds/', 'community/', 'experience/', 'skills/'] })
     expect(complete(sh, 'cd b')).toMatchObject({ text: 'builds/' })
   })
 

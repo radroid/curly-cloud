@@ -322,6 +322,23 @@
       ]
     },
     {
+      "id": "ret-community-open-invite",
+      "kind": "retrieval",
+      "question": "What do you do outside of work in Toronto?",
+      "expect": [
+        "resume:community:open-invite"
+      ]
+    },
+    {
+      "id": "ret-open-invite-platform",
+      "kind": "retrieval",
+      "question": "What did you build for Open Invite?",
+      "expect": [
+        "resume:community:open-invite:platform",
+        "resume:community:open-invite:ops"
+      ]
+    },
+    {
       "id": "ans-eddy",
       "kind": "answer",
       "question": "What did you build at Eddy?",

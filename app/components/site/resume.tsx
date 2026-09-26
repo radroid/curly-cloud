@@ -267,6 +267,43 @@ export function Work() {
           ))}
         </div>
       </section>
+
+      <section aria-labelledby="community-title" className="mt-16">
+        <SectionHeading id="community-title" index="04" title="Community" meta="Toronto" />
+        {RESUME.community.map((c) => (
+          <article
+            key={c.id}
+            id={resumeAnchor('community', c.id)}
+            className="scroll-mt-32 overflow-hidden rounded-2xl border border-rule bg-white"
+          >
+            <div className="flex flex-wrap items-end justify-between gap-3 bg-marker/60 px-5 py-4 sm:px-6">
+              <div>
+                <p className="font-mono text-xs text-muted">{c.period}</p>
+                <h3 className="mt-1 text-lg font-semibold leading-snug tracking-tight">{c.company}</h3>
+                <p className="text-[0.95rem] text-forest">{c.role}</p>
+              </div>
+              {c.url && (
+                <a
+                  href={c.url}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex h-9 items-center rounded-full border border-ink/20 bg-white px-4 text-sm font-medium hover:border-ink"
+                >
+                  {c.url.replace(/^https?:\/\//, '')} ↗
+                </a>
+              )}
+            </div>
+            <div className="p-5 sm:p-6">
+              {c.blurb && <p className="max-w-[62ch] text-[0.95rem] leading-relaxed text-muted">{c.blurb}</p>}
+              <ul className="mt-3 space-y-1">
+                {c.bullets.map((b) => (
+                  <Bullet key={b.id} anchor={resumeAnchor('community', c.id, b.id)} bullet={b} />
+                ))}
+              </ul>
+            </div>
+          </article>
+        ))}
+      </section>
     </div>
   )
 }
@@ -322,7 +359,7 @@ export function Skills() {
   }
   return (
     <section aria-labelledby="skills-title" id={resumeAnchor('skills')} className="mb-16 scroll-mt-24">
-      <SectionHeading id="skills-title" index="04" title="Skills" />
+      <SectionHeading id="skills-title" index="05" title="Skills" />
       <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2">
         {RESUME.skills.map((g) => (
           <div key={g.id}>
@@ -351,7 +388,7 @@ export function Skills() {
 export function Education() {
   return (
     <section aria-labelledby="education-title" id={resumeAnchor('education')} className="mb-16 scroll-mt-24">
-      <SectionHeading id="education-title" index="05" title="Education" />
+      <SectionHeading id="education-title" index="06" title="Education" />
       <ul className="divide-y divide-rule">
         {RESUME.education.map((e) => (
           <li key={e.id} className="grid gap-x-8 gap-y-0.5 py-3 sm:grid-cols-[8.5rem_minmax(0,1fr)]">

@@ -23,6 +23,8 @@ export interface ResumeRole {
   end: string | null
   blurb: string | null
   bullets: ResumeBullet[]
+  /** Public site for the organisation, when there is one. */
+  url?: string
 }
 
 export interface ResumeBuild {
@@ -51,6 +53,8 @@ export interface ResumeData {
   skills: SkillGroup[]
   experience: ResumeRole[]
   builds: ResumeBuild[]
+  /** Community work outside the day job. Same shape as a role. */
+  community: ResumeRole[]
   education: { id: string; credential: string; school: string; period: string }[]
 }
 
@@ -364,6 +368,36 @@ export const RESUME: ResumeData = {
       ],
     },
   ],
+  community: [
+    {
+      id: 'open-invite',
+      company: 'Open Invite',
+      role: 'Co-host & builder',
+      location: 'Toronto, ON',
+      period: 'Jul 2026 – Present',
+      start: '2026-07',
+      end: null,
+      blurb: 'Open Invite puts on small, open-to-everyone community events in Toronto. I help host them and built the platform behind them.',
+      url: 'https://openinviteto.ca',
+      bullets: [
+        {
+          id: 'events',
+          text: 'Help host small community events in Toronto, from the Cake Picnic, where every guest brings a cake to share, to Sip & Bedazzle, a crafts evening at a neighbourhood cafe.',
+          tags: ['community', 'product'],
+        },
+        {
+          id: 'platform',
+          text: 'Built openinviteto.ca end to end on Next.js and Cloudflare Workers with D1: ticket-shaped event cards that morph into each event page, Stripe Checkout fulfilled only by a signed webhook, Google Wallet passes and transactional email.',
+          tags: ['nextjs', 'typescript', 'cloudflare', 'community'],
+        },
+        {
+          id: 'ops',
+          text: "Built the team's operations dashboard for sales, guests, expenses and settlement, including an LLM pipeline that reads invoices from photos into the expense ledger and records every processing step so a wrong extraction can be traced and fixed on the spot.",
+          tags: ['llm-apis', 'product', 'community'],
+        },
+      ],
+    },
+  ],
   education: [
     { id: 'tpm', credential: 'Certificate in Technical Product Management', school: 'BrainStation, Toronto', period: '2024' },
     { id: 'ai', credential: 'Graduate Certificate in AI Design & Implementation', school: 'Durham College, Toronto', period: '2021 – 2022' },
@@ -432,6 +466,32 @@ export function resumeSources(data: ResumeData = RESUME): SourceInput[] {
       })
     }
   }
+  for (const c of data.community) {
+    const header = `${c.role}, ${c.company}, ${c.location} (${c.period}).`
+    if (c.blurb) {
+      out.push({
+        id: `resume:community:${c.id}:about`,
+        kind: 'resume',
+        visibility: 'public',
+        title: `Resume · ${c.company}`,
+        topic: 'community',
+        anchor: resumeAnchor('community', c.id),
+        body: `${header} ${c.blurb}`,
+      })
+    }
+    for (const b of c.bullets) {
+      out.push({
+        id: `resume:community:${c.id}:${b.id}`,
+        kind: 'resume',
+        visibility: 'public',
+        title: `Resume · ${c.company}`,
+        topic: 'community',
+        anchor: resumeAnchor('community', c.id, b.id),
+        body: `${header} ${b.text}`,
+        meta: { tags: b.tags },
+      })
+    }
+  }
   out.push({
     id: 'resume:skills',
     kind: 'resume',
@@ -490,6 +550,14 @@ export function resumeMarkdown(data: ResumeData = RESUME): string {
   lines.push('## Independent builds', '')
   for (const b of data.builds) {
     lines.push(`### ${b.title}`, `${b.period} · ${b.stack.join(', ')}`, '', ...b.bullets.map((x) => `- ${x.text}`), '')
+  }
+  if (data.community.length) {
+    lines.push('## Community', '')
+    for (const c of data.community) {
+      lines.push(`### ${c.role}, ${c.company}`, `${c.location} · ${c.period}`, '')
+      if (c.blurb) lines.push(c.blurb, '')
+      lines.push(...c.bullets.map((b) => `- ${b.text}`), '')
+    }
   }
   lines.push('## Education', '', ...data.education.map((e) => `- ${e.credential}, ${e.school} (${e.period})`), '')
   return lines.join('\n')

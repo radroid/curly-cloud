@@ -38,6 +38,7 @@ export const FILTERS: { group: string; items: { id: string; label: string }[] }[
   {
     group: 'Practice',
     items: [
+      { id: 'community', label: 'Community' },
       { id: 'leadership', label: 'Leadership' },
       { id: 'product', label: 'Product' },
       { id: 'monitoring', label: 'Monitoring' },
@@ -52,7 +53,11 @@ export const FILTER_LABELS: Record<string, string> = Object.fromEntries(
   FILTERS.flatMap((g) => g.items.map((i) => [i.id, i.label])),
 )
 
-const ALL_BULLETS: ResumeBullet[] = [...RESUME.experience.flatMap((r) => r.bullets), ...RESUME.builds.flatMap((b) => b.bullets)]
+const ALL_BULLETS: ResumeBullet[] = [
+  ...RESUME.experience.flatMap((r) => r.bullets),
+  ...RESUME.builds.flatMap((b) => b.bullets),
+  ...RESUME.community.flatMap((c) => c.bullets),
+]
 
 /** How many resume lines carry each tag. Filters with no lines are hidden. */
 export const TAG_COUNTS: Record<string, number> = ALL_BULLETS.reduce<Record<string, number>>((acc, b) => {

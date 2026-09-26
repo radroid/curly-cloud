@@ -41,7 +41,7 @@ export function AgentsSection() {
 
   return (
     <section id="agents" aria-labelledby="agents-title" className="mb-16 scroll-mt-24">
-      <SectionHeading id="agents-title" index="07" title="For agents: connect over MCP" meta="Streamable HTTP" />
+      <SectionHeading id="agents-title" index="08" title="For agents: connect over MCP" meta="Streamable HTTP" />
       <div className="max-w-[62ch] space-y-3 text-[0.95rem] leading-relaxed">
         <p>
           If your team screens candidates with an agent, point it here. It can interview my clone directly, pull my resume, and run a

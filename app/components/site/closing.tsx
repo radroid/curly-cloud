@@ -37,7 +37,7 @@ const PIPELINE: { step: string; title: string; body: string }[] = [
 export function HowItWorks() {
   return (
     <section id="how" aria-labelledby="how-title" className="mb-16 scroll-mt-24">
-      <SectionHeading id="how-title" index="08" title="How the clone works" meta="built like the day job" />
+      <SectionHeading id="how-title" index="09" title="How the clone works" meta="built like the day job" />
       <ol className="grid gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 xl:grid-cols-3">
         {PIPELINE.map((p, i) => (
           <li key={p.step} className="bg-white p-4 sm:p-5">
@@ -70,7 +70,7 @@ export function Contact() {
   const { focusAsk } = useSite()
   return (
     <section id={resumeAnchor('contact')} aria-labelledby="contact-title" className="mb-10 scroll-mt-24">
-      <SectionHeading id="contact-title" index="09" title="Get in touch" />
+      <SectionHeading id="contact-title" index="10" title="Get in touch" />
       <div className="rounded-2xl bg-forest p-6 text-paper sm:p-8">
         <p className="max-w-[30ch] text-2xl font-semibold leading-snug tracking-tight">The clone is good. The real one is better at follow-ups.</p>
         <a href={`mailto:${RESUME.email}`} className="mt-5 inline-block break-all font-mono text-lg underline decoration-paper/40 underline-offset-4 hover:decoration-paper">

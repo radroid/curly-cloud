@@ -7,7 +7,7 @@ describe('file commands', () => {
   it('ls: short, -a, -l, -1, errors, and clickable names on screen', async () => {
     const sh = await makeShell()
     const short = await run(sh, 'ls')
-    expect(short.out).toBe('about.txt  builds  contact.txt  education.md  experience  README.md  resume.md  skills\n')
+    expect(short.out).toBe('about.txt  builds  community  contact.txt  education.md  experience  README.md  resume.md  skills\n')
     const dir = short.outSegs.find((s) => s.text === 'experience')
     expect(dir).toMatchObject({ style: 'accent', link: { kind: 'command', command: 'cd experience && ls' } })
     expect(short.outSegs.find((s) => s.text === 'about.txt')?.link).toEqual({ kind: 'command', command: 'cat about.txt' })
@@ -16,8 +16,8 @@ describe('file commands', () => {
     const long = (await run(sh, 'ls -la')).out
     expect(long).toMatch(/^total \d+/)
     expect(long).toMatch(/-r-------- 1 raj {3}raj {4}\s*\d+ .* \.secrets/)
-    expect(long).toMatch(/drwxr-xr-x 2 raj {3}raj {3}4096 .* experience/)
-    expect((await run(sh, 'ls -lh resume.md')).out).toMatch(/\d\.\dK .* resume\.md/)
+    expect(long).toMatch(/drwxr-xr-x 2 raj {3}raj +4096 .* experience/)
+    expect((await run(sh, 'ls -lh resume.md')).out).toMatch(/\d+(\.\d)?K .* resume\.md/)
     expect((await run(sh, 'ls -1 builds')).out).toBe('jobsearch.md\nregdocs.md\n')
     expect((await run(sh, 'ls builds skills')).out).toMatch(/^builds:\n.*\n\nskills:\n/)
     const missing = await run(sh, 'ls nope')
@@ -42,15 +42,15 @@ describe('file commands', () => {
     const sh = await makeShell()
     const r = await run(sh, 'tree')
     expect(r.out).toMatch(/^\.\n├── about\.txt\n├── builds\n│   ├── jobsearch\.md\n│   └── regdocs\.md/)
-    expect(r.out).toMatch(/3 directories, \d+ files\n$/)
+    expect(r.out).toMatch(/4 directories, \d+ files\n$/)
     expect((await run(sh, 'tree -L 1 /')).out).toMatch(/^\/\n├── bin\n/)
-    expect((await run(sh, 'tree -a -d')).out).toMatch(/3 directories\n$/)
+    expect((await run(sh, 'tree -a -d')).out).toMatch(/4 directories\n$/)
   })
 
   it('find: -name, -iname, -type, -maxdepth', async () => {
     const sh = await makeShell()
     expect((await run(sh, 'find builds -name "*.md"')).out).toBe('builds/jobsearch.md\nbuilds/regdocs.md\n')
-    expect((await run(sh, 'find . -maxdepth 1 -type d')).out).toBe('.\n./builds\n./experience\n./skills\n')
+    expect((await run(sh, 'find . -maxdepth 1 -type d')).out).toBe('.\n./builds\n./community\n./experience\n./skills\n')
     expect((await run(sh, 'find ~ -iname "*EDDY*"')).out).toBe(`${HOME}/experience/eddy-solutions.md\n`)
     expect((await run(sh, 'find . -bogus')).err).toMatch(/unknown predicate/)
   })

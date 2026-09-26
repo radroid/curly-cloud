@@ -73,7 +73,7 @@ export function FitCheck() {
 
   return (
     <section id="fit" aria-labelledby="fit-title" className="mb-16 scroll-mt-24">
-      <SectionHeading id="fit-title" index="06" title="Hiring? Check my fit" meta="AI-assessed, cited" />
+      <SectionHeading id="fit-title" index="07" title="Hiring? Check my fit" meta="AI-assessed, cited" />
       <p className="max-w-[62ch] text-[0.95rem] leading-relaxed text-muted">
         Paste a job description. My clone scores technical and culture fit against what I’ve actually done and said, shows the evidence,
         and is upfront about what it doesn’t know.
