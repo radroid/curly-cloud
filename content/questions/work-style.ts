@@ -21,7 +21,7 @@ export const WORK_STYLE: Question[] = [
     type: 'this-or-that',
     depth: 1,
     prompt:
-      'You worked remotely from Mumbai at Duit and led a remote team there. If you had to pick one setup for the next three years, which would it be?',
+      'You worked remotely from Mumbai at Duit. If you had to pick one setup for the next three years, which would it be?',
     options: ['Fully remote', 'In the office most days'],
     hint: 'Pick one even if the honest answer is hybrid; the why is where the nuance goes.',
     followUps: [

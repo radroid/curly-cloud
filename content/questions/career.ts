@@ -58,7 +58,7 @@ export const CAREER: Question[] = [
     topic: 'career',
     type: 'this-or-that',
     depth: 2,
-    prompt: "You've led a team of 12 at Pinhous and a remote team of 3 at Duit. For the next five years, which path?",
+    prompt: "You've led interns at Pinhous and now lead services at Eddy. For the next five years, which path?",
     options: ['Hands-on technical lead', 'Managing managers'],
     hint: 'Think about which weeks at Pinhous felt best, and why.',
     followUps: [

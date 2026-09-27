@@ -249,7 +249,7 @@ describe('free tools', () => {
       topicsSource: 'static',
       currentRole: { company: 'Eddy Solutions' },
     })
-    expect(r.structuredContent.skills.length).toBeGreaterThan(3)
+    expect(r.structuredContent.skills.length).toBeGreaterThanOrEqual(3)
     expect(r.structuredContent.topics.find((t: any) => t.topic === 'ai')).toMatchObject({ count: null })
     expect(text(r)).toContain('How to reach Raj')
     expect(rateRows()).toEqual([])

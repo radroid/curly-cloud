@@ -11,25 +11,33 @@
       ]
     },
     {
-      "id": "ret-eddy-mcp-auth",
+      "id": "ret-eddy-mcp",
       "kind": "retrieval",
-      "question": "How did you handle authorization and attribution in your MCP server?",
+      "question": "What can people do with the MCP server and agent at Eddy?",
       "expect": [
         "resume:exp:eddy:mcp"
       ]
     },
     {
-      "id": "ret-mcp-inprocess",
+      "id": "ret-pulse",
       "kind": "retrieval",
-      "question": "Why did you host the MCP server in-process instead of as a sidecar?",
+      "question": "What is The Pulse?",
       "expect": [
-        "resume:exp:eddy:mcp-inprocess"
+        "resume:build:pulse"
+      ]
+    },
+    {
+      "id": "ret-earned",
+      "kind": "retrieval",
+      "question": "Have you built an app with an AI coach?",
+      "expect": [
+        "resume:build:earned"
       ]
     },
     {
       "id": "ret-eddy-rag",
       "kind": "retrieval",
-      "question": "Tell me about the RAG system over internal engineering docs",
+      "question": "Tell me about the RAG system over sensor engineering docs and ISO whitepapers",
       "expect": [
         "resume:exp:eddy:rag"
       ]
@@ -39,13 +47,13 @@
       "kind": "retrieval",
       "question": "What do you do with the LoRaWAN device telemetry?",
       "expect": [
-        "resume:exp:eddy:telemetry"
+        "resume:exp:eddy:services"
       ]
     },
     {
       "id": "ret-claude-code",
       "kind": "retrieval",
-      "question": "How do you use Claude Code with your team?",
+      "question": "How have you rolled out agent-driven development with Codex and Claude Code?",
       "expect": [
         "resume:exp:eddy:claude-code"
       ]
@@ -112,8 +120,7 @@
       "kind": "retrieval",
       "question": "How big a team have you led?",
       "expect": [
-        "resume:exp:pinhous:team",
-        "resume:exp:duit:team"
+        "resume:exp:pinhous:team"
       ]
     },
     {
@@ -353,12 +360,29 @@
     {
       "id": "ans-team-size",
       "kind": "answer",
-      "question": "How many developers did you lead at Pinhous?",
+      "question": "How many people did you lead at Pinhous?",
       "expect": [
         "resume:exp:pinhous:team"
       ],
       "mustInclude": [
-        "12|twelve"
+        "3|three",
+        "intern"
+      ],
+      "mustNotMatch": [
+        "\\b12\\b|twelve"
+      ],
+      "mustCite": true
+    },
+    {
+      "id": "ans-duit-role",
+      "kind": "answer",
+      "question": "What did you do at Duit.io, and did you lead a team there?",
+      "expect": [
+        "resume:exp:duit"
+      ],
+      "mustNotMatch": [
+        "\\bled (a|the) (remote )?team",
+        "team of (3|three)"
       ],
       "mustCite": true
     },

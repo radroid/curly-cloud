@@ -37,8 +37,8 @@ export const STORIES: Question[] = [
     type: 'story',
     depth: 3,
     prompt:
-      "Tell me how the Eddy RAG over engineering docs ended up with two modes, Explain and Assess, and an Inspect AI suite that has to pass before any change ships. What were engineers actually asking for, and what does Assess do that Explain can't?",
-    hint: 'Situation · why one mode was not enough · how the eval gate works · what it has caught so far · what you would do differently.',
+      "Tell me about the RAG system you're building at Eddy over sensor engineering docs and ISO whitepapers, gated by an Inspect AI eval suite. What are engineers actually asking it, and how does the gate decide a change can ship?",
+    hint: 'Situation · what engineers need from it · how the eval gate works · what it has caught so far · what you would do differently.',
     followUps: [
       'Has the gate ever blocked a change you wanted to ship? What happened?',
       'How did you decide the pass threshold?',
@@ -67,14 +67,14 @@ export const STORIES: Question[] = [
     type: 'story',
     depth: 1,
     prompt:
-      'Within your first month at Eddy you rolled out Claude Code and Copilot and shipped an app the team now uses to record its engineering decisions. Tell me the story of that app: where the idea came from and how it went from your laptop to something the team uses.',
-    hint: 'Situation · the problem it solved · how you built it and with what · the first real decision recorded · what you would change.',
+      'At Eddy you rolled out AGENTS.md instructions and pull request review guidelines across several repositories for agent-driven development with Codex and Claude. Tell me the story: where it started and how it went from your own setup to something the team relies on.',
+    hint: 'Situation · the problem it solved · what went into AGENTS.md and the review guidelines · the first time it paid off · what you would change.',
     followUps: [
-      'How much of it did Claude Code write?',
-      'Was it partly a demonstration of what the tools could do for the team?',
-      'What is a decision the team recorded that later mattered?',
+      'What did you leave out of AGENTS.md on purpose, to avoid stuffing the context?',
+      'What does a pull request review guideline catch that CI does not?',
+      'How much of the rollout itself did the agents write?',
     ],
-    why: 'How he builds momentum early in a new role and uses a small, real tool to show what AI-assisted development can do.',
+    why: 'How he builds momentum in a new role and sets a team up to work well with coding agents.',
   },
   {
     id: 'stories-006',
@@ -112,7 +112,7 @@ export const STORIES: Question[] = [
     type: 'story',
     depth: 2,
     prompt:
-      'Across the 10+ client apps you shipped at Create Club, tell me about the hardest engagement. What made it hard, and how did it end?',
+      'Across the 4+ production apps you shipped at Create Club, tell me about the hardest engagement. What made it hard, and how did it end?',
     hint: 'Situation · what made it hard (scope, trust, money, people) · what you did · how it ended · what you would do differently. No names needed.',
     followUps: [
       'What would you now put in the contract or the kickoff to prevent it?',
@@ -127,12 +127,12 @@ export const STORIES: Question[] = [
     type: 'story',
     depth: 2,
     prompt:
-      'At Pinhous you built a Docker and infrastructure-as-code pipeline on AWS that cut deploys from 15 minutes to 2, with health monitoring and automated rollbacks. Tell me where the 13 minutes went and how you found them.',
+      'At Pinhous you built the AWS deploy pipeline (GitHub Actions, Docker images to ECS, CloudFormation via CDK) that cut deploys from 15 minutes to 2, with health checks and automatic rollbacks. Tell me where the 13 minutes went and how you found them.',
     hint: 'Situation · what the old deploy looked like · what you measured · what you changed first · what you would do differently.',
     followUps: [
       'Did an automated rollback ever fire for real? What happened?',
-      'How did the habits of 12 developers change once a deploy took 2 minutes?',
-      'Which infrastructure-as-code tool did you pick, and would you pick it again?',
+      "How did the team's habits change once a deploy took 2 minutes?",
+      'Would you pick CDK again?',
     ],
     why: 'How he diagnoses a delivery bottleneck and what fast, safe deploys changed for his team.',
   },
@@ -187,14 +187,14 @@ export const STORIES: Question[] = [
     type: 'open',
     depth: 2,
     prompt:
-      'At ARO your ML-powered document automation tripled report-generation throughput with automated extraction and NLU-based classification. If you rebuilt it today, what would you keep, what would you hand to an LLM, and what would you still refuse to?',
+      'At ARO you built Python document-processing automations for extraction and tagging, shaped around how the documents were used downstream. If you rebuilt them today, what would you keep, what would you hand to an LLM, and what would you still refuse to?',
     hint: 'Start with what the pipeline did and who did that work by hand before it existed.',
     followUps: [
       'How did you know the extraction was right without checking every page?',
-      'Which document type was hardest to classify, and why?',
+      'Which document type was hardest to tag, and why?',
       'How did the people who used to produce those reports by hand feel about it?',
     ],
-    why: 'How his pre-LLM machine learning experience shapes where he would and would not use LLMs today.',
+    why: 'How his pre-LLM automation work shapes where he would and would not use LLMs today.',
   },
   {
     id: 'stories-014',
@@ -217,14 +217,14 @@ export const STORIES: Question[] = [
     type: 'story',
     depth: 2,
     prompt:
-      'Early in your career at Duit, you led a remote team of 3 building Cloud Functions, IAM and the data pipelines behind real-time dashboards. Tell me about a week on that team when things were not going well: what was wrong, and what did you do about it?',
+      'Early in your career at Duit, working remotely from Mumbai, you deployed the Cloud Functions and IAM roles behind the backends and data pipelines for real-time dashboards. Tell me about a week when things were not going well: what was wrong, and what did you do about it?',
     hint: 'Situation · what was going wrong · what you tried · what worked · what you would do differently with what you know now.',
     followUps: [
-      'How did you run a remote team in 2020 and 2021 without the habits and tools you rely on now?',
-      'Did the team know you were new to leading?',
+      'How did you work remotely in 2020 and 2021 without the habits and tools you rely on now?',
+      'Who did you go to when you were stuck, and how?',
       'What did you get wrong then that you still watch for?',
     ],
-    why: 'How he first learned to lead, remotely and early in his career.',
+    why: 'How he worked and learned early in his career, remotely.',
   },
   {
     id: 'stories-016',

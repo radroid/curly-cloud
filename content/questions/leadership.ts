@@ -48,14 +48,14 @@ export const LEADERSHIP: Question[] = [
     type: 'story',
     depth: 2,
     prompt:
-      'At Duit you were an Associate Software Engineer, early in your career, and already leading a remote team of 3. Tell me about a week when keeping that team moving was genuinely hard.',
+      'At Pinhous you led 3 interns, 2 developers and a designer, while owning the architecture yourself. Tell me about a week when keeping them moving was genuinely hard.',
     hint: 'Situation · what you did · what happened · what you would do differently now.',
     followUps: [
-      'With no shared office, what held the team together day to day: standups, docs, chat, something else?',
+      'What held the team together day to day: standups, docs, chat, something else?',
       'What did you have to figure out about leading that nobody had taught you yet?',
-      'How much did your title matter to how the team treated your decisions?',
+      'How did you split your week between your own code and unblocking them?',
     ],
-    why: 'How he led before he had seniority, and which early lessons stuck.',
+    why: 'How he led early on, with a small team of interns, and which lessons stuck.',
   },
   {
     id: 'leadership-005',
@@ -78,7 +78,7 @@ export const LEADERSHIP: Question[] = [
     type: 'scenario',
     depth: 2,
     prompt:
-      "Sprint planning at Pinhous scale: 12 developers, a two-week sprint, and three stakeholders who each insist their item is the top priority. Together those three items are about twice the team's capacity. How do you run the next hour?",
+      "Sprint planning at Pinhous: you, 3 interns, a two-week sprint, and three stakeholders who each insist their item is the top priority. Together those three items are about twice the team's capacity. How do you run the next hour?",
     hint: 'Minute by minute: who is in the room, what is on the screen, and how it ends.',
     followUps: [
       'Who gets told no, and who delivers that message?',
@@ -92,7 +92,7 @@ export const LEADERSHIP: Question[] = [
     topic: 'leadership',
     type: 'this-or-that',
     depth: 2,
-    prompt: 'Code review with 12 developers shipping at Pinhous. Which was closer to how you ran it?',
+    prompt: 'Code review with 3 interns shipping at Pinhous. Which was closer to how you ran it?',
     options: ['Every PR went through me', 'Peers reviewed, I spot-checked'],
     hint: 'Think about a typical PR, from opened to merged.',
     followUps: [
@@ -167,7 +167,7 @@ export const LEADERSHIP: Question[] = [
     type: 'story',
     depth: 3,
     prompt:
-      'Tell me about rolling out Claude Code and GitHub Copilot to the engineering team at Eddy, focusing on whoever took longest to come around (no names needed).',
+      'Tell me about rolling out AGENTS.md instructions and pull request review guidelines for Codex and Claude at Eddy, focusing on whoever took longest to come around (no names needed).',
     hint: 'Situation · what you did · what happened · what you would do differently.',
     followUps: [
       'What was their objection in their own words, and was any of it right?',
