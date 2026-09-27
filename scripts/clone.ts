@@ -14,6 +14,8 @@ import type { Answer, IngestResult, SourceInput } from '@/lib/rag/types'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DEFAULT_URL = 'http://localhost:3000'
+/** The Access service token only works here, so it's never sent anywhere else. */
+const ACCESS_DOMAIN = 'curlycloud.dev'
 const INGEST_BATCH = 500
 
 export class CliError extends Error {}
@@ -42,7 +44,7 @@ export interface CliConfig {
   /** Where the token came from, for error messages. Never the token itself. */
   tokenSource: 'env' | '.dev.vars' | 'missing'
   local: boolean
-  /** Cloudflare Access service token for production, which sits behind Access. */
+  /** Cloudflare Access service token. Loaded only when CLONE_URL is on ACCESS_DOMAIN. */
   access: { id: string; secret: string } | null
 }
 
@@ -64,7 +66,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   if (!local && parsed.protocol !== 'https:') throw new CliError(`CLONE_URL "${url}" must use https:// so tokens aren't sent in the clear.`)
   const accessId = env.CF_ACCESS_CLIENT_ID || vars.CF_ACCESS_CLIENT_ID
   const accessSecret = env.CF_ACCESS_CLIENT_SECRET || vars.CF_ACCESS_CLIENT_SECRET
-  const access = accessId && accessSecret ? { id: accessId, secret: accessSecret } : null
+  const onAccessDomain = host === ACCESS_DOMAIN || host.endsWith(`.${ACCESS_DOMAIN}`)
+  const access = accessId && accessSecret && onAccessDomain ? { id: accessId, secret: accessSecret } : null
   return { url, token, tokenSource, local, access }
 }
 
@@ -87,8 +90,7 @@ export async function api<T>(
   const doFetch = opts.fetchImpl ?? fetch
   const headers: Record<string, string> = { authorization: `Bearer ${cfg.token}` }
   if (body !== undefined) headers['content-type'] = 'application/json'
-  // The Access token is a production credential: never send it to a local server.
-  if (cfg.access && !cfg.local) {
+  if (cfg.access) {
     headers['cf-access-client-id'] = cfg.access.id
     headers['cf-access-client-secret'] = cfg.access.secret
   }
@@ -395,7 +397,7 @@ Config (environment, else .dev.vars)
   CLONE_URL    default ${DEFAULT_URL} (Raj's dev server). Use another port for isolated servers.
   ADMIN_TOKEN  must match the server's ADMIN_TOKEN.
   CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
-               Cloudflare Access service token, needed for production. Sent only to non-local URLs.
+               Cloudflare Access service token, needed for production. Sent only to ${ACCESS_DOMAIN}.
                Bun also loads .env.local, so they can live there.
 
 Writes to a non-local CLONE_URL (production) need --yes, and only with Raj's explicit go-ahead.

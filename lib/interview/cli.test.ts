@@ -42,9 +42,11 @@ describe('clone CLI', () => {
     const access = { CF_ACCESS_CLIENT_ID: 'id.access', CF_ACCESS_CLIENT_SECRET: 'cfast_s3cret' }
     expect(await run(['stats'], { log: capture().log, env: { ...ENV, ...access }, fetchImpl })).toBe(0)
     expect(await run(['stats'], { log: capture().log, env: { CLONE_URL: 'https://curlycloud.dev', ADMIN_TOKEN: 'x', ...access }, fetchImpl })).toBe(0)
+    expect(await run(['stats'], { log: capture().log, env: { CLONE_URL: 'https://curlycloud.co', ADMIN_TOKEN: 'x', ...access }, fetchImpl })).toBe(0)
     expect(seen).toEqual([
       { url: 'http://localhost:3205/api/admin/stats', id: null, secret: null, redirect: 'manual' },
       { url: 'https://curlycloud.dev/api/admin/stats', id: 'id.access', secret: 'cfast_s3cret', redirect: 'manual' },
+      { url: 'https://curlycloud.co/api/admin/stats', id: null, secret: null, redirect: 'manual' },
     ])
   })
 
