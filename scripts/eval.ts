@@ -5,14 +5,16 @@
  *                      [--id <substring>] [--limit <n>] [--concurrency <n>] [--no-rerank] [--no-private]
  *
  * Cases come from evals/golden.json plus any private/evals/*.json with a `cases` array.
- * ADMIN_TOKEN comes from the environment or .dev.vars. The URL defaults to CLONE_URL, else
- * http://localhost:3000. A JSON report (answers may quote private text) is written to
+ * Config works like the clone CLI: ADMIN_TOKEN (and, for production, the Cloudflare Access service
+ * token CF_ACCESS_CLIENT_ID/SECRET) come from the environment or .dev.vars. The URL defaults to
+ * CLONE_URL, else http://localhost:3000. A JSON report (answers may quote private text) is written to
  * private/evals/<timestamp>.json, which is gitignored.
  */
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { EvalCase, EvalCaseResult } from '@/lib/rag/eval'
+import { api, type CliConfig, loadConfig } from '@/scripts/clone'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '')
 const KINDS = ['retrieval', 'answer', 'refusal', 'injection'] as const
@@ -48,16 +50,6 @@ function parseArgs(argv: string[]): Args {
   }
 }
 
-function readDevVar(name: string): string | null {
-  const file = join(ROOT, '.dev.vars')
-  if (!existsSync(file)) return null
-  for (const line of readFileSync(file, 'utf8').split('\n')) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/)
-    if (m && m[1] === name) return m[2].replace(/^["']|["']$/g, '')
-  }
-  return null
-}
-
 function loadCases(includePrivate: boolean): { cases: EvalCase[]; files: string[] } {
   const files = [join(ROOT, 'evals/golden.json')]
   const privateDir = join(ROOT, 'private/evals')
@@ -76,17 +68,10 @@ function loadCases(includePrivate: boolean): { cases: EvalCase[]; files: string[
   return { cases, files: used }
 }
 
-async function runCase(args: Args, token: string, c: EvalCase): Promise<EvalCaseResult> {
+async function runCase(args: Args, cfg: CliConfig, c: EvalCase): Promise<EvalCaseResult> {
   const started = Date.now()
   try {
-    const res = await fetch(`${args.url}/api/admin/eval/case${args.rerank ? '' : '?rerank=0'}`, {
-      method: 'POST',
-      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-      body: JSON.stringify(c),
-      signal: AbortSignal.timeout(120_000),
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`)
-    return (await res.json()) as EvalCaseResult
+    return await api<EvalCaseResult>(cfg, 'POST', `/api/admin/eval/case${args.rerank ? '' : '?rerank=0'}`, c, { timeoutMs: 120_000 })
   } catch (err) {
     return {
       id: c.id,
@@ -145,8 +130,14 @@ function summarize(results: EvalCaseResult[]) {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2))
-  const token = process.env.ADMIN_TOKEN ?? readDevVar('ADMIN_TOKEN')
-  if (!token) {
+  let cfg: CliConfig
+  try {
+    cfg = loadConfig({ ...process.env, CLONE_URL: args.url })
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : String(err))
+    process.exit(2)
+  }
+  if (!cfg.token) {
     console.error('ADMIN_TOKEN is not set (env or .dev.vars).')
     process.exit(2)
   }
@@ -159,7 +150,7 @@ async function main(): Promise<void> {
 
   const started = Date.now()
   const results = await pool(cases, args.concurrency, async (c) => {
-    const r = await runCase(args, token, c)
+    const r = await runCase(args, cfg, c)
     const rank = r.retrieval ? `rank ${r.retrieval.firstRelevantRank ?? '—'}` : ''
     const failed = r.checks.filter((ch) => !ch.passed).map((ch) => ch.name + (ch.detail ? ` (${ch.detail})` : ''))
     const note = r.error ? `ERROR ${r.error}` : failed.length ? `failed: ${failed.join('; ')}` : ''

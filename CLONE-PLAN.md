@@ -51,7 +51,7 @@
 | Generation | Anthropic `claude-opus-5` when `ANTHROPIC_API_KEY` is set (server-side refusal fallbacks on); otherwise Workers AI `@cf/meta/llama-4-scout-17b-16e-instruct` | Claude for voice quality; Workers AI so everything runs with zero keys |
 | Citations | Numbered `[n]` markers against numbered sources, validated server-side | Provider-agnostic, streams cleanly |
 | MCP | `@modelcontextprotocol/sdk` `WebStandardStreamableHTTPServerTransport`, stateless, JSON responses | Official SDK, Workers-compatible |
-| Auth (studio) | Passphrase → HMAC-signed HttpOnly cookie; `ADMIN_TOKEN` bearer for CLI | Single owner; no external IdP needed. Cloudflare Access recommended on top in prod |
+| Auth (studio) | Passphrase → HMAC-signed HttpOnly cookie; `ADMIN_TOKEN` bearer for CLI | Single owner; no external IdP needed. Cloudflare Access on top in prod (CLI uses a service token) |
 | Auth (MCP) | Optional per-company API keys (hashed), anonymous tier with lower limits | Raj can see which company's agent asked what, and revoke |
 | Rate limits | Fixed-window counters in D1 + daily token budget | Cost exposure bounded |
 | Tests | Vitest; D1 emulated with `node:sqlite` (FTS5 supported) | Real SQL in unit tests |
@@ -172,7 +172,7 @@ per-client fit bucket. `/api/chat` and `/api/fit` accept same-origin `applicatio
 - Answer interview cards → `ingest my answers` in Claude Code. The persona builds from them.
 - Optional `ANTHROPIC_API_KEY` for Claude-quality voice (Workers AI Llama 4 Scout is the default).
 - ~~Production~~ Deployed 2026-09-26: D1 `raj-clone` migrated, secrets set, resume seeded (40 sources), baseline persona built.
-- Cloudflare Access on `/studio*` and `/api/admin/*` (recommended second lock).
+- ~~Cloudflare Access~~ On since 2026-09-27 for `/studio*`, `/api/admin/*`, `/api/auth/*`. The CLI sends a service token (`CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET`).
 
 ### Latest eval baseline (Workers AI, resume-only corpus, production worker, 2026-09-25)
 Retrieval (47 cases incl. answer-case expectations): hit@1 93.6%, hit@3 97.9%, hit@8 100%, MRR 0.961.

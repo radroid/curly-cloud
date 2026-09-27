@@ -14,6 +14,8 @@ import type { Answer, IngestResult, SourceInput } from '@/lib/rag/types'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const DEFAULT_URL = 'http://localhost:3000'
+/** The Access service token only works here, so it's never sent anywhere else. */
+const ACCESS_DOMAIN = 'curlycloud.dev'
 const INGEST_BATCH = 500
 
 export class CliError extends Error {}
@@ -42,6 +44,8 @@ export interface CliConfig {
   /** Where the token came from, for error messages. Never the token itself. */
   tokenSource: 'env' | '.dev.vars' | 'missing'
   local: boolean
+  /** Cloudflare Access service token. Loaded only when CLONE_URL is on ACCESS_DOMAIN. */
+  access: { id: string; secret: string } | null
 }
 
 export function loadConfig(env: Record<string, string | undefined> = process.env, root: string = ROOT): CliConfig {
@@ -50,14 +54,21 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const url = (env.CLONE_URL || vars.CLONE_URL || DEFAULT_URL).replace(/\/+$/, '')
   const token = env.ADMIN_TOKEN || vars.ADMIN_TOKEN || null
   const tokenSource = env.ADMIN_TOKEN ? 'env' : vars.ADMIN_TOKEN ? '.dev.vars' : 'missing'
-  let local = false
+  let parsed: URL
   try {
-    const host = new URL(url).hostname
-    local = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]'
+    parsed = new URL(url)
   } catch {
     throw new CliError(`CLONE_URL "${url}" is not a valid URL.`)
   }
-  return { url, token, tokenSource, local }
+  const host = parsed.hostname
+  const local = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]'
+  // Tokens go in headers, so anything off this machine must be encrypted.
+  if (!local && parsed.protocol !== 'https:') throw new CliError(`CLONE_URL "${url}" must use https:// so tokens aren't sent in the clear.`)
+  const accessId = env.CF_ACCESS_CLIENT_ID || vars.CF_ACCESS_CLIENT_ID
+  const accessSecret = env.CF_ACCESS_CLIENT_SECRET || vars.CF_ACCESS_CLIENT_SECRET
+  const onAccessDomain = host === ACCESS_DOMAIN || host.endsWith(`.${ACCESS_DOMAIN}`)
+  const access = accessId && accessSecret && onAccessDomain ? { id: accessId, secret: accessSecret } : null
+  return { url, token, tokenSource, local, access }
 }
 
 // ── HTTP ──────────────────────────────────────────────────────────────────────
@@ -77,12 +88,21 @@ export async function api<T>(
 ): Promise<T> {
   if (!cfg.token) throw new CliError('No ADMIN_TOKEN. Put it in .dev.vars (same value the server uses) or export ADMIN_TOKEN=…')
   const doFetch = opts.fetchImpl ?? fetch
+  const headers: Record<string, string> = { authorization: `Bearer ${cfg.token}` }
+  if (body !== undefined) headers['content-type'] = 'application/json'
+  if (cfg.access) {
+    headers['cf-access-client-id'] = cfg.access.id
+    headers['cf-access-client-secret'] = cfg.access.secret
+  }
   let res: Response
   try {
     res = await doFetch(`${cfg.url}${path}`, {
       method,
-      headers: { authorization: `Bearer ${cfg.token}`, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
+      headers,
       body: body === undefined ? undefined : typeof body === 'string' ? body : JSON.stringify(body),
+      // Admin routes never redirect. A redirect means Cloudflare Access wants a login, and following
+      // it would parse the login page as a failed API call.
+      redirect: 'manual',
       signal: AbortSignal.timeout(opts.timeoutMs ?? 180_000),
     })
   } catch (err) {
@@ -91,6 +111,17 @@ export async function api<T>(
     throw new CliError(
       `Can't reach ${cfg.url}. Start the dev server (bun run dev) or set CLONE_URL to a running server (e.g. CLONE_URL=http://localhost:3205).`,
     )
+  }
+  if (res.status >= 300 && res.status < 400) {
+    const location = res.headers.get('location') ?? ''
+    if (/^https:\/\/[^/]+\.cloudflareaccess\.com\//.test(location)) {
+      throw new CliError(
+        cfg.access
+          ? `Cloudflare Access turned the service token away on ${cfg.url}. Check that the Access application covering ${path} has a Service Auth policy that includes this token, and that CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET are current.`
+          : `${cfg.url} is behind Cloudflare Access. Set CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET (an Access service token with a Service Auth policy), for example in .env.local.`,
+      )
+    }
+    throw new CliError(`${method} ${path} redirected to ${location || 'an unknown location'} (${res.status}). Is ${cfg.url} this app?`)
   }
   const text = await res.text()
   let json: unknown = null
@@ -365,6 +396,9 @@ Commands
 Config (environment, else .dev.vars)
   CLONE_URL    default ${DEFAULT_URL} (Raj's dev server). Use another port for isolated servers.
   ADMIN_TOKEN  must match the server's ADMIN_TOKEN.
+  CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET
+               Cloudflare Access service token, needed for production. Sent only to ${ACCESS_DOMAIN}.
+               Bun also loads .env.local, so they can live there.
 
 Writes to a non-local CLONE_URL (production) need --yes, and only with Raj's explicit go-ahead.
 `

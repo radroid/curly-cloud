@@ -30,7 +30,8 @@ bun scripts/build-interview.ts      # Rebuild interview/raj-interview.html after
 ```
 
 CLI commands target `CLONE_URL` (default `http://localhost:3000`) with `ADMIN_TOKEN` from `.dev.vars`.
-Writes to a non-local `CLONE_URL` require `--yes`.
+Writes to a non-local `CLONE_URL` require `--yes`. Production is behind Cloudflare Access, so the CLI also needs
+`CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` (a service token; Bun loads them from `.env.local`).
 
 ### Dev server is usually running
 Raj keeps `bun run dev` running in another terminal. Don't start a second one on port 3000. For an
