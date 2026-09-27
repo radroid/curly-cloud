@@ -42,7 +42,7 @@ export function AnswerText({ text, sources, activeN, onCite, onHoverCite }: Prop
             aria-label={`Source ${n}: ${source?.title ?? ''}`}
             className={[
               'mx-0.5 inline-flex h-[1.15rem] min-w-[1.15rem] -translate-y-px items-center justify-center rounded px-1 align-middle font-mono text-[0.7rem] font-medium leading-none transition-colors',
-              activeN === n ? 'bg-coral text-white' : 'bg-coral/10 text-coral hover:bg-coral hover:text-white',
+              activeN === n ? 'bg-coral-ink text-white' : 'bg-coral/10 text-coral-ink hover:bg-coral-ink hover:text-white',
             ].join(' ')}
           >
             {n}

@@ -10,10 +10,18 @@
   --color-forest: #164c46;
   --color-pine: #103a35;
   --color-coral: #d95f4f;
+  /* Coral fails contrast for small text: use coral-ink on light surfaces, coral-glow on the stage.
+     Plain coral is for dots, rings, ticks and fills (3:1 is enough there). */
+  --color-coral-ink: #ad4236;
+  --color-coral-glow: #ec8374;
   --color-sun: #e5bb52;
   --color-paper: #f5f7f5;
   --color-rule: #d3dcd8;
   --color-marker: #f7e3a3;
+
+  /* The dark stage: hero, marquee, how-it-works, contact. Text on it uses the term-* colours. */
+  --color-night: #0b2a26;
+  --color-night-deep: #071d1a;
 
   --color-term-bg: #103a35;
   --color-term-text: #dce8e2;
@@ -23,6 +31,87 @@
   --font-sans: var(--font-plex-sans), system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
   --font-chicago: 'Chicago', 'VT323', system-ui, monospace;
+
+  /* Side padding of the resume page's reading column (px-gutter, -mx-gutter for full-bleed bands). */
+  --spacing-gutter: clamp(20px, 4vw, 56px);
+
+  /* Motion used by the resume page. Every one of these stops under the `still` variant below. */
+  --animate-flash: flash 2.4s ease-out;
+  --animate-marquee: marquee 56s linear infinite;
+  --animate-grow-x: grow-x 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-travel: travel 5s cubic-bezier(0.6, 0, 0.4, 1) 3 both;
+  --animate-blink: blink 1s steps(2) infinite;
+  --animate-boot-fallback: boot-fallback 0.7s cubic-bezier(0.7, 0, 0.2, 1) 2.5s forwards;
+
+  @keyframes flash {
+    0%,
+    60% {
+      box-shadow:
+        0 0 0 2px var(--color-coral),
+        inset 0 0 0 999px var(--color-marker);
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes grow-x {
+    from {
+      transform: scaleX(0);
+    }
+  }
+  @keyframes travel {
+    from {
+      left: 0;
+    }
+    to {
+      left: calc(100% - 12px);
+    }
+  }
+  @keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+  /* If the app never hydrates, the boot overlay wipes itself away. */
+  @keyframes boot-fallback {
+    to {
+      clip-path: inset(0 0 100% 0);
+      visibility: hidden;
+    }
+  }
+}
+
+/* Anton is loaded by the home page only (app/page.tsx), so this resolves per element. */
+@theme inline {
+  --font-display: var(--font-anton), Impact, 'Arial Narrow', sans-serif;
+}
+
+/* The display voice: Anton in caps. The DOM keeps proper case for screen readers. Anton has one
+   weight, so the weight is pinned to stop browsers faking a bold on headings. */
+@utility type-display {
+  font-family: var(--font-anton), Impact, 'Arial Narrow', sans-serif;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 0.9;
+  letter-spacing: 0.01em;
+}
+
+/* `still:` applies when motion is off: prefers-reduced-motion (unless the visitor opted in to a
+   render tier) or the Saver tier. `data-motion` is set on <html> by the head script (app/lib/motion.ts). */
+@custom-variant still {
+  &:where([data-motion='saver'] *) {
+    @slot;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &:where(:root:not([data-motion='high'], [data-motion='medium']) *) {
+      @slot;
+    }
+  }
 }
 
 @font-face {
@@ -48,14 +137,80 @@ body {
   outline-offset: 2px;
 }
 
+/* Motion off: reduced motion (unless the visitor picked Medium or High) and the Saver tier. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root:not([data-motion='high'], [data-motion='medium']) *,
+  :root:not([data-motion='high'], [data-motion='medium']) *::before,
+  :root:not([data-motion='high'], [data-motion='medium']) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+:root[data-motion='saver'] *,
+:root[data-motion='saver'] *::before,
+:root[data-motion='saver'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ── Disclosures on the resume page ──────────────────────────────────────────
+   Collapsed resume content is a native <details class="disclose">: find-in-page, print and
+   citations can all open it. It animates open where ::details-content is supported (Chromium;
+   others snap). A citation jump sets data-jump on <html> so the open is instant and the scroll
+   lands on the final layout (focusAnchor in site-context.tsx). */
+
+@layer components {
+  details.disclose {
+    interpolate-size: allow-keywords;
+  }
+  details.disclose > summary {
+    list-style: none;
+    cursor: pointer;
+  }
+  details.disclose > summary::-webkit-details-marker {
+    display: none;
+  }
+  details.disclose::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition:
+      block-size 0.35s cubic-bezier(0.2, 0.7, 0.2, 1),
+      content-visibility 0.35s allow-discrete;
+  }
+  details.disclose[open]::details-content {
+    block-size: auto;
+  }
+  :root[data-jump] details.disclose::details-content {
+    transition: none;
+  }
+
+  /* A citation jump rings its target for 2.4 s; with motion off the ring holds still. */
+  [data-flash] {
+    animation: var(--animate-flash);
+  }
+  :root[data-motion='saver'] [data-flash] {
+    animation: none;
+    box-shadow:
+      0 0 0 2px var(--color-coral),
+      inset 0 0 0 999px var(--color-marker);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root:not([data-motion='high'], [data-motion='medium']) [data-flash] {
+      animation: none;
+      box-shadow:
+        0 0 0 2px var(--color-coral),
+        inset 0 0 0 999px var(--color-marker);
+    }
+  }
+  @media print {
+    details.disclose::details-content {
+      block-size: auto;
+      transition: none;
+    }
   }
 }
 
