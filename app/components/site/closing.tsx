@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { RESUME, resumeAnchor } from '@/content/resume'
+import { MOTION_TIERS, type MotionTier } from '@/app/lib/motion'
+import { useMotionTier } from '@/app/lib/use-motion-tier'
 import { SectionHeading } from './resume'
 import { useSite } from './site-context'
 
@@ -93,10 +95,13 @@ export function Contact() {
   )
 }
 
+/** C16. The privacy note stays visible and word for word (CLONE-PLAN); the render select sets the tier. */
 export function Footer() {
+  const { tier, setTier } = useMotionTier()
+  const link = 'inline-flex min-h-11 items-center underline decoration-current/45 decoration-1 underline-offset-4 transition-colors hover:text-ink hover:decoration-current'
   return (
-    <footer className="border-t border-rule py-8 text-sm text-muted">
-      <div id="privacy" className="max-w-[62ch] scroll-mt-24 space-y-2">
+    <footer className="pt-9 text-sm text-muted">
+      <div id="privacy" className="max-w-[64ch] scroll-mt-24 space-y-2">
         <p className="font-medium text-ink">About the clone and your privacy</p>
         <p>
           “Ask Raj” is an AI that answers from my resume and my own written answers. It can be wrong, and it’s no substitute for talking to me.
@@ -104,20 +109,39 @@ export function Footer() {
           email addresses or phone numbers in questions are redacted.
         </p>
       </div>
-      <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2">
-        <span>© {new Date().getFullYear()} {RESUME.name}</span>
-        <Link href="/terminal" className="hover:text-ink">
+      <div className="mt-4 flex flex-wrap items-center gap-x-5">
+        <span className="inline-flex min-h-11 items-center">
+          © {new Date().getFullYear()} {RESUME.name}
+        </span>
+        <Link href="/terminal" className={link}>
           Terminal
         </Link>
-        <Link href="/mac" className="font-chicago hover:text-ink">
+        <Link href="/mac" className={link}>
           Mac ’84
         </Link>
-        <a href="/llms.txt" className="hover:text-ink">
+        <a href="/llms.txt" className={link}>
           llms.txt
         </a>
-        <a href="#agents" className="hover:text-ink">
+        <a href="#agents" className={link}>
           MCP
         </a>
+        <button type="button" onClick={() => window.print()} className={`${link} print:hidden`}>
+          Save as PDF
+        </button>
+        <label className="inline-flex min-h-11 items-center gap-2 print:hidden">
+          Render quality
+          <select
+            value={tier}
+            onChange={(e) => setTier(e.target.value as MotionTier)}
+            className="h-9 rounded-md border border-rule bg-white px-1.5 text-[13px] text-ink pointer-coarse:h-11"
+          >
+            {MOTION_TIERS.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
     </footer>
   )
