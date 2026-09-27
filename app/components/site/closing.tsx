@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import Link from 'next/link'
 import { RESUME, resumeAnchor } from '@/content/resume'
 import { SectionHeading } from './resume'
@@ -37,7 +36,7 @@ const PIPELINE: { step: string; title: string; body: string }[] = [
 export function HowItWorks() {
   return (
     <section id="how" aria-labelledby="how-title" className="mb-16 scroll-mt-24">
-      <SectionHeading id="how-title" index="09" title="How the clone works" meta="built like the day job" />
+      <SectionHeading id="how-title" title="How the clone answers" />
       <ol className="grid gap-px overflow-hidden rounded-2xl border border-rule bg-rule sm:grid-cols-2 xl:grid-cols-3">
         {PIPELINE.map((p, i) => (
           <li key={p.step} className="bg-white p-4 sm:p-5">
@@ -69,9 +68,9 @@ export function HowItWorks() {
 export function Contact() {
   const { focusAsk } = useSite()
   return (
-    <section id={resumeAnchor('contact')} aria-labelledby="contact-title" className="mb-10 scroll-mt-24">
-      <SectionHeading id="contact-title" index="10" title="Get in touch" />
-      <div className="rounded-2xl bg-forest p-6 text-paper sm:p-8">
+    <section id="contact" aria-labelledby="contact-title" className="mb-10 scroll-mt-24">
+      <SectionHeading id="contact-title" title="Say hello" />
+      <div id={resumeAnchor('contact')} className="scroll-mt-24 rounded-2xl bg-forest p-6 text-paper sm:p-8">
         <p className="max-w-[30ch] text-2xl font-semibold leading-snug tracking-tight">The clone is good. The real one is better at follow-ups.</p>
         <a href={`mailto:${RESUME.email}`} className="mt-5 inline-block break-all font-mono text-lg underline decoration-paper/40 underline-offset-4 hover:decoration-paper">
           {RESUME.email}
@@ -121,21 +120,5 @@ export function Footer() {
         </a>
       </div>
     </footer>
-  )
-}
-
-/** Mobile entry point to the clone sheet. */
-export function AskFab() {
-  const { sheetOpen, setSheetOpen } = useSite()
-  return (
-    <button
-      type="button"
-      onClick={() => setSheetOpen(true)}
-      inert={sheetOpen}
-      className={`fixed bottom-4 right-4 z-30 flex h-12 items-center gap-2 rounded-full bg-forest pl-2 pr-4 text-sm font-medium text-paper shadow-[0_8px_24px_-6px_rgb(16_58_53/0.55)] transition-transform lg:hidden print:hidden ${sheetOpen ? 'translate-y-24' : ''}`}
-    >
-      <Image src="/raj-avatar.webp" alt="" width={32} height={32} className="size-8 rounded-full" />
-      Ask Raj
-    </button>
   )
 }

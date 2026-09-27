@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { RESUME, type ResumeBullet } from '@/content/resume'
+import { RESUME, resumeAnchor, type ResumeBullet } from '@/content/resume'
 
 /** Short chip labels for the skill filter, keyed by the tag ids used on resume bullets. */
 export const FILTERS: { group: string; items: { id: string; label: string }[] }[] = [
@@ -53,19 +53,54 @@ export const FILTER_LABELS: Record<string, string> = Object.fromEntries(
   FILTERS.flatMap((g) => g.items.map((i) => [i.id, i.label])),
 )
 
-const ALL_BULLETS: ResumeBullet[] = [
-  ...RESUME.experience.flatMap((r) => r.bullets),
-  ...RESUME.builds.flatMap((b) => b.bullets),
-  ...RESUME.community.flatMap((c) => c.bullets),
+export interface ResumeLine {
+  anchor: string
+  /** Anchor of the role, build or community block the line belongs to. */
+  group: string
+  bullet: ResumeBullet
+}
+
+/** Every citable resume line, in page order. */
+export const LINES: ResumeLine[] = [
+  ...RESUME.experience.flatMap((r) => r.bullets.map((b) => ({ anchor: resumeAnchor('exp', r.id, b.id), group: resumeAnchor('exp', r.id), bullet: b }))),
+  ...RESUME.builds.flatMap((x) => x.bullets.map((b) => ({ anchor: resumeAnchor('build', x.id, b.id), group: resumeAnchor('build', x.id), bullet: b }))),
+  ...RESUME.community.flatMap((c) => c.bullets.map((b) => ({ anchor: resumeAnchor('community', c.id, b.id), group: resumeAnchor('community', c.id), bullet: b }))),
 ]
 
+const LINE_BY_ANCHOR: Record<string, ResumeLine> = Object.fromEntries(LINES.map((l) => [l.anchor, l]))
+
 /** How many resume lines carry each tag. Filters with no lines are hidden. */
-export const TAG_COUNTS: Record<string, number> = ALL_BULLETS.reduce<Record<string, number>>((acc, b) => {
-  for (const t of b.tags) acc[t] = (acc[t] ?? 0) + 1
+export const TAG_COUNTS: Record<string, number> = LINES.reduce<Record<string, number>>((acc, l) => {
+  for (const t of l.bullet.tags) acc[t] = (acc[t] ?? 0) + 1
   return acc
 }, {})
 
-export const RESUME_LINE_COUNT = ALL_BULLETS.length
+export const RESUME_LINE_COUNT = LINES.length
+
+/** "1 line", "7 lines". */
+export function nLines(n: number): string {
+  return `${n} line${n === 1 ? '' : 's'}`
+}
+
+/** Lines in a role, build or community block that carry a tag. */
+export function matchesIn(group: string, tag: string | null): number {
+  if (!tag) return 0
+  return LINES.filter((l) => l.group === group && l.bullet.tags.includes(tag)).length
+}
+
+/** Whether the skill filter dims an anchor: a line without the tag, or a block with no such line. */
+export function dimmedBy(skill: string | null, anchor: string): boolean {
+  if (!skill) return false
+  const line = LINE_BY_ANCHOR[anchor]
+  if (line) return !line.bullet.tags.includes(skill)
+  const inGroup = LINES.filter((l) => l.group === anchor)
+  return inGroup.length > 0 && !inGroup.some((l) => l.bullet.tags.includes(skill))
+}
+
+/** How many anchors the latest answer cited inside a block (the block itself or its lines). */
+export function citedIn(cited: Record<string, number[]>, group: string): number {
+  return Object.keys(cited).filter((a) => a === group || LINE_BY_ANCHOR[a]?.group === group).length
+}
 
 /** A natural question about one resume line, for the "Ask about this" buttons. */
 export function questionAbout(text: string): string {

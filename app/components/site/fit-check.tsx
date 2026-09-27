@@ -13,7 +13,7 @@ const VERDICT: Record<FitAssessment['overall']['verdict'], { label: string; tone
   strong: { label: 'Strong fit', tone: 'bg-forest text-paper' },
   promising: { label: 'Promising', tone: 'bg-term-accent text-pine' },
   mixed: { label: 'Mixed', tone: 'bg-sun text-ink' },
-  weak: { label: 'Weak fit', tone: 'bg-coral text-white' },
+  weak: { label: 'Weak fit', tone: 'bg-coral-ink text-white' },
 }
 
 const STEPS = ['Reading the job description…', 'Pulling evidence from my resume and answers…', 'Weighing technical fit…', 'Weighing culture fit…', 'Writing it up…']
@@ -73,7 +73,7 @@ export function FitCheck() {
 
   return (
     <section id="fit" aria-labelledby="fit-title" className="mb-16 scroll-mt-24">
-      <SectionHeading id="fit-title" index="07" title="Hiring? Check my fit" meta="AI-assessed, cited" />
+      <SectionHeading id="fit-title" index={3} title="Fit" meta="AI-assessed, cited" />
       <p className="max-w-[62ch] text-[0.95rem] leading-relaxed text-muted">
         Paste a job description. My clone scores technical and culture fit against what I’ve actually done and said, shows the evidence,
         and is upfront about what it doesn’t know.
@@ -144,7 +144,7 @@ export function FitCheck() {
             </button>
             {state.phase === 'loading' && <LoadingSteps />}
             {state.phase === 'error' && (
-              <p role="alert" className="text-sm text-coral">
+              <p role="alert" className="text-sm text-coral-ink">
                 {state.message}
               </p>
             )}
@@ -165,7 +165,7 @@ function Field({ label, hint, required, children }: { label: string; hint?: stri
       <span className="mb-1.5 flex items-baseline justify-between text-sm font-medium">
         <span>
           {label}
-          {required && <span className="text-coral"> *</span>}
+          {required && <span className="text-coral-ink"> *</span>}
         </span>
         {hint && <span className="font-mono text-xs font-normal text-muted">{hint}</span>}
       </span>
@@ -214,13 +214,13 @@ function Evidence({ nums, sources }: { nums: number[]; sources: CitationSource[]
             onClick={() => focusAnchor(s.anchor ?? '')}
             className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-paper/60 px-2 py-1 text-xs hover:border-forest"
           >
-            <span className="font-mono text-coral">{s.n}</span>
+            <span className="font-mono text-coral-ink">{s.n}</span>
             {s.title.replace(/^Resume · /, '')}
             <span aria-hidden className="text-forest">↗</span>
           </button>
         ) : (
           <span key={s.n} className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-paper/60 px-2 py-1 text-xs" title={s.title}>
-            <span className="font-mono text-coral">{s.n}</span>
+            <span className="font-mono text-coral-ink">{s.n}</span>
             In my own words · {topicLabel(s.topic)}
           </span>
         ),
@@ -251,7 +251,7 @@ function Dimension({ title, d, sources }: { title: string; d: FitDimension; sour
         <ul className="mt-2 space-y-1 text-sm text-muted">
           {d.gaps.map((s) => (
             <li key={s} className="flex gap-2">
-              <span aria-hidden className="text-coral">−</span>
+              <span aria-hidden className="text-coral-ink">−</span>
               <span>{s}</span>
             </li>
           ))}

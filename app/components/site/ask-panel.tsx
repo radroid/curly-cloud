@@ -520,7 +520,7 @@ function SourceRow({ source: s, active, onOpen }: { source: CitationSource; acti
         active ? 'bg-marker/70' : 'hover:bg-white',
       ].join(' ')}
     >
-      <span className="mt-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded bg-coral/10 px-1 font-mono text-[0.7rem] text-coral">{s.n}</span>
+      <span className="mt-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded bg-coral/10 px-1 font-mono text-[0.7rem] text-coral-ink">{s.n}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-1.5 text-xs">
           <span className="truncate font-medium text-ink">{label}</span>
