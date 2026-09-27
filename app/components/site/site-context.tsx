@@ -51,6 +51,8 @@ const SkillHoverContext = createContext<[string | null, (id: string | null) => v
 const DESKTOP = '(min-width: 1024px)'
 /** The hero's question box; `/` and "Ask" buttons focus it while it's on screen. */
 export const HERO_PROMPT_ID = 'hero-q'
+/** The Ask panel's column (app/page.tsx). */
+const ASK_PANEL_ID = 'ask'
 
 function motionOff(): boolean {
   const d = document.documentElement.dataset.motion
@@ -140,7 +142,13 @@ export function SiteProvider({ children }: { children: React.ReactNode }) {
 
   const ask = useCallback((question: string, opts: { send?: boolean } = {}) => {
     setRequest({ id: nextId.current++, question, send: opts.send ?? true })
-    if (!window.matchMedia(DESKTOP).matches) setSheetOpen(true)
+    if (!window.matchMedia(DESKTOP).matches) {
+      setSheetOpen(true)
+      return
+    }
+    // On desktop the panel starts below the hero: bring it up so the answer is visible.
+    const panel = document.getElementById(ASK_PANEL_ID)
+    if (panel && panel.getBoundingClientRect().top > 80) panel.scrollIntoView({ behavior: motionOff() ? 'auto' : 'smooth', block: 'start' })
   }, [])
 
   const focusAsk = useCallback(() => {

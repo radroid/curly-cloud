@@ -73,7 +73,7 @@ export default function Home() {
             <Contact />
             <Footer />
           </div>
-          <div className="lg:sticky lg:top-14 lg:h-[calc(100dvh-3.5rem)] lg:self-start print:hidden">
+          <div id="ask" className="scroll-mt-14 lg:sticky lg:top-14 lg:h-[calc(100dvh-3.5rem)] lg:self-start print:hidden">
             <AskPanel />
           </div>
         </main>

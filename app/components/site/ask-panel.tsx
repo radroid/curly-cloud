@@ -159,7 +159,8 @@ function useChat() {
 
 // ── Panel ────────────────────────────────────────────────────────────────────
 
-const STARTERS = [
+/** Starter questions. Also cycled in the hero prompt; lib/rag/injection.test.ts reads them from this file. */
+export const STARTERS = [
   'What are you building at Eddy right now?',
   'How do you know a RAG system is actually good?',
   'Tell me about a time you recommended not shipping something.',
