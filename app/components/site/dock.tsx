@@ -101,7 +101,18 @@ export function Dock() {
           onClick={() => setSheetOpen(true)}
           className="flex h-[52px] shrink-0 items-center gap-2.5 rounded-2xl border border-term-accent bg-term-accent pl-1.5 pr-3.5 text-[15px] font-semibold text-pine"
         >
-          <Image src="/raj-avatar.webp" alt="" width={38} height={38} className="size-[38px] rounded-xl" />
+          {/* The clone at work while the sheet is closed (<html data-clone>, set by the Ask panel): a ring
+              while it thinks, a nod as it answers. With motion off the ring holds still for both. */}
+          <span className="relative shrink-0">
+            <span
+              aria-hidden
+              className="absolute -inset-[3px] hidden overflow-hidden rounded-[15px] in-data-[clone=thinking]:block still:in-data-[clone=answering]:block"
+            >
+              <span className="absolute -inset-1/2 animate-spin bg-[conic-gradient(transparent_25%,var(--color-pine)_75%)] still:animate-none still:bg-pine" />
+            </span>
+            <span aria-hidden data-pulse className="absolute -inset-[3px] rounded-[15px] border-2 border-coral opacity-0" />
+            <Image data-nod src="/raj-avatar.webp" alt="" width={38} height={38} className="relative size-[38px] rounded-xl ring-1 ring-term-accent" />
+          </span>
           Ask Raj
         </button>
       </div>

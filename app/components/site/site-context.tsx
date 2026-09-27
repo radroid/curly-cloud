@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { CitationSource } from '@/lib/rag/types'
+import { motionOff } from '@/app/lib/motion'
 import { dimmedBy } from './resume-helpers'
 
 /**
@@ -53,13 +54,6 @@ const DESKTOP = '(min-width: 1024px)'
 export const HERO_PROMPT_ID = 'hero-q'
 /** The Ask panel's column (app/page.tsx). */
 const ASK_PANEL_ID = 'ask'
-
-function motionOff(): boolean {
-  const d = document.documentElement.dataset.motion
-  if (d === 'saver') return true
-  if (d === 'high' || d === 'medium') return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
 
 function onScreen(el: HTMLElement): boolean {
   const r = el.getBoundingClientRect()
