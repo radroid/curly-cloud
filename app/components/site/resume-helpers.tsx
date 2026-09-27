@@ -16,7 +16,7 @@ export const FILTERS: { group: string; items: { id: string; label: string }[] }[
       { id: 'guardrails', label: 'Guardrails' },
       { id: 'llm-apis', label: 'LLM APIs' },
       { id: 'langchain', label: 'LangChain' },
-      { id: 'claude-code', label: 'Claude Code' },
+      { id: 'claude-code', label: 'Codex/Claude CLI' },
     ],
   },
   {

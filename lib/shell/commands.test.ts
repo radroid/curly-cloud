@@ -18,7 +18,7 @@ describe('file commands', () => {
     expect(long).toMatch(/-r-------- 1 raj {3}raj {4}\s*\d+ .* \.secrets/)
     expect(long).toMatch(/drwxr-xr-x 2 raj {3}raj +4096 .* experience/)
     expect((await run(sh, 'ls -lh resume.md')).out).toMatch(/\d+(\.\d)?K .* resume\.md/)
-    expect((await run(sh, 'ls -1 builds')).out).toBe('jobsearch.md\nregdocs.md\n')
+    expect((await run(sh, 'ls -1 builds')).out).toBe('earned.md\njobsearch.md\npulse.md\nregdocs.md\n')
     expect((await run(sh, 'ls builds skills')).out).toMatch(/^builds:\n.*\n\nskills:\n/)
     const missing = await run(sh, 'ls nope')
     expect(missing.code).toBe(2)
@@ -41,7 +41,7 @@ describe('file commands', () => {
   it('tree: draws the home directory and counts', async () => {
     const sh = await makeShell()
     const r = await run(sh, 'tree')
-    expect(r.out).toMatch(/^\.\n├── about\.txt\n├── builds\n│   ├── jobsearch\.md\n│   └── regdocs\.md/)
+    expect(r.out).toMatch(/^\.\n├── about\.txt\n├── builds\n│   ├── earned\.md\n│   ├── jobsearch\.md\n│   ├── pulse\.md\n│   └── regdocs\.md/)
     expect(r.out).toMatch(/4 directories, \d+ files\n$/)
     expect((await run(sh, 'tree -L 1 /')).out).toMatch(/^\/\n├── bin\n/)
     expect((await run(sh, 'tree -a -d')).out).toMatch(/4 directories\n$/)
@@ -49,7 +49,7 @@ describe('file commands', () => {
 
   it('find: -name, -iname, -type, -maxdepth', async () => {
     const sh = await makeShell()
-    expect((await run(sh, 'find builds -name "*.md"')).out).toBe('builds/jobsearch.md\nbuilds/regdocs.md\n')
+    expect((await run(sh, 'find builds -name "*.md"')).out).toBe('builds/earned.md\nbuilds/jobsearch.md\nbuilds/pulse.md\nbuilds/regdocs.md\n')
     expect((await run(sh, 'find . -maxdepth 1 -type d')).out).toBe('.\n./builds\n./community\n./experience\n./skills\n')
     expect((await run(sh, 'find ~ -iname "*EDDY*"')).out).toBe(`${HOME}/experience/eddy-solutions.md\n`)
     expect((await run(sh, 'find . -bogus')).err).toMatch(/unknown predicate/)
@@ -58,7 +58,7 @@ describe('file commands', () => {
   it('touch, mkdir, cp, mv and rm work in /tmp', async () => {
     const sh = await makeShell()
     await run(sh, 'cd /tmp && touch a && mkdir -p d/e && cp ~/about.txt d/ && cp -r ~/builds b && mv a z')
-    expect((await run(sh, 'find . | sort')).out).toBe('.\n./b\n./b/jobsearch.md\n./b/regdocs.md\n./d\n./d/about.txt\n./d/e\n./z\n')
+    expect((await run(sh, 'find . | sort')).out).toBe('.\n./b\n./b/earned.md\n./b/jobsearch.md\n./b/pulse.md\n./b/regdocs.md\n./d\n./d/about.txt\n./d/e\n./z\n')
     expect((await run(sh, 'cp ~/builds /tmp/x')).err).toMatch(/-r not specified; omitting directory/)
     expect((await run(sh, 'mkdir d')).err).toMatch(/cannot create directory 'd': File exists/)
     expect((await run(sh, 'rm nothere')).err).toMatch(/cannot remove 'nothere': No such file/)
@@ -79,7 +79,7 @@ describe('file commands', () => {
     const r = await run(sh, 'rm -r ~/builds')
     expect(r.code).toBe(1)
     expect(r.err).toMatch(/Permission denied/)
-    expect((await run(sh, 'ls -1 ~/builds')).out).toBe('jobsearch.md\nregdocs.md\n')
+    expect((await run(sh, 'ls -1 ~/builds')).out).toBe('earned.md\njobsearch.md\npulse.md\nregdocs.md\n')
   })
 })
 
@@ -109,7 +109,7 @@ describe('text commands', () => {
     expect((await run(sh, 'echo "héllo" | wc -c')).out).toBe('7\n')
     expect((await run(sh, 'echo "héllo" | wc -m')).out).toBe('6\n')
     expect((await run(sh, 'echo "a b" | wc')).out).toBe('      1       2       4\n')
-    expect((await run(sh, 'wc -l education.md builds/*.md')).out).toMatch(/\d+ education\.md\n.*\n.*\n\s*\d+ total\n$/)
+    expect((await run(sh, 'wc -l education.md builds/*.md')).out).toMatch(/\d+ education\.md\n(.*\n){4}\s*\d+ total\n$/)
   })
 
   it('grep: -i -n -v -c -l -r -o -w -q, stdin and exit codes', async () => {
@@ -288,9 +288,9 @@ describe("Raj's commands", () => {
     for (const b of RESUME.builds) expect(p.out).toContain(b.title)
     expect((await run(sh, 'builds regdocs')).out).toMatch(/^# Grounded regulatory assistant/)
     expect((await run(sh, 'projects nope')).code).toBe(1)
-    expect((await run(sh, 'skills')).out).toContain('Retrieval')
+    expect((await run(sh, 'skills')).out).toContain('Code and data')
     expect((await run(sh, 'skills --grep aws')).out).toMatch(/AWS \(EC2/)
-    expect((await run(sh, 'skills retrieval')).out).not.toContain('Python')
+    expect((await run(sh, 'skills genai')).out).not.toContain('Python')
     expect((await run(sh, 'skills --grep cobol')).code).toBe(1)
   })
 

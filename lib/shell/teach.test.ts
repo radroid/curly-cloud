@@ -32,7 +32,7 @@ describe('completion', () => {
     const common = complete(sh, 'cat e')
     expect(common).toMatchObject({ text: null, options: ['education.md', 'experience/'] })
     expect(complete(sh, 'cat sk')).toMatchObject({ text: 'skills/' })
-    expect(complete(sh, 'cat skills/re')).toMatchObject({ text: 'skills/retrieval.txt ' })
+    expect(complete(sh, 'cat skills/ge')).toMatchObject({ text: 'skills/genai.txt ' })
     expect(complete(sh, 'echo hi > /tm')).toMatchObject({ text: '/tmp/' })
   })
 

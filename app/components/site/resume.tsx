@@ -250,13 +250,20 @@ export function Work() {
             <article key={b.id} id={resumeAnchor('build', b.id)} className="scroll-mt-32 rounded-2xl border border-rule bg-white p-5 sm:p-6">
               <p className="font-mono text-xs text-muted">{b.period}</p>
               <h3 className="mt-1 text-lg font-semibold leading-snug tracking-tight">{b.title}</h3>
-              <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Stack">
-                {b.stack.map((s) => (
-                  <li key={s} className="rounded-md bg-paper px-2 py-0.5 font-mono text-[0.72rem] text-muted">
-                    {s}
-                  </li>
-                ))}
-              </ul>
+              {b.link && (
+                <a href={b.link.href} target="_blank" rel="noopener" className="mt-1 inline-block text-sm font-medium text-forest underline underline-offset-2">
+                  {b.link.label} ↗
+                </a>
+              )}
+              {b.stack.length > 0 && (
+                <ul className="mt-3 flex flex-wrap gap-1.5" aria-label="Stack">
+                  {b.stack.map((s) => (
+                    <li key={s} className="rounded-md bg-paper px-2 py-0.5 font-mono text-[0.72rem] text-muted">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {b.id === 'regdocs' && <EvalTrail />}
               <ul className="mt-4 space-y-1">
                 {b.bullets.map((x) => (

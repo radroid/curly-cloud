@@ -49,7 +49,7 @@ export const DECISIONS: Question[] = [
     type: 'open',
     depth: 2,
     prompt: 'Think of a recent decision at Eddy that you treated as a one-way door. How did you know it was one?',
-    hint: 'The tracker data model, hosting the MCP server in-process, rolling out Claude Code to the team.',
+    hint: 'The tracker data model, hosting the MCP server in-process, rolling out AGENTS.md and review guidelines.',
     followUps: [
       'What did you do differently because it was one-way?',
       'Which decision did you treat as reversible that turned out not to be?',

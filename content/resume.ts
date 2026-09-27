@@ -33,6 +33,8 @@ export interface ResumeBuild {
   period: string
   stack: string[]
   bullets: ResumeBullet[]
+  /** Public page for the build (live app, write-up or video), as linked from the PDF resume. */
+  link?: { label: string; href: string }
 }
 
 export interface SkillGroup {
@@ -79,66 +81,45 @@ export const RESUME: ResumeData = {
   skills: [
     {
       id: 'genai',
-      label: 'MCP and agents',
+      label: 'GenAI',
       items: [
-        { id: 'mcp', label: 'MCP servers (Streamable HTTP, stdio, per-user auth, RBAC)' },
-        { id: 'agents', label: 'AI agents' },
+        { id: 'mcp', label: 'MCP servers (tool design, context engineering)' },
         { id: 'langchain', label: 'LangChain' },
         { id: 'llm-apis', label: 'Anthropic and OpenAI APIs' },
-      ],
-    },
-    {
-      id: 'retrieval',
-      label: 'Retrieval',
-      items: [
-        { id: 'rag', label: 'RAG pipelines end to end' },
-        { id: 'vector-search', label: 'pgvector, Supabase, Qdrant, multi-vector search' },
-        { id: 'rrf', label: 'Reciprocal Rank Fusion and reranking' },
-        { id: 'citations', label: 'Grounded answers with citations' },
-      ],
-    },
-    {
-      id: 'evals',
-      label: 'Evaluation and safety',
-      items: [
-        { id: 'evals', label: 'Golden sets, LLM-as-judge, hit@k, recall@k, MRR, Inspect AI' },
-        { id: 'guardrails', label: 'Input sanitization, jailbreak detection, output guards' },
+        { id: 'rag', label: 'RAG (retrieval quality, chunking strategy, hybrid search, BM25)' },
+        { id: 'vector-search', label: 'pgvector, Qdrant Query API (named vectors, filtered multi-vector search)' },
+        { id: 'rrf', label: 'Reranking' },
+        { id: 'evals', label: 'LLM-based evaluations, Inspect AI' },
+        { id: 'guardrails', label: 'Guardrails' },
         { id: 'rate-limiting', label: 'Rate limiting' },
-        { id: 'pii', label: 'PII-safe logging' },
       ],
     },
     {
       id: 'code',
-      label: 'Languages and data',
+      label: 'Code and data',
       items: [
         { id: 'python', label: 'Python' },
         { id: 'typescript', label: 'TypeScript' },
         { id: 'csharp', label: 'C#/.NET' },
-        { id: 'nextjs', label: 'Next.js and Node.js' },
-        { id: 'postgres', label: 'PostgreSQL and SQL' },
+        { id: 'nextjs', label: 'Node.js and Next.js' },
+        { id: 'postgres', label: 'PostgreSQL' },
         { id: 'etl', label: 'ETL and REST APIs' },
+        { id: 'kafka', label: 'Kafka' },
+        { id: 'azure', label: 'Azure Storage Queues' },
+        { id: 'auth', label: 'AuthN and AuthZ' },
       ],
     },
     {
       id: 'cloud',
-      label: 'Cloud and operations',
+      label: 'Cloud and tooling',
       items: [
-        { id: 'aws', label: 'AWS (EC2, ECS, Lambda, RDS, S3, API Gateway, CDK)' },
-        { id: 'azure', label: 'Azure Storage Queues' },
+        { id: 'aws', label: 'AWS (EC2, ECS, Lambda, RDS, S3, API Gateway, CloudFormation)' },
+        { id: 'kubernetes', label: 'Kubernetes/EKS' },
         { id: 'gcp', label: 'GCP' },
         { id: 'cloudflare', label: 'Cloudflare Workers' },
-        { id: 'docker', label: 'Docker and CI/CD' },
-        { id: 'kafka', label: 'Kafka' },
-        { id: 'monitoring', label: 'Logging, monitoring, incident response' },
-      ],
-    },
-    {
-      id: 'ways',
-      label: 'Ways of working',
-      items: [
-        { id: 'claude-code', label: 'Claude Code, interactive and headless' },
-        { id: 'leadership', label: 'Leading teams and mentoring' },
-        { id: 'product', label: 'Product thinking and technical documentation' },
+        { id: 'docker', label: 'Docker and GitHub Actions' },
+        { id: 'monitoring', label: 'Monitoring' },
+        { id: 'claude-code', label: 'Codex/Claude CLI' },
       ],
     },
   ],
@@ -151,80 +132,59 @@ export const RESUME: ResumeData = {
       period: 'Apr 2026 – Present',
       start: '2026-04',
       end: null,
-      blurb:
-        'Eddy makes water-leak detection hardware. I lead software on the team that turns that device data into web apps and insights, and I own the GenAI tooling for the engineering team.',
+      blurb: 'Eddy makes water-leak detection hardware. I lead software on the team that turns that device data into web apps and insights.',
       bullets: [
         {
+          id: 'rag',
+          text: 'Building a RAG system over internal sensor engineering docs and ISO whitepapers, gated by an Inspect AI eval suite.',
+          tags: ['rag', 'evals'],
+        },
+        {
           id: 'tracker',
-          text: "Built the company's work tracker from scratch (Next.js, TypeScript, self-hosted PostgreSQL) so Service, Product and Tech teams, field technicians and third-party vendors hand work to each other in one system. It replaced a shared Excel sheet where items were routinely lost.",
-          tags: ['nextjs', 'typescript', 'postgres', 'product'],
+          text: "Built the company's work tracker from scratch (Next.js, PostgreSQL), with adoption across Service, Product, Tech, field technicians and vendors in place of a shared Excel sheet, Jira and email chains.",
+          tags: ['nextjs', 'postgres', 'product'],
         },
         {
           id: 'mcp',
-          text: "Built and run the company's MCP server on top of the tracker: Streamable HTTP for humans with personal access tokens, stdio for the unattended maintainer bot. Every tool call is authenticated, resolved to a real actor and authorized against the web app's own role and visibility rules, so a viewer cannot create tickets and a comment is attributed to the person who made it, not to a shared token.",
-          tags: ['mcp', 'agents', 'typescript'],
-        },
-        {
-          id: 'mcp-inprocess',
-          text: 'Hosted the MCP server in-process in the existing Next.js app against the same core write paths, rather than as a sidecar, so deploy, auth and the database stay one system and the remote path never calls itself over HTTP.',
-          tags: ['mcp', 'nextjs'],
-        },
-        {
-          id: 'rag',
-          text: 'Architected a RAG system over internal engineering documentation with two modes, Explain and Assess, gated by an Inspect AI evaluation suite that scores answer quality before any change ships.',
-          tags: ['rag', 'evals', 'citations'],
-        },
-        {
-          id: 'telemetry',
-          text: 'Build and monitor the web apps, Python commissioning scripts and internal tools that turn telemetry from a 150,000+ LoRaWAN device fleet, ingested through Azure Storage Queues, into insights for customers and field teams.',
-          tags: ['python', 'azure', 'monitoring'],
+          text: 'Built an MCP server and agent on top of the work tracker inside the same Next.js app, so users can ask questions, search and update work items with chat history storing important context about specific incidents/work items.',
+          tags: ['mcp', 'agents', 'nextjs'],
         },
         {
           id: 'services',
-          text: 'Lead production C#/.NET and TypeScript services on AWS, owning features from design through deployment, with structured logging and monitoring on the paths I own.',
-          tags: ['csharp', 'typescript', 'aws', 'monitoring', 'leadership'],
+          text: 'Led C#/.NET and TypeScript services on AWS and Azure; added monitoring in web apps, Python scripts that turn telemetry from 150,000+ LoRaWAN devices (via Azure Storage Queues) into actionable insights.',
+          tags: ['csharp', 'typescript', 'aws', 'azure', 'python', 'monitoring', 'leadership'],
         },
         {
           id: 'claude-code',
-          text: 'Build with Claude Code daily, interactive and headless. Rolled it and GitHub Copilot out to the engineering team and shipped an app the team now uses to record its own engineering decisions, within the first month.',
-          tags: ['claude-code', 'leadership'],
+          text: 'Agent-driven development with Codex/Claude CLI, rolled out AGENTS.md instructions and pull request review guidelines to several repositories while being thoughtful about context stuffing.',
+          tags: ['claude-code'],
         },
       ],
     },
     {
       id: 'create-club',
-      company: 'Create Club (ARK Experiences)',
+      company: 'Create Club',
       role: 'Co-Founder & AI Engineer',
       location: 'Toronto, ON',
       period: 'Aug 2024 – Mar 2026',
       start: '2024-08',
       end: '2026-03',
-      blurb: 'A small studio that built web applications and AI tooling for clients in Toronto and the Bay Area.',
+      blurb: 'A small studio that built web applications and AI tooling for clients.',
       bullets: [
         {
           id: 'beverage-agents',
-          text: 'Built AI agents on the Anthropic and OpenAI APIs with LangChain for a global beverage company (via a consultancy) that download the weekly reports, apply the required changes and load the data into internal systems. They replaced 80+ manual weekly processes and cut manual work by about 60%.',
-          tags: ['agents', 'langchain', 'llm-apis', 'python'],
-        },
-        {
-          id: 'monitoring',
-          text: "Built the monitoring and dashboards on top of that data so the operations team could see each week's runs and catch failures without opening the files.",
-          tags: ['monitoring', 'product'],
+          text: 'Built LangChain agents on the Anthropic and OpenAI APIs for a global beverage company (via a consultancy) that pulled weekly reports, applied required changes and loaded them into internal systems, replacing 80+ weekly processes and cutting manual work by about 60%.',
+          tags: ['agents', 'langchain', 'llm-apis'],
         },
         {
           id: 'imap-mcp',
-          text: "Prototyped an MCP server over a client's self-hosted IMAP mail so an agent could search and read email on their behalf. Measured tool latency, showed that acceptable response times needed a local index plus a response cache, costed the production version, and recommended stopping there.",
-          tags: ['mcp', 'agents', 'product'],
+          text: "Prototyped an MCP server over a client's self-hosted IMAP mail. Showed that acceptable latency needed a local index plus a response cache and estimated the cost to build and run it.",
+          tags: ['mcp', 'product'],
         },
         {
           id: 'client-apps',
-          text: 'Shipped 10+ production applications for clients (Next.js, Node.js, PostgreSQL, Docker).',
+          text: 'Shipped 4+ production apps including production-grade payment flows for clients (Next.js, Node.js, PostgreSQL, Docker, Stripe API).',
           tags: ['nextjs', 'postgres', 'docker'],
-        },
-        {
-          id: 'review',
-          text: 'Integrated AI-assisted code review and automated testing into the delivery workflow so every change is reviewed and tested before it ships.',
-          tags: ['claude-code', 'docker'],
         },
       ],
     },
@@ -240,22 +200,22 @@ export const RESUME: ResumeData = {
       bullets: [
         {
           id: 'team',
-          text: 'Led a team of 12 developers, owning architecture decisions, the REST API layer behind the web and mobile apps, Agile sprint planning and code review, and mentoring engineers on design patterns and coding standards.',
+          text: "Led 3 interns, including 2 developers and 1 designer, building the company's React web and mobile apps: owned the architecture and shared REST API layer, ran sprint planning and code review, and mentored on design patterns.",
           tags: ['leadership', 'etl', 'product'],
         },
         {
-          id: 'cicd',
-          text: 'Built a Docker and infrastructure-as-code CI/CD pipeline on AWS that cut deploy time from 15 minutes to 2, with health monitoring and automated rollbacks.',
-          tags: ['aws', 'docker', 'monitoring'],
-        },
-        {
           id: 'kafka',
-          text: 'Introduced Kafka for event-driven data flow between services so producers and consumers could scale and fail independently.',
+          text: 'Introduced Kafka to make the backend event-driven: with data showing a buyer co-located properties from several sources, and streamed their updates as new events.',
           tags: ['kafka'],
         },
         {
+          id: 'cicd',
+          text: 'Built the AWS deploy pipeline (GitHub Actions, Docker images to ECS, stacks in CloudFormation via CDK): reduced deployments from 15 minutes to 2, with health checks and automatic rollbacks.',
+          tags: ['aws', 'docker', 'monitoring'],
+        },
+        {
           id: 'recs-poc',
-          text: 'Ran a LangChain proof of concept for personalized home recommendations, matching buyers to listings from the images and tags they liked. It worked, but per-user inference cost against expected traffic did not justify shipping it, so I recommended against it and documented the trade-off for when model prices fell.',
+          text: 'Ran a LangChain PoC for personalized home recommendations from images and tags buyers liked; concluded that per-user cost was too high to ship.',
           tags: ['langchain', 'product'],
         },
       ],
@@ -263,7 +223,7 @@ export const RESUME: ResumeData = {
     {
       id: 'aro',
       company: 'ARO Inc.',
-      role: 'Lead Application Developer, Full Stack & Automation',
+      role: 'Lead Application Developer',
       location: 'Toronto, ON',
       period: 'May 2022 – Dec 2023',
       start: '2022-05',
@@ -272,17 +232,17 @@ export const RESUME: ResumeData = {
       bullets: [
         {
           id: 'automation',
-          text: 'Deployed ML-powered Python automations for document processing that tripled report-generation throughput through automated extraction and NLU-based classification.',
+          text: 'Built Python document-processing automations (automated extraction, tagging) that better aligned with downstream use-cases.',
           tags: ['python'],
         },
         {
           id: 'etl',
-          text: 'Built ETL and integration layers connecting enterprise ERP and CRM systems, cutting manual processing time by 50%.',
+          text: 'Built ETL and integration layers between client and internal CRM systems, cutting manual work for 40% of the workflows.',
           tags: ['etl'],
         },
         {
           id: 'docs',
-          text: 'Owned the technical documentation repository and on-call incident response, with preventive measures that reduced recurring incidents by 20%.',
+          text: 'Owned the technical documentation and on-call preventive fixes that cut repeat incidents by 20%.',
           tags: ['monitoring', 'product'],
         },
       ],
@@ -299,13 +259,13 @@ export const RESUME: ResumeData = {
       bullets: [
         {
           id: 'signals',
-          text: 'Built a fintech analytics platform on GCP (Python, SQL) that computed buy/sell signals over NSE market data, cutting signal latency from 15 seconds to 5.',
-          tags: ['gcp', 'python', 'postgres'],
+          text: 'Built a fintech analytics platform on GCP (Python, SQL) that computed buy/sell signals over NSE market data; cut signal latency from 15 seconds to 5.',
+          tags: ['gcp', 'python'],
         },
         {
-          id: 'team',
-          text: 'Led a remote team of 3, deploying Cloud Functions and IAM for the backend and the data-aggregation pipelines feeding real-time dashboards.',
-          tags: ['gcp', 'leadership'],
+          id: 'pipelines',
+          text: 'Deployed Cloud Functions and IAM roles for the backends and data pipelines behind real-time dashboards.',
+          tags: ['gcp', 'etl'],
         },
       ],
     },
@@ -314,8 +274,9 @@ export const RESUME: ResumeData = {
     {
       id: 'regdocs',
       title: 'Grounded regulatory assistant for the Canadian nuclear industry',
-      period: 'Apr – Jul 2026',
+      period: 'Jul 2026',
       stack: ['Next.js', 'TypeScript', 'OpenAI', 'Supabase pgvector', 'Cloudflare Workers'],
+      link: { label: 'Live app', href: 'https://npx.curlycloud.dev/knowledge-hub' },
       bullets: [
         {
           id: 'corpus',
@@ -345,10 +306,25 @@ export const RESUME: ResumeData = {
       ],
     },
     {
+      id: 'pulse',
+      title: 'The Pulse, a living-analytics app',
+      period: 'May 2026',
+      stack: ['Next.js', 'Cloudflare Workers'],
+      link: { label: 'System design explanation', href: 'https://opendoor.curlycloud.dev/system' },
+      bullets: [
+        {
+          id: 'app',
+          text: "Shipped The Pulse, a Next.js / Cloudflare Workers living-analytics app ranking a pricing leader's decisions from a semantic mart.",
+          tags: ['nextjs', 'cloudflare'],
+        },
+      ],
+    },
+    {
       id: 'jobsearch',
       title: 'Natural-language search over 100K job postings',
       period: 'Feb 2026',
       stack: ['Python', 'OpenAI', 'Qdrant'],
+      link: { label: 'YouTube explainer', href: 'https://youtu.be/y9iwp3zfpJc' },
       bullets: [
         {
           id: 'vectors',
@@ -357,13 +333,27 @@ export const RESUME: ResumeData = {
         },
         {
           id: 'pipeline',
-          text: "Query pipeline parses the user's request into structured intent with an LLM (including negations), embeds it, runs three filtered vector searches (remote, seniority, state, industry), fuses results with intent-weighted Reciprocal Rank Fusion, then applies salary and keyword boosts, a negation penalty and near-duplicate collapsing to return a top 10.",
+          text: "Query pipeline parses the user's request into structured intent with an LLM (including negations), embeds it, runs three filtered vector searches through the Qdrant Query API (remote, seniority, state, industry), fuses results with intent-weighted Reciprocal Rank Fusion, then applies salary and keyword boosts, a negation penalty and near-duplicate collapsing to return a top 10.",
           tags: ['rrf', 'vector-search', 'llm-apis'],
         },
         {
           id: 'refinement',
           text: 'Supported conversational refinement by merging each follow-up into the previous intent.',
           tags: ['agents'],
+        },
+      ],
+    },
+    {
+      id: 'earned',
+      title: 'Earned, a habit-tracking app with an AI coach',
+      period: 'Jan 2026',
+      stack: [],
+      link: { label: 'Live app', href: 'https://75.createplus.club/' },
+      bullets: [
+        {
+          id: 'coach',
+          text: 'Built Earned, a habit-tracking app whose AI coach remembers user context to create personalized routines and recommend challenges.',
+          tags: ['llm-apis', 'product'],
         },
       ],
     },
@@ -452,7 +442,7 @@ export function resumeSources(data: ResumeData = RESUME): SourceInput[] {
     }
   }
   for (const build of data.builds) {
-    const header = `Independent build: ${build.title} (${build.period}; ${build.stack.join(', ')}).`
+    const header = `Independent build: ${build.title} (${[build.period, build.stack.join(', ')].filter(Boolean).join('; ')}).`
     for (const b of build.bullets) {
       out.push({
         id: `resume:build:${build.id}:${b.id}`,
@@ -549,7 +539,9 @@ export function resumeMarkdown(data: ResumeData = RESUME): string {
   }
   lines.push('## Independent builds', '')
   for (const b of data.builds) {
-    lines.push(`### ${b.title}`, `${b.period} · ${b.stack.join(', ')}`, '', ...b.bullets.map((x) => `- ${x.text}`), '')
+    lines.push(`### ${b.title}`, [b.period, b.stack.join(', ')].filter(Boolean).join(' · '), '')
+    if (b.link) lines.push(`${b.link.label}: ${b.link.href}`, '')
+    lines.push(...b.bullets.map((x) => `- ${x.text}`), '')
   }
   if (data.community.length) {
     lines.push('## Community', '')

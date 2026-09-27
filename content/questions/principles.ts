@@ -205,7 +205,7 @@ export const PRINCIPLES: Question[] = [
     hint: 'Go with your gut, then defend it.',
     followUps: [
       'Which one does your current role reward?',
-      'Which one would the 12 developers you led at Pinhous say you are?',
+      'Which one would the interns you led at Pinhous say you are?',
     ],
     why: 'Which identity he values more when forced to choose: dependable or ambitious.',
   },

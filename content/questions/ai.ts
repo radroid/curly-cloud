@@ -256,7 +256,7 @@ export const AI: Question[] = [
     topic: 'ai',
     type: 'scale',
     depth: 2,
-    prompt: "Since you rolled out Claude Code and Copilot at Eddy, how much has the team's output actually changed?",
+    prompt: "Since you rolled out AGENTS.md instructions and pull request review guidelines at Eddy, how much has the team's output with Codex and Claude actually changed?",
     scale: { min: 1, max: 5, minLabel: 'Barely moved', maxLabel: 'Night and day' },
     hint: 'Separate what you can measure from what it feels like.',
     followUps: [
