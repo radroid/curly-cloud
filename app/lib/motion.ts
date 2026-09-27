@@ -49,6 +49,18 @@ export function currentTier(): MotionTier {
 }
 
 /**
+ * True when motion is off, matching the `still:` variant: the Saver tier, or reduced motion unless the
+ * visitor opted in to a render tier. Scripted motion (smooth scroll, WAAPI) checks this, since the CSS
+ * motion-off rule doesn't reach it.
+ */
+export function motionOff(): boolean {
+  const d = document.documentElement.dataset.motion
+  if (d === 'saver') return true
+  if (d === 'high' || d === 'medium') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+/**
  * Apply a tier. `persist: false` is for automatic downgrades (slow frames), which shouldn't
  * overwrite what the visitor chose.
  */

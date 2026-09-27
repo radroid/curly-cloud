@@ -6,6 +6,7 @@ import { streamAnswer } from '@/lib/client/sse'
 import type { ChatTurn, CitationSource } from '@/lib/rag/types'
 import { RESUME } from '@/content/resume'
 import { topicLabel } from '@/content/topics'
+import { motionOff } from '@/app/lib/motion'
 import { useMediaQuery } from '@/app/lib/use-media-query'
 import { AnswerText } from './answer-text'
 import { useSite } from './site-context'
@@ -157,6 +158,57 @@ function useChat() {
   return { messages, busy, send, stop, reset }
 }
 
+// ── What the clone is doing ──────────────────────────────────────────────────
+
+type CloneState = 'idle' | 'thinking' | 'answering'
+
+const NOD: Keyframe[] = [{ transform: 'none' }, { transform: 'translateY(2px) rotate(-2deg)' }, { transform: 'none' }]
+const PULSE: Keyframe[] = [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.3)' }]
+
+/**
+ * What the clone is doing, read from the latest reply. The header gets it as a prop; the mobile dock
+ * reads it from <html data-clone> with `in-data-[clone=…]:` variants, so the rest of the page doesn't
+ * re-render on every token. As text streams in, [data-nod] avatars nod (at most every 220 ms), and an
+ * answer that cites sources pulses the [data-pulse] rings once. WAAPI ignores the CSS motion-off rule,
+ * so both check motionOff().
+ */
+function useCloneState(messages: Message[]): CloneState {
+  const last = messages[messages.length - 1]
+  const streaming = last?.role === 'assistant' && last.status === 'streaming'
+  const state: CloneState = streaming ? (last.content ? 'answering' : 'thinking') : 'idle'
+
+  useEffect(() => {
+    const root = document.documentElement
+    root.dataset.clone = state
+    return () => {
+      delete root.dataset.clone
+    }
+  }, [state])
+
+  const lastNod = useRef(0)
+  const text = streaming ? last.content : ''
+  useEffect(() => {
+    const now = performance.now()
+    if (!text || now - lastNod.current < 220 || motionOff()) return
+    lastNod.current = now
+    document.querySelectorAll<HTMLElement>('[data-nod]').forEach((el) => el.animate(NOD, { duration: 180, easing: 'ease-in-out' }))
+  }, [text])
+
+  // Only a reply that finishes streaming here pulses, not one restored from history.
+  const watching = useRef<string | null>(null)
+  useEffect(() => {
+    if (streaming) watching.current = last.id
+    else if (last && last.id === watching.current) {
+      watching.current = null
+      if (last.status === 'done' && last.cited?.length && !motionOff()) {
+        document.querySelectorAll<HTMLElement>('[data-pulse]').forEach((el) => el.animate(PULSE, { duration: 700, easing: 'ease-out' }))
+      }
+    }
+  }, [streaming, last])
+
+  return state
+}
+
 // ── Panel ────────────────────────────────────────────────────────────────────
 
 /** Starter questions. Also cycled in the hero prompt; lib/rag/injection.test.ts reads them from this file. */
@@ -174,6 +226,7 @@ export const STARTERS = [
 export function AskPanel() {
   const site = useSite()
   const { messages, busy, send, stop, reset } = useChat()
+  const clone = useCloneState(messages)
   const [input, setInput] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -279,7 +332,7 @@ export function AskPanel() {
           'lg:static lg:z-auto lg:h-full lg:translate-y-0 lg:rounded-none lg:border-l lg:border-rule lg:shadow-none',
         ].join(' ')}
       >
-        <PanelHeader onReset={messages.length ? reset : undefined} onClose={sheet ? () => site.setSheetOpen(false) : undefined} />
+        <PanelHeader state={clone} onReset={messages.length ? reset : undefined} onClose={sheet ? () => site.setSheetOpen(false) : undefined} />
 
         <div
           ref={scrollRef}
@@ -374,16 +427,30 @@ export function AskPanel() {
   )
 }
 
-function PanelHeader({ onReset, onClose }: { onReset?: () => void; onClose?: () => void }) {
+function PanelHeader({ state, onReset, onClose }: { state: CloneState; onReset?: () => void; onClose?: () => void }) {
   return (
     <header className="relative flex items-center gap-3 border-b border-rule px-[18px] py-3.5">
       {onClose && <span aria-hidden className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-rule lg:hidden" />}
       <div className="relative shrink-0">
-        <Image src="/raj-avatar.webp" alt="" width={38} height={38} className="size-[38px] rounded-full" />
+        {/* Thinking: a mint ring circles the avatar. With motion off, the status text beside the name stands in. */}
+        <span
+          aria-hidden
+          className={`absolute -inset-[3px] rounded-full bg-[conic-gradient(transparent_25%,var(--color-term-accent)_75%)] still:hidden ${state === 'thinking' ? 'animate-spin' : 'hidden'}`}
+        />
+        <span aria-hidden data-pulse className="absolute -inset-[3px] rounded-full border-2 border-coral opacity-0" />
+        <Image data-nod src="/raj-avatar.webp" alt="" width={38} height={38} className="relative size-[38px] rounded-full ring-1 ring-white" />
         <span aria-hidden className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-forest" />
       </div>
       <div className="min-w-0 flex-1">
-        <h2 className="type-display text-[20px] leading-none tracking-[0.02em]">Ask Raj</h2>
+        <div className="flex items-baseline gap-2">
+          <h2 className="type-display text-[20px] leading-none tracking-[0.02em]">Ask Raj</h2>
+          {/* The live region announces the answer; this is for sighted visitors with motion off. */}
+          {state !== 'idle' && (
+            <span aria-hidden className="hidden font-mono text-xs leading-none text-muted still:inline">
+              {state}…
+            </span>
+          )}
+        </div>
         <p className="mt-1 truncate text-[12.5px] text-muted">AI clone · answers from my resume and my own words</p>
       </div>
       {onReset && (
