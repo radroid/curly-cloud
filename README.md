@@ -74,7 +74,7 @@ bunx wrangler secret put SESSION_SECRET
 bunx wrangler secret put ANTHROPIC_API_KEY    # optional: answers with Claude instead of Workers AI
 ```
 
-Each release:
+Each release (production sits behind Cloudflare Access, so the CLI also needs the `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` service token; Bun loads them from `.env.local`):
 
 ```bash
 bun run deploy
@@ -83,6 +83,6 @@ CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:ingest private/an
 CLONE_URL=https://curlycloud.dev ADMIN_TOKEN=… bun run clone:persona --yes
 ```
 
-Recommended: put `/studio*` and `/api/admin/*` behind **Cloudflare Access** as a second lock on top of the studio passphrase.
+**Cloudflare Access** guards `/studio*`, `/api/admin/*` and `/api/auth/*` as a second lock on top of the studio passphrase: browsers sign in with an emailed code, and the CLI uses a service token allowed by a Service Auth policy. The `workers.dev` and preview URLs are off (`wrangler.jsonc`), so `curlycloud.dev` is the only way in.
 
 Cost controls are set in `wrangler.jsonc` vars: `CHAT_PER_HOUR`, `CHAT_PER_DAY`, `FIT_PER_DAY`, `FIT_GLOBAL_PER_DAY`, `MCP_ANON_PER_DAY`, `DAILY_TOKEN_BUDGET`. Studio logout signs out every session. Set `MCP_REQUIRE_KEY=true` to turn off anonymous MCP access.

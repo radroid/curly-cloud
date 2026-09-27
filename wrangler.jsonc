@@ -48,5 +48,9 @@
       "pattern": "curlycloud.dev",
       "custom_domain": true
     }
-  ]
+  ],
+  // curlycloud.dev is the only way in: Cloudflare Access guards /studio and the admin API there, and
+  // a workers.dev or preview URL would skip it.
+  "workers_dev": false,
+  "preview_urls": false
 }

@@ -25,8 +25,41 @@ describe('clone CLI', () => {
       CLONE_URL: 'http://localhost:3201',
     })
     const cfg = loadConfig({ CLONE_URL: 'https://curlycloud.dev/', ADMIN_TOKEN: 'x' }, dir)
-    expect(cfg).toEqual({ url: 'https://curlycloud.dev', token: 'x', tokenSource: 'env', local: false })
+    expect(cfg).toEqual({ url: 'https://curlycloud.dev', token: 'x', tokenSource: 'env', local: false, access: null })
     expect(loadConfig({}, dir).url).toBe('http://localhost:3000')
+    expect(loadConfig({ CF_ACCESS_CLIENT_ID: 'id.access' }, dir).access).toBeNull()
+  })
+
+  it('sends the Cloudflare Access service token to production only', async () => {
+    const seen: { url: string; id: string | null; secret: string | null; redirect?: RequestRedirect }[] = []
+    const fetchImpl = (async (url: string, init: RequestInit) => {
+      const h = new Headers(init.headers)
+      seen.push({ url, id: h.get('cf-access-client-id'), secret: h.get('cf-access-client-secret'), redirect: init.redirect })
+      return new Response('{"sources":1}', { status: 200 })
+    }) as typeof fetch
+    const access = { CF_ACCESS_CLIENT_ID: 'id.access', CF_ACCESS_CLIENT_SECRET: 'cfast_s3cret' }
+    expect(await run(['stats'], { log: capture().log, env: { ...ENV, ...access }, fetchImpl })).toBe(0)
+    expect(await run(['stats'], { log: capture().log, env: { CLONE_URL: 'https://curlycloud.dev', ADMIN_TOKEN: 'x', ...access }, fetchImpl })).toBe(0)
+    expect(seen).toEqual([
+      { url: 'http://localhost:3205/api/admin/stats', id: null, secret: null, redirect: 'manual' },
+      { url: 'https://curlycloud.dev/api/admin/stats', id: 'id.access', secret: 'cfast_s3cret', redirect: 'manual' },
+    ])
+  })
+
+  it('explains a Cloudflare Access login redirect instead of following it', async () => {
+    const toAccess = (async () =>
+      new Response(null, { status: 302, headers: { location: 'https://team.cloudflareaccess.com/cdn-cgi/access/login/curlycloud.dev?kid=1' } })) as unknown as typeof fetch
+    const prod = { CLONE_URL: 'https://curlycloud.dev', ADMIN_TOKEN: 'x' }
+
+    const missing = capture()
+    expect(await run(['stats'], { log: missing.log, env: prod, fetchImpl: toAccess })).toBe(1)
+    expect(missing.text()).toMatch(/behind Cloudflare Access\. Set CF_ACCESS_CLIENT_ID and CF_ACCESS_CLIENT_SECRET/)
+
+    const refused = capture()
+    const env = { ...prod, CF_ACCESS_CLIENT_ID: 'id.access', CF_ACCESS_CLIENT_SECRET: 'cfast_wrong' }
+    expect(await run(['stats'], { log: refused.log, env, fetchImpl: toAccess })).toBe(1)
+    expect(refused.text()).toMatch(/turned the service token away.*Service Auth policy/)
+    expect(refused.text()).not.toContain('cfast_wrong')
   })
 
   it('detects file formats', () => {
