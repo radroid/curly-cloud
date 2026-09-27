@@ -52,13 +52,16 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const url = (env.CLONE_URL || vars.CLONE_URL || DEFAULT_URL).replace(/\/+$/, '')
   const token = env.ADMIN_TOKEN || vars.ADMIN_TOKEN || null
   const tokenSource = env.ADMIN_TOKEN ? 'env' : vars.ADMIN_TOKEN ? '.dev.vars' : 'missing'
-  let local = false
+  let parsed: URL
   try {
-    const host = new URL(url).hostname
-    local = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]'
+    parsed = new URL(url)
   } catch {
     throw new CliError(`CLONE_URL "${url}" is not a valid URL.`)
   }
+  const host = parsed.hostname
+  const local = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '[::1]'
+  // Tokens go in headers, so anything off this machine must be encrypted.
+  if (!local && parsed.protocol !== 'https:') throw new CliError(`CLONE_URL "${url}" must use https:// so tokens aren't sent in the clear.`)
   const accessId = env.CF_ACCESS_CLIENT_ID || vars.CF_ACCESS_CLIENT_ID
   const accessSecret = env.CF_ACCESS_CLIENT_SECRET || vars.CF_ACCESS_CLIENT_SECRET
   const access = accessId && accessSecret ? { id: accessId, secret: accessSecret } : null

@@ -28,6 +28,8 @@ describe('clone CLI', () => {
     expect(cfg).toEqual({ url: 'https://curlycloud.dev', token: 'x', tokenSource: 'env', local: false, access: null })
     expect(loadConfig({}, dir).url).toBe('http://localhost:3000')
     expect(loadConfig({ CF_ACCESS_CLIENT_ID: 'id.access' }, dir).access).toBeNull()
+    expect(() => loadConfig({ CLONE_URL: 'http://curlycloud.dev' }, dir)).toThrow(/must use https/)
+    expect(loadConfig({ CLONE_URL: 'http://127.0.0.1:3205' }, dir).local).toBe(true)
   })
 
   it('sends the Cloudflare Access service token to production only', async () => {

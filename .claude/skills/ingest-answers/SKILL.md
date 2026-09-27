@@ -15,7 +15,8 @@ counts at most. Quoting his answers back to Raj in this conversation is fine; he
 
 **Target.** Everything runs against `CLONE_URL` (default `http://localhost:3000`, Raj's dev server)
 with `ADMIN_TOKEN` from `.dev.vars`. Production (`CLONE_URL=https://curlycloud.dev` plus the production
-`ADMIN_TOKEN`) runs only after Raj explicitly says go in this conversation; the CLI then needs `--yes`.
+`ADMIN_TOKEN`, and the Cloudflare Access service token `CF_ACCESS_CLIENT_ID`/`CF_ACCESS_CLIENT_SECRET`
+that Bun loads from `.env.local`) runs only after Raj explicitly says go in this conversation; the CLI then needs `--yes`.
 
 ## Steps
 
