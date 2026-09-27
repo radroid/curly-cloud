@@ -273,28 +273,28 @@ export function AskPanel() {
         aria-modal={sheet ? true : undefined}
         inert={!open}
         className={[
-          'flex flex-col bg-white outline-none',
-          'fixed inset-x-0 bottom-0 z-50 h-[88dvh] rounded-t-2xl border-t border-rule shadow-[0_-12px_40px_-12px_rgb(0_0_0/0.25)] transition-transform duration-300',
+          'flex flex-col bg-white text-ink outline-none',
+          'fixed inset-x-0 bottom-0 z-50 h-[88dvh] rounded-t-[20px] shadow-[0_-16px_40px_-12px_rgb(0_0_0/0.35)] transition-transform duration-300',
           site.sheetOpen ? 'translate-y-0' : 'translate-y-full',
-          'lg:static lg:z-auto lg:h-full lg:translate-y-0 lg:rounded-none lg:border-t-0 lg:border-l lg:shadow-none',
+          'lg:static lg:z-auto lg:h-full lg:translate-y-0 lg:rounded-none lg:border-l lg:border-rule lg:shadow-none',
         ].join(' ')}
       >
         <PanelHeader onReset={messages.length ? reset : undefined} onClose={sheet ? () => site.setSheetOpen(false) : undefined} />
 
         <div
           ref={scrollRef}
-          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-5"
+          className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain p-[18px]"
           aria-live="polite"
           aria-busy={busy}
         >
           {messages.length === 0 ? (
             <EmptyState onPick={(q) => void send(q)} />
           ) : (
-            <ol className="space-y-6">
+            <ol className="space-y-5">
               {messages.map((m, i) =>
                 m.role === 'user' ? (
                   <li key={m.id} data-msg={m.id} className="flex justify-end">
-                    <p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-br-md bg-ink px-3.5 py-2 text-[0.95rem] text-paper">{m.content}</p>
+                    <p className="max-w-[88%] whitespace-pre-wrap rounded-[16px_16px_4px_16px] bg-ink px-3.5 py-[9px] text-[15px] text-paper">{m.content}</p>
                   </li>
                 ) : (
                   <li key={m.id} style={i === messages.length - 1 && viewH ? { minHeight: Math.max(0, viewH - 120) } : undefined}>
@@ -311,12 +311,12 @@ export function AskPanel() {
             e.preventDefault()
             submit()
           }}
-          className="border-t border-rule p-3 sm:p-4"
+          className="border-t border-rule p-3"
         >
           <label htmlFor="ask-input" className="sr-only">
             Ask Raj’s AI clone a question
           </label>
-          <div className="flex items-end gap-2 rounded-xl border border-rule bg-paper/60 p-1.5 focus-within:border-forest">
+          <div className="flex items-end gap-1.5 rounded-xl border border-rule bg-paper p-[5px] transition-colors focus-within:border-forest">
             <textarea
               id="ask-input"
               ref={inputRef}
@@ -335,13 +335,13 @@ export function AskPanel() {
                 }
               }}
               placeholder="Ask me anything…"
-              className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2 py-1.5 text-[0.95rem] outline-none placeholder:text-muted"
+              className="max-h-40 min-h-10 flex-1 resize-none bg-transparent px-2.5 py-2 text-base outline-none placeholder:text-muted lg:text-[15px]"
             />
             {busy ? (
               <button
                 type="button"
                 onClick={stop}
-                className="inline-flex h-9 shrink-0 items-center rounded-lg border border-rule bg-white px-3 text-sm font-medium hover:border-ink"
+                className="inline-flex h-10 shrink-0 items-center rounded-[9px] border border-rule bg-white px-4 text-sm font-semibold hover:border-ink"
               >
                 Stop
               </button>
@@ -349,16 +349,16 @@ export function AskPanel() {
               <button
                 type="submit"
                 disabled={!input.trim()}
-                className="inline-flex h-9 shrink-0 items-center rounded-lg bg-forest px-3.5 text-sm font-medium text-paper transition-colors hover:bg-pine disabled:bg-rule disabled:text-muted"
+                className="inline-flex h-10 shrink-0 items-center rounded-[9px] bg-forest px-4 text-sm font-semibold text-paper transition-colors hover:bg-pine disabled:bg-rule disabled:text-muted"
               >
                 Ask
               </button>
             )}
           </div>
-          <p className="mt-2 flex items-center justify-between gap-3 px-1 text-xs text-muted">
+          <p className="mx-1 mt-2 flex items-center justify-between gap-3 text-xs text-muted">
             <span>
               An AI clone — it can be wrong. Questions are logged, never your IP.{' '}
-              <a href="#privacy" className="underline underline-offset-2 hover:text-ink" onClick={() => site.setSheetOpen(false)}>
+              <a href="#privacy" className="underline decoration-current/45 underline-offset-4 hover:text-ink hover:decoration-current" onClick={() => site.setSheetOpen(false)}>
                 More
               </a>
             </span>
@@ -376,18 +376,18 @@ export function AskPanel() {
 
 function PanelHeader({ onReset, onClose }: { onReset?: () => void; onClose?: () => void }) {
   return (
-    <header className="flex items-center gap-3 border-b border-rule px-4 py-3 sm:px-5">
+    <header className="relative flex items-center gap-3 border-b border-rule px-[18px] py-3.5">
       {onClose && <span aria-hidden className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-rule lg:hidden" />}
-      <div className="relative">
-        <Image src="/raj-avatar.webp" alt="" width={36} height={36} className="size-9 rounded-full" />
+      <div className="relative shrink-0">
+        <Image src="/raj-avatar.webp" alt="" width={38} height={38} className="size-[38px] rounded-full" />
         <span aria-hidden className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-forest" />
       </div>
       <div className="min-w-0 flex-1">
-        <h2 className="text-sm font-semibold leading-tight">Ask Raj</h2>
-        <p className="truncate text-xs text-muted">AI clone · answers from my resume and my own words</p>
+        <h2 className="type-display text-[20px] leading-none tracking-[0.02em]">Ask Raj</h2>
+        <p className="mt-1 truncate text-[12.5px] text-muted">AI clone · answers from my resume and my own words</p>
       </div>
       {onReset && (
-        <button type="button" onClick={onReset} className="rounded-md px-2 py-1 text-xs font-medium text-muted hover:bg-paper hover:text-ink">
+        <button type="button" onClick={onReset} className="inline-flex h-9 items-center rounded-md px-2 text-[12.5px] font-medium text-muted hover:bg-paper hover:text-ink">
           New chat
         </button>
       )}
@@ -396,7 +396,7 @@ function PanelHeader({ onReset, onClose }: { onReset?: () => void; onClose?: () 
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="grid size-9 place-items-center rounded-full text-muted hover:bg-paper hover:text-ink"
+          className="-mr-1.5 grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-paper hover:text-ink"
         >
           <svg aria-hidden viewBox="0 0 16 16" className="size-4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
@@ -410,20 +410,23 @@ function PanelHeader({ onReset, onClose }: { onReset?: () => void; onClose?: () 
 function EmptyState({ onPick }: { onPick: (q: string) => void }) {
   return (
     <div>
-      <p className="text-[0.95rem] leading-relaxed">
+      <p className="text-[15px] leading-relaxed">
         Hi — I’m an AI version of Raj. I answer from his resume and from interview questions he’s answered in his own words, and I cite
         where each answer comes from. <span className="text-muted">Cited resume lines light up <span className="lg:hidden">in the resume</span><span className="max-lg:hidden">on the left</span>.</span>
       </p>
-      <p className="mt-5 font-mono text-[0.7rem] uppercase tracking-wider text-muted">Try asking</p>
-      <ul className="mt-2 space-y-1.5">
-        {STARTERS.map((q) => (
+      <p className="mb-2 mt-5 font-mono text-xs lowercase text-muted">Try asking</p>
+      <ul className="grid gap-1.5">
+        {STARTERS.map((q, i) => (
           <li key={q}>
             <button
               type="button"
               onClick={() => onPick(q)}
-              className="w-full rounded-lg border border-rule px-3 py-2 text-left text-sm transition-colors hover:border-forest hover:bg-paper"
+              className="grid min-h-11 w-full grid-cols-[28px_1fr] gap-1 rounded-[10px] border border-rule px-3 py-2.5 text-left text-sm transition-colors hover:border-forest hover:bg-paper"
             >
-              {q}
+              <span aria-hidden className="font-mono text-[11px] leading-[1.9] text-muted">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <span>{q}</span>
             </button>
           </li>
         ))}
@@ -462,7 +465,7 @@ function AssistantMessage({ message: m }: { message: Message }) {
   }
 
   return (
-    <div className="text-[0.95rem] leading-relaxed">
+    <div className="text-[15px] leading-relaxed">
       {m.content ? (
         <AnswerText text={m.content} sources={sources} activeN={activeN} onCite={onCite} onHoverCite={setActiveN} />
       ) : (
@@ -475,18 +478,18 @@ function AssistantMessage({ message: m }: { message: Message }) {
           {sources.length ? `Reading ${sources.length} sources…` : 'Searching what I know…'}
         </p>
       )}
-      {m.status === 'streaming' && m.content && <span aria-hidden className="ml-0.5 inline-block h-4 w-1.5 animate-pulse bg-forest align-text-bottom" />}
+      {m.status === 'streaming' && m.content && <span aria-hidden className="ml-0.5 inline-block h-[15px] w-[7px] animate-blink bg-forest align-[-2px] still:animate-none" />}
       {m.status === 'stopped' && <p className="mt-2 text-xs text-muted">Stopped.</p>}
       {m.meta?.guarded && (
         <p className="mt-2 text-xs text-muted">I stopped early rather than quote my private notes word for word. Ask me to put it differently.</p>
       )}
 
       {listed.length > 0 && m.status !== 'streaming' && (
-        <div className="mt-3 rounded-xl border border-rule bg-paper/60 p-2.5">
-          <p className="px-1 font-mono text-[0.68rem] uppercase tracking-wider text-muted">
+        <div className="mt-2.5 rounded-xl border border-rule bg-paper p-2">
+          <p className="mx-1 mb-1.5 font-mono text-[11px] lowercase text-muted">
             {cited.length && !showAll ? 'Sources cited' : 'Sources retrieved'}
           </p>
-          <ul className="mt-1.5 space-y-1">
+          <ul className="space-y-0.5">
             {listed.map((s) => (
               <li key={s.n}>
                 <SourceRow source={s} active={activeN === s.n} onOpen={() => onCite(s.n)} />
@@ -494,7 +497,7 @@ function AssistantMessage({ message: m }: { message: Message }) {
             ))}
           </ul>
           {cited.length > 0 && sources.length > cited.length && (
-            <button type="button" onClick={() => setShowAll((v) => !v)} className="mt-1.5 px-1 text-xs text-muted underline underline-offset-2 hover:text-ink">
+            <button type="button" onClick={() => setShowAll((v) => !v)} className="mx-1 mt-1.5 text-xs text-muted underline decoration-current/45 underline-offset-4 hover:text-ink">
               {showAll ? 'Only cited sources' : `Show all ${sources.length} retrieved`}
             </button>
           )}
@@ -517,11 +520,11 @@ function SourceRow({ source: s, active, onOpen }: { source: CitationSource; acti
       type="button"
       onClick={onOpen}
       className={[
-        'flex w-full gap-2 rounded-lg px-1.5 py-1.5 text-left transition-colors',
+        'flex w-full gap-2 rounded-lg p-1.5 text-left transition-colors',
         active ? 'bg-marker/70' : 'hover:bg-white',
       ].join(' ')}
     >
-      <span className="mt-0.5 grid h-[1.15rem] min-w-[1.15rem] place-items-center rounded bg-coral/10 px-1 font-mono text-[0.7rem] text-coral-ink">{s.n}</span>
+      <span className="mt-0.5 grid h-[19px] min-w-[19px] place-items-center rounded bg-coral/10 px-1 font-mono text-[11px] font-medium text-coral-ink">{s.n}</span>
       <span className="min-w-0 flex-1">
         <span className="flex items-baseline gap-1.5 text-xs">
           <span className="truncate font-medium text-ink">{label}</span>
