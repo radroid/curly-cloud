@@ -4,11 +4,14 @@
 > reference is saifullah.dev. Humans and agents should treat this file as the source of truth for the
 > redesign and update it when a decision changes. `CLONE-PLAN.md` still governs architecture and privacy.
 >
-> **Status: draft for Raj's review.** Nothing is built yet. Branch: `feat/visual-refresh` (off `origin/main`).
+> **Status: design agreed, ready to build (2026-09-27).** Raj reviewed a clickable prototype, asked for five
+> changes and approved the rest (§1a). The content it shows was first aligned with Raj's final PDF CV in
+> PR #10, which is merged, deployed and re-seeded into the production clone. Branch: `feat/visual-refresh`
+> = `main` + this plan.
 
 ## 0. What we measured (2026-09-26)
 
-**curlycloud.dev today**
+**curlycloud.dev before the redesign**
 
 | | Desktop 1440 | Mobile 390 |
 |---|---|---|
@@ -29,9 +32,9 @@ limit is 3 MiB (3,072 KiB), so there is about 805 KiB of headroom.
 > `/cdn-cgi/challenge-platform/scripts/jsd/main.js`. The zone injects it into every HTML response, and it
 > costs about 3.5 s of main-thread work on simulated mobile, including one 1.8 s long task. With that URL
 > blocked, the same page scores **Performance 93, Best Practices 100, LCP 3.0 s, TBT 30 ms**. The fix is a
-> Cloudflare dashboard setting (JavaScript detections / Bot Fight Mode on the zone), not code. **It's your
-> call.** PRs are measured on `bun run preview`, which doesn't inject that script, so we see the app's own
-> cost.
+> Cloudflare dashboard setting (JavaScript detections / Bot Fight Mode on the zone), not code. **It's Raj's
+> call** (§9, still open). PRs are measured on `bun run preview`, which doesn't inject that script, so we
+> see the app's own cost.
 
 **saifullah.dev, the reference**
 
@@ -54,15 +57,10 @@ hero visual, a marquee, numbers shown as instruments, and the persistent footer.
 ## 1. Design direction: "the curly cloud"
 
 **Idea.** The resume becomes an *instrument panel for an AI engineer*. The first screen is a dark stage:
-Raj's curly-haired avatar is drawn as a live **point cloud**, which is literally a *curly cloud*.
-**40 brighter points in it are the 40 public sources the clone can cite.** Hover one to see its label;
-click it to jump to that resume line. The hero is the knowledge base, so it replaces the "How to read
-this" explainer.
-
-> Probe (throwaway, not product code): `docs/redesign/probe-hero-desktop.jpg` shows the avatar sampled into
-> about 9k points on the pine stage, with type and marquee. `docs/redesign/probe-type.jpg` compares display
-> fonts. The avatar reads well as a cloud: curls, beard, cup and collar all hold. The eyes and nose need
-> edge-weighted sampling.
+Raj's curly-haired illustration is drawn as a live **point cloud**, which is literally a *curly cloud*.
+**One brighter point per public source the clone can cite (38 today).** Hover one to see its label; click
+it to jump to that resume line. The hero is the knowledge base, so it replaces the "How to read this"
+explainer.
 
 **Palette.** No new hues; the brand palette stays.
 
@@ -76,77 +74,128 @@ this" explainer.
 
 **Type.**
 
-- **Display:** **Anton** 400. It's condensed, set in caps with `text-transform` (the DOM keeps proper case,
-  so screen readers say "Raj Dholakia"). It's used for the name, section titles, numbers and the marquee.
-- **Micro-copy:** **IBM Plex Mono**, which is already loaded. Uppercase with 0.14em tracking for bracket
-  nav, labels and `> key: value` log lines.
+- **Display:** **Anton** 400, set in caps with `text-transform` (the DOM keeps proper case, so screen readers
+  say "Raj Dholakia"). It's used for the name, section titles, company names, numbers and the marquee.
+- **Micro-copy:** **IBM Plex Mono**, which is already loaded. Two voices:
+  - Navigation stays uppercase and bracketed: `[2] WORK`.
+  - The system log, captions and counts are lowercase: `$ clone status`, `each bright point is one of the
+    38 sources my clone can cite. hover one.`, `5 lines`.
 - **Body and resume lines:** **IBM Plex Sans**, unchanged.
-- Alternatives are in the probe: Plex Sans Condensed 700 (same family, less punch) and Archivo at width 62.
-  All three self-host through `next/font`, so no CSP change.
+- Self-hosted through `next/font`, so no CSP change.
 
 **Grammar.**
 
-- Bracket indices: `[02] WORK`.
-- Mono keys on chips: `NOW`, `BASE`, `STACK`.
+- Bracket indices on the nav and section heads: `[2] WORK`.
 - Hairline rules.
-- Numbers as counters and bars.
-- Every collapsible block shows a visual summary plus a `▸ 07 LINES` disclosure.
+- Numbers as counters and unit charts.
+- Every collapsible block shows a visual summary plus a `▸ 7 lines` disclosure (no zero padding; `1 line`
+  singular).
+- Numbered markers only where the content is a real sequence (the nav, the how-it-works pipeline).
+- No `→` appended to links.
 
 **Honesty rule.** Every number or claim on screen comes from one of three places:
 
-- `content/resume.ts`.
-- A count derived from it, such as 32 lines or 40 sources.
+- `content/resume.ts`, which now follows Raj's final PDF CV (PR #10).
+- A count derived from it, such as 30 lines or 38 sources.
 - An architecture fact in `CLONE-PLAN.md`.
 
-Measured values (FPS, local time) are real. A unit test enforces this for stats (§6). **No `resume.ts`
-edits are planned.** The items that would need your copy approval are listed in §9.
+Measured values (FPS, local time) are real. A unit test enforces this for stats (§6). **The redesign makes no
+further `resume.ts` edits.** Anything that would need Raj's copy approval is listed in §9.
 
 **Layout.**
 
 - **Desktop:** the hero stage is full-bleed across both columns, and the top bar floats over it in the
-  dark tone. Below the hero is today's two-column grid, with the page on the left and the **Ask panel
-  sticky on the right**. The panel starts at the Work section instead of at y=0. The hero has its own
-  prompt bar that sends to the panel and scrolls it into view. (The alternative is to keep the panel from
-  the first pixel; see §9.)
-- **Mobile:** the hero stage fills the first screen: cloud, name, tagline, prompt bar. A bottom
-  **dock** replaces the Ask FAB, with the current section and menu on the left and `Ask Raj` on the right.
+  dark tone. Below the hero is the two-column grid, with the page on the left and the **Ask panel sticky
+  on the right**, starting just below the marquee instead of at y=0. The hero has its own prompt bar that sends to
+  the panel.
+- **Mobile:** the hero stage fills the first screen: cloud on top, then the name, prompt bar, disclosure and
+  two links, all clear of the dock. A bottom **dock** replaces the Ask FAB, with the current section and
+  menu on the left and `Ask Raj` on the right.
+
+## 1a. Design reference and review outcome
+
+**The prototype is the visual spec.** It's a single HTML file with the real resume data, all 20 components
+tagged C0–C19, and the same citation mechanics. Where this plan and the prototype disagree on *how
+something looks*, the prototype wins. Where they disagree on *how it's built* (framework, accessibility,
+performance), this plan wins.
+
+- **Where:** local branch `prototype/visual-refresh`, folder `docs/redesign/` (not pushed, kept out of
+  `main`). In this worktree the same files are untracked at `docs/redesign/`.
+  - `docs/redesign/redesign-prototype.html`: open it in a browser. `?intro=off&tags=off` gives a clean
+    view; `embed=1` hides the review bar.
+  - `docs/redesign/prototype/src.html`: the source to read when building a component (search for
+    `data-c="C7"` or `// ── C7`).
+  - `docs/redesign/prototype/build.ts`: rebuilds the HTML from `content/resume.ts`
+    (`bun docs/redesign/prototype/build.ts`).
+  - `docs/redesign/prototype/cloud-src.png` and `cloud-src.py`: the hero's source image and the script
+    that made it (§4).
+  - `docs/redesign/shots/`: reference screenshots at 1440×900 and 390×844.
+- **Prototype-only, don't port:** the pink review tags and review bar, the Options menu, the canned Ask
+  answers and fit result, the Canvas2D cloud (the product uses WebGL, §4), the retrieval-field hero and the
+  font switcher (options that weren't chosen).
+
+**Raj's review (2026-09-27): "Solid prototype."** Changes he asked for, all made in the prototype:
+
+1. **Hero image.** The cloud is sampled from Raj's new illustration (curly hair, beard, earbud, floral
+   camp-collar shirt) instead of the old avatar. The small chat avatar is unchanged.
+2. **C4 path line.** The vertical line runs exactly through the centre of each dot, from the first dot to
+   the last, with the dots drawn on top. The horizontal layout also ends at the last dot.
+3. **No subtitle under the name.** The hero is name, prompt bar, disclosure, links.
+4. **Floating filter pill.** "Showing N lines about X · Clear" is fixed just under the top bar, centred on
+   the reading column, with a shadow, and stays visible while the filter is on.
+5. **Full border on filtered lines.** Matching lines get a 1.5 px rounded border in the forest accent over
+   a 7 % tint; non-matching lines dim.
+6. **Content.** The page shows the CV as it is now (PR #10): four builds, Pinhous as 3 interns, no Duit
+   leadership, and so on.
+
+**Found and fixed during review** (keep these in the build):
+
+- The mobile timeline opens at the recent end, keeps the lane labels pinned on the left while it scrolls
+  sideways, and says "Swipe back for earlier years".
+- "Ask about this" floats at a line's top-right corner on mouse devices, so it never holds an empty row;
+  on touch it stays inline and visible.
+- The mobile menu button reports `aria-expanded` and returns focus when the menu closes.
+- The system log sits on a translucent backdrop so it reads over any hero.
+
+**Measured on the prototype** (intro off):
+
+| Measure | Before | Prototype |
+|---|---|---|
+| Words visible before any expansion | ~2,360 | ~910 |
+| Desktop page height (1440) | 9,806 px | 7,699 px |
+| Mobile page height (390) | 17.4 screens | 12.5 screens |
+
+All 30 lines and 38 sources stay in the HTML.
 
 ## 2. Section by section: before → after
 
 "In DOM" means the full citable text is still rendered as HTML inside a closed `<details>`. It is indexed,
-found by find-in-page in Chromium, printed, and opened by citations.
+found by find-in-page in Chromium, printed, and opened by citations. Component ids (C0–C19) match the
+prototype.
 
-| # | Section | Before | After: visual | Text on screen (target) |
-|---|---|---|---|---|
-| 0 | **Intro** (new) | none | Boot overlay: Anton `%` counter, 3-line system log, HIGH / MED / SAVER chips, `Enter` (details below) | ~15 words, gone in ≤1.2 s |
-| 1 | **Hero** | Name, 23-word pitch, "Now:" line, 3 CTAs, 4 links (67 words) | Curly-cloud canvas with 40 source stars. `RAJ DHOLAKIA` in Anton. `[ INFO_LOG ] LLM features that make it past the demo.` (a substring of `pitch`). **Prompt bar** "Ask my AI clone anything…" with placeholder cycling through the existing `STARTERS`. Two quiet links: `Check my fit →` `Connect your agent →`. Right side (desktop): system log `> corpus: 40 public sources · 32 citable lines`, `> retrieval: bm25 ∥ bge-m3 → rrf → rerank`, `> guard: streaming verbatim check`, `> render: HIGH · 60 fps` (measured) | ~40 words, including the required AI and logging disclosure under the prompt bar |
-| — | **How to read** | 50-word explainer card | **Removed.** The stars show the idea; one mono line under the cloud: `EVERY LIGHT IS A LINE THE CLONE CAN CITE` | 9 words |
-| 2 | **Marquee** (new) | "Now: …" sentence | Looping chips: `NOW` Lead Software Developer @ Eddy Solutions · `BASE` Toronto, ON · `FOCUS` MCP · RAG · Evals · Agents · `STACK` TypeScript / Python / C# · `SINCE` 2020 · `AGENTS` /mcp · Streamable HTTP · `COMMUNITY` Open Invite. Pause button. | chips only |
-| 3 | **About → Profile band** | 3 paragraphs (89 words) | Left: a 3-node path `NUCLEAR ENGINEERING → SOFTWARE → GENAI INFRA` (from the summary) with three principle chips: `DEEP DIVES` `RELIABILITY FIRST` `CLAUDE CODE DAILY`. Right: the **numbers** (below). `▸ Read the summary` holds the 3 paragraphs. The block keeps `id="r-summary"`. | ~20 words + numbers |
-| 3b | **Numbers** (new) | Numbers buried in bullets | 6 instruments, each linking to its source line: **6** years shipping · **150,000+** devices · **80+** weekly processes → agents (with a **60%** bar) · **15 → 2** min deploys (a shrinking bar) · **12** developers led · **40+** regulatory documents grounded. Counters count up once in view. | labels only |
-| 4 | **Work: skill lens** (was Skills + sticky filter bar) | 6 groups × 26 long labels (120 words) + a 29-chip filter bar (69 words) | A **skill map**: 6 sectors (the `resume.ts` groups), short-label chips with a line-count pip. **Hover or focus** lights up the matching lines and puts ticks on the timeline bars. **Click** sets the filter, opens matching roles and dims the rest, and a sticky pill `FILTER: MCP · 5 LINES ✕` appears. `▸ Full skill list` keeps the long labels in DOM under `id="r-skills"`. | chips only |
-| 4b | **Work: timeline** (was Experience, 857 words) | 5 role blocks, 21 bullets, all expanded | **Desktop:** a swimlane chart from 2016 to now with 4 lanes: EDUCATION (3 bars), ROLES (5), BUILDS (2), COMMUNITY (1). It tells the nuclear → software → AI arc at a glance; the Aug 2021–May 2022 gap is filled by the AI certificate. Clicking a bar opens that role row. **Below it: role rows**, each collapsed to `[01] EDDY SOLUTIONS` (Anton) · role · period · one headline metric chip (e.g. `150,000+ DEVICES`) · top 3 tags · `▸ 07 LINES` · a coral `2 CITED` badge after an answer. Expanded, a row shows the blurb and the original bullets with "Ask about this". **Mobile:** a slim, non-interactive mini-swimlane, then the rows. | ~15 words per role |
-| 4c | **Independent builds** (421 words) | 2 cards of full bullets | Two **project cards**. *Regdocs* gets the existing hit@8 chart, now drawn on scroll, with chips `40+ DOCS` `14 SAFETY AREAS`. *Job search* gets a mini animated pipeline: `3 NAMED VECTORS → RRF → TOP 10`. Stack chips on both. Bullets sit behind `▸ 05 LINES`. | ~15 words per card |
-| 4d | **Community** (152 words) | Card with paragraphs | An **Open Invite ticket**: perforated edge and notches (CSS mask), a stub reading `OPEN TO EVERYONE`, event names *Cake Picnic* and *Sip & Bedazzle* from the bullet, stack chips `NEXT.JS` `WORKERS` `D1` `STRIPE` `GOOGLE WALLET`, and an `openinviteto.ca ↗` link. Lines sit behind `▸ 03 LINES`. | ~20 words |
-| 4e | **Education** (37 words) | 3-row list | Shown as the EDUCATION lane on the timeline, plus a compact 3-chip strip that keeps `id="r-education"` and the full credential text. | ~20 words |
-| 5 | **Fit check** (52 words + form) | Paragraph + 4 fields | One-line mono subtitle. The form opens as **role title + JD textarea**; company and culture sit behind `+ More fields`. The loading steps become a system-log ticker with a progress bar. Results: a big verdict badge, and technical and culture **meters** (animated bars instead of dots). Evidence chips unchanged. **API and logic untouched.** | ~12 words before use |
-| 6 | **Agents** (161 words) | 2 paragraphs, terminal card, 6 tool cards | One line: `Point your screening agent at /mcp.` The terminal card stays as is (endpoint, tabs, copy). Tools become 5 mono chips, `ask_raj()` and the rest, with the description on focus or click. The key paragraph becomes `> anonymous: daily limit · higher limits: email me` (the mailto stays). | ~25 words |
-| 7 | **How the clone works** (188 words) | 5 text cards + terminal CTA | An animated **pipeline**: `KNOW → FIND → ANSWER → GUARD → MEASURE`, with a query dot travelling the line. Each node has a 3–6 word label, such as FIND `bm25 ∥ bge-m3 → rrf → rerank`. The full sentence opens on focus or click. The Terminal and Mac ’84 card stays. | ~35 words |
-| 8 | **Contact** | Green card | A giant Anton `SAY HELLO` with a magnetic email button, LinkedIn, GitHub, and `Ask the clone first`. | ~10 words |
-| 9 | **Footer** | Privacy note + links | **Privacy note unchanged and visible** (`#privacy`, a CLONE-PLAN requirement). Links: Terminal · Mac ’84 · llms.txt · MCP · Save as PDF · Render: HIGH ▾. | unchanged note |
-| — | **Persistent footer bar** (new, desktop) | none | Fixed at the bottom-left of the page column after the hero: `SAY HELLO raj9dholakia@gmail.com` · `LOCAL TIME TORONTO 2:32 A.M.` It hides while Contact is in view. On mobile these move into the dock menu. | ~8 words |
-| — | **Top bar** | Name, For agents, Mac ’84, Website ⇄ Terminal | Mono wordmark + **bracket nav** `[1] HOME [2] WORK [3] FIT [4] AGENTS [5] CONTACT` with scroll-spy highlight, then Mac ’84 and the `ModeSwitch` (unchanged; `tone="dark"` over the hero, `light` after). | same |
-| — | **Ask panel** | Unchanged | **Logic untouched** (SSE, signed turns, starters, storage). Restyle only: a mono header `ASK RAJ · AI CLONE` and starters as `[01] …` rows. It stays in `ask-panel.tsx` because `lib/rag/injection.test.ts` parses `STARTERS` from that file. | same |
-
-**Net effect:**
-
-| Measure | Now | Target |
-|---|---|---|
-| Words visible before any expansion | ~2,360 | ~450 |
-| Desktop page height | ~9,800 px | ~5,500 px |
-| Mobile page height | 17.4 screens | ~8 screens |
-
-All 32 lines and 40 sources stay in the HTML.
+| # | Section | Before | After (as agreed in the prototype) |
+|---|---|---|---|
+| C0 | **Intro** (new) | none | Boot overlay: Anton `%` counter, a short `$ clone boot` log (points, fonts, corpus, render), render-quality chips High / Medium / Saver, `Enter`. Details below. |
+| C1 | **Top bar** | Name, For agents, Mac ’84, Website ⇄ Terminal | Anton wordmark + **bracket nav** `[1] HOME [2] WORK [3] FIT [4] AGENTS [5] CONTACT` with scroll-spy, then `mac ’84` and the `ModeSwitch` (API unchanged; dark over the hero, light after). |
+| C2 | **Hero** | Name, 23-word pitch, "Now:" line, 3 CTAs, 4 links (67 words) | Curly-cloud canvas with one star per public source. `RAJ DHOLAKIA` in Anton. **No subtitle.** **Prompt bar** whose placeholder cycles through the existing `STARTERS`. The required AI and logging disclosure with a `Privacy` link. Two quiet links: `Check my fit for a role`, `Connect your agent`. Caption (top right, lowercase mono): `each bright point is one of the 38 sources my clone can cite. hover one.` Desktop system log: `$ clone status` · corpus 38 public sources · lines 30 citable · retrieval bm25 + bge-m3, fused, reranked · guard checks answers as they stream · render high, 60 fps (measured). |
+| — | **How to read** | 50-word explainer card | **Removed.** The stars and the caption carry the idea. |
+| C3 | **Marquee** (new) | "Now: …" sentence | Looping `key value` items: `now` Lead Software Developer, Eddy Solutions · `base` Toronto · `building` MCP servers, RAG pipelines, agents, evals · `stack` TypeScript, Python, C# · `shipping since` 2020 · `for agents` curlycloud.dev/mcp · `community` Open Invite. Pause button. |
+| C4 | **Profile** (was About, 89 words) | 3 paragraphs | A 3-node **path**: 2016 NUCLEAR ENGINEERING (BEng, University of Manchester) → 2020 SOFTWARE (Duit.io, then full-stack roles) → 2024 GENAI INFRASTRUCTURE (Create Club, now Eddy Solutions); vertical on narrow widths, the line through the dot centres. Beside it, three one-sentence quotes from the summary. `▸ Read the full summary` holds the pitch and the 3 paragraphs and keeps `id="r-summary"`. |
+| C5 | **Numbers** (new) | Numbers buried in bullets | 6 instruments, each with a unit chart and a `source: …` link to its line: **6** years shipping (summary) · **150,000+** LoRaWAN devices (`eddy/services`) · **80+** weekly processes replaced by agents, with a 60 % bar (`create-club/beverage-agents`) · **15 → 2** min deploys, a shrinking bar (`pinhous/cicd`) · **100K** job postings searchable, three vectors each (`jobsearch/vectors`) · **40+** regulatory documents grounded (`regdocs/corpus`). Count up once in view. Two columns on mobile. |
+| C6 | **Skill lens** (was Skills + sticky filter bar) | 6 groups × 26 long labels + a 29-chip filter bar | Chips grouped **AI / Stack / Practice** (the site's `FILTERS`, only chips with lines), each with a line count. **Hover or focus** lights up matching lines, role rows and timeline ticks. **Click** sets the filter: matching roles open, matching lines get the full border, others dim, and the **floating pill** appears (feedback 4–5). `▸ Full skill list` shows the CV's three groups (GenAI, Code and data, Cloud and tooling) under `id="r-skills"`. |
+| C7 | **Career timeline** (was Experience, 857 words) | 5 role blocks, all expanded | A swimlane from 2016 to now with lanes study, work (two tracks), builds, community, and a compressed pre-2020 axis. Year-only dates have soft ends. Work bars open their role row. The four builds cluster in Jan–Jul 2026, so the lane has one `4 builds` label and each bar is a titled button that opens its card. **Mobile:** the same chart, scrollable sideways, opening at the recent end with pinned lane labels. |
+| C8 | **Role rows** | Full bullets | Collapsed rows: period (+ `now` pill), company in Anton, role, one headline metric (`150,000+ devices`, `80+ processes automated`, `15 → 2 min deploys`, `20% fewer repeat incidents`, `15 s → 5 s signals`), top 3 tags, `N lines`, and after an answer a coral `N cited` badge; during a filter a `N match` badge. Expanded: the blurb and the lines with "Ask about this". `Expand all` in the section head. |
+| C9 | **Independent builds** (421 words) | 2 cards of full bullets | Builds with a diagram lead, in a 2-column grid: the regulatory assistant (hit@8 chart, drawn in view; `40+ documents` `14 safety areas` `shall vs should, shown apart`) and job search (query → intent → three named vectors → rrf → top 10, a dot travels it). The Pulse and Earned follow as compact cards. Every card has its link from the CV (`Live app`, `System design explanation`, `YouTube explainer`), stack chips, and its lines: behind `▸ N lines`, or shown directly when there's only one. |
+| C10 | **Community** (152 words) | Card with paragraphs | An **Open Invite ticket**: perforated edge, a stub reading `OPEN TO EVERYONE` and the `openinviteto.ca` link, event names *Cake Picnic* and *Sip & Bedazzle*, platform chips, and the blurb plus lines behind `▸ 3 lines`. |
+| C11 | **Study** (37 words) | 3-row list | A compact 3-row strip that keeps `id="r-education"` and the full credential text; the timeline's study lane shows the same three. |
+| C12 | **Fit check** | Paragraph + 4 fields | One-line lede. The form opens as **role title + job description**; company and culture sit behind `More fields`. Loading steps become a log ticker; results show a verdict badge and technical and culture **meters**. Evidence chips unchanged. **API and logic untouched.** |
+| C13 | **Agents** (161 words) | 2 paragraphs, terminal card, 6 tool cards | One-line lede. The terminal card stays (endpoint, copy, setup tabs). Tools become mono chips with the description on focus or click. The key note stays one line with the mailto. |
+| C14 | **How the clone answers** (188 words) | 5 text cards + terminal CTA | An animated **pipeline** Know → Find → Answer → Guard → Measure, each with a 3–6 word label (Find: `bm25 + bge-m3, fused, reranked`); the full sentence opens on click. A dot travels it in view. The terminal and Mac ’84 links stay. |
+| C15 | **Contact** | Green card | A giant Anton `SAY HELLO`, a large email button, LinkedIn, GitHub, `Ask the clone first`, and Toronto local time. |
+| C16 | **Footer** | Privacy note + links | **Privacy note unchanged and visible** (`#privacy`, a CLONE-PLAN requirement). Links: Terminal · Mac ’84 · llms.txt · MCP · Save as PDF · Render quality select. |
+| C17 | **Persistent footer bar** (new, desktop) | none | Fixed bottom-left of the page column after the hero: `Say hello raj9dholakia@gmail.com · Toronto 2:32 p.m.` Hidden while Contact is in view; on mobile it lives in the dock menu. |
+| C18 | **Mobile dock** (new) | Ask FAB | Current section + menu (bracket items, email, local time, Save as PDF) on the left, `Ask Raj` on the right. The Ask panel opens as a bottom sheet. |
+| C19 | **Ask panel** | Unchanged | **Logic untouched** (SSE, signed turns, starters, storage). Restyle only: Anton `ASK RAJ` header and starters as `01 …` rows. It stays in `ask-panel.tsx` because `lib/rag/injection.test.ts` parses `STARTERS` from that file. |
 
 ### Boot overlay details
 
@@ -154,8 +203,8 @@ All 32 lines and 40 sources stay in the HTML.
   session, and in print. A tiny inline `<head>` script sets `data-boot="skip"` before first paint, so it
   never flashes. The CSP has no `script-src`, so inline scripts are allowed.
 - **Progress:**
-  - The % tracks real milestones: fonts ready, cloud renderer chunk loaded, avatar sampled.
-  - It has a 600 ms floor and a 1.4 s cap.
+  - The % tracks real milestones: fonts ready, cloud renderer chunk loaded, source image sampled.
+  - It has a 1.1 s ramp and a 1.4 s cap.
   - It auto-enters at 100 %.
   - `Enter` skips.
   - Touching a tier chip pauses auto-enter until you press Enter.
@@ -163,9 +212,9 @@ All 32 lines and 40 sources stay in the HTML.
   element), and the overlay leaves with a `clip-path` wipe. If JS never runs, a CSS fallback animation
   removes the overlay at 2.5 s.
 - **Tiers:**
-  - **HIGH:** ~9k points, DPR ≤ 2, 60 fps.
-  - **MED:** ~4k points, DPR 1, 30 fps cap.
-  - **SAVER:** static poster, and all motion off.
+  - **High:** ~9k points, DPR ≤ 2, 60 fps.
+  - **Medium:** ~4k points, DPR 1, 30 fps cap.
+  - **Saver:** static poster, and all motion off.
   - **Default:** auto from reduced motion, Save-Data, WebGL support, pointer type, cores and memory.
     It auto-downgrades if the measured frame rate stays under 40 fps for 2 s.
   - The choice is saved in `localStorage` and can be changed later from the footer.
@@ -173,26 +222,31 @@ All 32 lines and 40 sources stay in the HTML.
 
 ## 3. Motion list
 
-| # | Motion | Trigger | Technique | Reduced motion / SAVER |
+One orchestrated moment (the cloud assembling after the intro); everything else answers the reader or
+reports a value. **No generic fade-up reveals on sections.**
+
+| # | Motion | Trigger | Technique | Reduced motion / Saver |
 |---|---|---|---|---|
 | M1 | Boot counter + wipe | First visit in session | CSS + rAF counter, `clip-path` | Skipped entirely |
-| M2 | Curly cloud: idle drift, cursor parallax (±12°), cursor "brush" that pushes points and springs back | Always while in view | WebGL2 points (§4); paused off-screen (IntersectionObserver) and on hidden tabs | Static poster image, same box |
+| M2 | Curly cloud: assembles from scatter (~2.4 s), idle drift, cursor parallax, cursor "brush" that pushes points and springs back | After the intro, while in view | WebGL2 points (§4); paused off-screen (IntersectionObserver) and on hidden tabs | Static poster, same box |
 | M3 | Source stars: hover label, click to line, coral flare when an answer cites them | Pointer; `done` event | Same renderer; label is an HTML chip | Poster only; the same lines are reachable in the page |
-| M4 | Hero text: masked line rise | Boot end or first paint | CSS keyframes | Static |
 | M5 | Prompt bar placeholder cycling through `STARTERS` | Idle, empty input | Interval text swap with fade | First starter, static |
 | M6 | Marquee | Always | CSS `translateX` loop, ~40 s; pauses on hover or focus; **pause button** (WCAG 2.2.2) | Static wrapped row |
-| M7 | Counters count up, bars grow | Enter viewport, once | IntersectionObserver + rAF; final value is in the SSR HTML; the animated span is `aria-hidden`; tabular figures at fixed width, so no shift | Final values |
-| M8 | Section reveal (translate 12 px + fade) | Scroll | **CSS scroll-driven** `animation-timeline: view()` inside `@supports` and `prefers-reduced-motion: no-preference`. Content is never hidden without it (no JS gating). | None |
-| M9 | Timeline lanes draw in, bars grow from their start date | Scroll | CSS scroll-driven, same gating | Drawn |
-| M10 | Row expand and collapse | Click or keyboard | `<details>` + `::details-content` + `interpolate-size` (Chromium; others snap) | Instant |
+| M7 | Counters count up, unit charts fill | Enter viewport, once | IntersectionObserver + rAF; final value is in the SSR HTML; the animated span is `aria-hidden`; tabular figures at fixed width, so no shift | Final values |
+| M9 | Timeline bars grow from their start date | Enter viewport, once | CSS, gated on the in-view class | Drawn |
+| M10 | Row expand and collapse | Click or keyboard | `<details>` + `::details-content` + `interpolate-size` (Chromium; others snap); programmatic opens are instant so a citation scroll lands | Instant |
 | M11 | Skill hover glow on lines and timeline ticks | Hover or focus a chip | CSS transitions on a `data-skill-hover` attribute | Instant highlight |
-| M12 | Citation jump: expand, scroll, marker sweep | Citation click, star click, `#r-…` URL hash | Opens ancestor `<details>`, then `scrollIntoView`, then a `background-size` sweep on the marker | `behavior: 'auto'`, instant highlight |
-| M13 | Eval chart draws; search pipeline dot travels | Enter viewport | SVG `stroke-dashoffset` / offset-path, CSS | Static chart |
-| M14 | How-it-works query dot travels KNOW → MEASURE | In view, loops 3× then rests | CSS `offset-path` | Static |
-| M15 | Magnetic buttons (hero prompt submit, email, main CTAs) | `pointer: fine` hover | pointermove + rAF transform, max 6 px | Off |
+| M12 | Citation jump: expand, scroll, flash | Citation click, star click, `#r-…` URL hash | Opens ancestor `<details>`, then `scrollIntoView`, then a flash ring | `behavior: 'auto'`, instant highlight |
+| M13 | Eval chart draws; search pipeline dot travels | Enter viewport | SVG `stroke-dashoffset` / `animateMotion` or `offset-path` | Static chart |
+| M14 | How-it-works dot travels Know → Measure | In view, loops 3× then rests | CSS `offset-path` | Static |
+| M15 | Magnetic buttons (hero Ask, email, main CTAs) | `pointer: fine` hover | pointermove + rAF transform, max 6 px | Off |
 | M16 | Top bar dark → paper crossfade | Hero leaves viewport | IntersectionObserver sentinel, colour transition only (no size change) | Instant |
-| M17 | Scroll-spy on bracket nav, progress tick | Scroll | IntersectionObserver | Highlight only |
+| M17 | Scroll-spy on bracket nav | Scroll | IntersectionObserver | Highlight only |
 | M18 | Fit meters fill; log ticker during the check | Result, loading | CSS transitions | Instant |
+| M19 | Filter pill enters | Filter set | 6 px slide + fade, ~200 ms | None |
+
+**Dropped:** M4 (hero text line rise) and M8 (section reveals on scroll), per the design critique: scattered
+entrance effects read as templated and compete with the cloud.
 
 **Not proposed:**
 
@@ -207,11 +261,12 @@ All 32 lines and 40 sources stay in the HTML.
 
 | Piece | Choice | Client cost (gz) | Worker cost | Why |
 |---|---|---|---|---|
-| Point cloud | **Own WebGL2 renderer**: `gl.POINTS`, one vertex shader for rotation, brush and flare, round-point fragment shader; WebGL1 fallback; poster if neither | ~4–6 KB, lazy chunk loaded after first paint only when tier ≠ SAVER and the hero is in view | ~few KB (SSR only renders the wrapper) | three.js adds about 150 KB+ gz for one draw call we can write in about 200 lines |
-| Point data | Sampled **at runtime** from the existing `/raj-avatar.webp` (1024², OffscreenCanvas, edge-weighted, seeded) | 0 | 0 | No new asset or build step. Positions are deterministic. |
-| Poster | `public/hero-cloud.webp` (≤ 40 KB), exported once from the renderer | image, lazy after LCP | 0 (static asset) | Reduced motion, SAVER, no-WebGL, and the pre-hydration placeholder |
-| Display font | **Anton** via `next/font/google` (self-hosted, latin subset, `adjustFontFallback`) | ~25–30 KB woff2 (measured in PR 0) | 0 | Same-origin, so no CSP change |
-| Reveals, marquee, timeline, pipelines | CSS keyframes + **CSS scroll-driven animations** + IntersectionObserver + WAAPI | ~0 | 0 | Chromium 115+ and Safari 26 get scroll-driven motion; Firefox gets a static page |
+| Point cloud | **Own WebGL2 renderer**: `gl.POINTS`, one vertex shader for rotation, brush and flare, round-point fragment shader; WebGL1 fallback; poster if neither | ~4–6 KB, lazy chunk loaded after first paint only when the tier isn't Saver and the hero is in view | ~few KB (SSR only renders the wrapper) | three.js adds about 150 KB+ gz for one draw call we can write in about 200 lines |
+| Cloud source image | **`public/hero-cloud-src.png`**: the prototype's `cloud-src.png`, 320², ~19 KB, transparent background, derived once from Raj's illustration by `cloud-src.py` (flood-fills the cream background from the border and damps the shirt print) | ~19 KB, lazy with the renderer | 0 (static asset) | Deterministic input; no build step in the repo (the script needs numpy/Pillow/scipy and stays on the prototype branch) |
+| Sampling | At runtime in the renderer chunk, seeded: the image's alpha is the figure mask; edges on √luminance; solid dark fill down-weighted (hair and beard don't swallow points); head region weighted up; stars picked farthest-point on the outline and kept out of the faded bottom rows. Port the prototype's `sample()`, `depth()`, `pickStars()` and `layout()` | in the chunk | 0 | Tuned in review; the layout measures the name, prompt bar and system log so the figure never collides with them |
+| Poster | `public/hero-cloud.webp` (≤ 40 KB), exported once from the renderer | image, lazy after LCP | 0 (static asset) | Reduced motion, Saver, no-WebGL, and the pre-hydration placeholder |
+| Display font | **Anton** via `next/font/google` (self-hosted, latin subset, `adjustFontFallback`) | ~25–30 KB woff2 (measured in P0) | 0 | Same-origin, so no CSP change |
+| Marquee, timeline, pipelines, counters | CSS keyframes + IntersectionObserver + WAAPI | ~0 | 0 | |
 | Counters, magnetic, scroll-spy, local time | Small hooks in `app/lib/` (`use-in-view`, `use-motion-tier`, `use-local-time`) | ~3 KB | small | |
 
 **Considered and rejected:**
@@ -238,24 +293,23 @@ not mean "out of the Worker".** Two rules follow:
 | Initial client JS on `/` | ≤ +20 KB gz; the renderer chunk is extra and lazy |
 | Lighthouse mobile on `bun run preview` | Performance ≥ 90, Accessibility 100, Best Practices 100, SEO 100, CLS ≤ 0.02 |
 
-**CSP:** no change needed. Fonts, avatar and poster are all same-origin, and the current CSP sets no
-`img-src`, `font-src` or `connect-src`. If a later iteration adds an external asset, update `next.config.ts`
-in the same PR.
+**CSP:** no change needed. Fonts, images and the poster are all same-origin, and the current CSP sets no
+`img-src`, `font-src` or `connect-src`. Build links point off-site but are plain anchors. If a later
+iteration adds an external asset, update `next.config.ts` in the same PR.
 
 ## 5. Reduced motion, accessibility and fallbacks
 
 - **`prefers-reduced-motion: reduce`:**
   - No boot overlay.
-  - Poster instead of the live cloud.
+  - Poster instead of the live cloud (the prototype shows a static, fully assembled cloud; the product uses
+    the poster).
   - Static marquee.
   - Final numbers.
-  - No reveals.
-  - Instant expand.
+  - Instant expand, and the filter pill appears without motion.
   - `scrollIntoView` with `behavior: 'auto'`.
-  - The page is fully readable and static. SAVER applies the same rules for anyone. Reduced-motion users
-    can opt in to MED or HIGH from the footer.
-- **Content is never hidden by default.** Reveal animations only run where CSS scroll-driven animations are
-  supported and motion is allowed. There is no "hidden until JS adds a class" state.
+  - The page is fully readable and static. Saver applies the same rules for anyone. Reduced-motion users
+    can opt in to Medium or High from the footer.
+- **Content is never hidden by default.** There is no "hidden until JS adds a class" state.
 - **No JS:**
   - `<details>` still opens.
   - The overlay auto-removes.
@@ -263,13 +317,14 @@ in the same PR.
   - The cloud shows its poster.
 - **Print and Save as PDF:**
   - `beforeprint` opens every `<details>`; `afterprint` restores them.
-  - Print CSS hides the canvas, marquee, dock, footer bar and overlay.
+  - Print CSS hides the canvas, marquee, dock, footer bar, filter pill and overlay.
   - The resume prints the same as today.
 - **Keyboard:**
-  - Timeline bars are buttons with `aria-controls` pointing at their row.
-  - Skill chips use `aria-pressed`.
+  - Timeline bars (work and builds) are buttons that open their row or card.
+  - Skill chips use `aria-pressed`; Clear on the filter pill returns focus to the chip.
   - Tier chips are a radio group.
   - Every disclosure is a real `<summary>`.
+  - The mobile menu button has `aria-expanded`; Escape closes it and returns focus.
   - The coral focus ring is kept.
   - `/` still focuses the Ask input: it focuses the hero prompt while the hero is in view, and otherwise
     scrolls the panel into view first. Today it uses `preventScroll`, which would hide the input below the
@@ -278,6 +333,7 @@ in the same PR.
   - The canvas and poster are `aria-hidden`.
   - Marquee duplicates are `aria-hidden`.
   - Counters expose only their final value.
+  - The filter has a polite live region ("Showing 4 lines about TypeScript", "Filter cleared").
   - The overlay is non-modal and brief; when paused by interaction, `<main>` is `inert` until Enter.
 - **Contrast** (measured):
   - On `night`: text 12.2:1, mint 8.9:1, dim 6.7:1, sun 8.4:1.
@@ -299,30 +355,34 @@ in the same PR.
   - Counters use tabular figures at a fixed width.
   - The top bar changes colour only, never size.
   - Local time renders client-side into a reserved-width slot.
-  - The overlay is `position: fixed`.
+  - The overlay and the filter pill are `position: fixed`.
+  - "Ask about this" is absolutely positioned on mouse devices.
   - Rows only expand on user input.
-- **Touch:** targets are at least 44 px. The mobile swimlane is decorative, so the rows are the tap
-  targets. Touch gets no hover-only behaviour; hover affordances also work on focus and click.
-- **Zoom:** display type wraps and scales to 200 % zoom without overlap. The probe's tight leading is fixed.
+- **Touch:** targets are at least 44 px. Touch gets no hover-only behaviour; hover affordances also work on
+  focus and click.
+- **Zoom:** display type wraps and scales to 200 % zoom without overlap.
 
 ## 6. Keeping every resume line a citable source
 
-These are the mechanics, and PR 0 lands them before any visual work.
+These are the mechanics, and P0 lands them before any visual work. The prototype implements the same ones
+(`openFor`, `focusAnchor`, `setCited` in `src.html`), verified on desktop and in the mobile sheet.
 
 1. **Anchors don't change.** `resumeAnchor(...)` ids stay on the same elements:
    - Bullets: `r-exp-<role>-<b>`, `r-build-<id>-<b>` and `r-community-<id>-<b>`.
-   - Blocks: `r-exp-<role>`, `r-summary`, `r-skills`, `r-education` and `r-contact`.
+   - Blocks: `r-exp-<role>`, `r-build-<id>`, `r-summary`, `r-skills`, `r-education` and `r-contact`.
 2. **Collapsed means `<details>`**, uncontrolled, so React never fights the DOM `open` state.
 3. **`focusAnchor(anchor)`** (in `site-context.tsx`):
    - Finds the element.
-   - Opens every ancestor `<details>`.
+   - Opens every ancestor `<details>` instantly (an animated open interrupts the smooth scroll).
+   - Opens a linked disclosure too (`r-skills` opens the full skill list; the ticket opens its lines).
    - Clears a skill filter that would dim it.
    - On mobile, closes the sheet first (existing behaviour).
    - Waits one frame, then scrolls and flashes (M12).
 
-   Every caller gets this for free: citation chips, source rows, fit-check evidence, and hero stars.
-4. **Cited-but-collapsed is visible.** After an answer, each role row shows a coral `N CITED` badge and a
-   coral tick on its timeline bar. Rows don't auto-expand, since that would shift content under a reader
+   Every caller gets this for free: citation chips, source rows, fit-check evidence, stat `source:` links,
+   timeline bars and hero stars.
+4. **Cited-but-collapsed is visible.** After an answer, each role row shows a coral `N cited` badge and its
+   timeline bar gets a coral outline. Rows don't auto-expand, since that would shift content under a reader
    who is still reading the answer. They open on citation click.
 5. **Deep links (new).** `/#r-exp-eddy-mcp` on load or `hashchange` calls `focusAnchor`, so a line is
    shareable and browser QA is easy.
@@ -333,35 +393,42 @@ These are the mechanics, and PR 0 lands them before any visual work.
      - Its anchor is a real public source.
      - Its `match` string is a literal substring of that source's text.
 
-     For example, `"from 15 minutes to 2"` must appear in `pinhous/cicd`, and `"6 years"` in the summary.
-     That way a `resume.ts` edit can't silently orphan a number.
-   - `timeline.test.ts` covers the period-string parsing for builds and education.
+     For example, `"from 15 minutes to 2"` must appear in `pinhous/cicd`, `"150,000+"` in `eddy/services`,
+     `"~100K"` in `jobsearch/vectors`, and `"6 years"` in the summary. That way a `resume.ts` edit can't
+     silently orphan a number.
+   - `timeline.test.ts` covers the period-string parsing for builds (`Jul 2026`, `Apr – Jul 2026`) and
+     education (`2016 – 2019`, `2024`).
 
 ## 7. Build plan: small PRs, parallel worktrees
 
-All PRs target **`feat/visual-refresh`** as the integration branch. **Nothing goes to `main`** until you
-approve the final integration PR, because main deploys to production.
+All PRs target **`feat/visual-refresh`** as the integration branch. **Nothing goes to `main`** until Raj
+approves the final integration PR, because main deploys to production. The first step is pushing
+`feat/visual-refresh` so PRs have a base.
 
 Each PR must pass:
 
 - `bun run typecheck` and `bun run test`.
 - `bun run cloud-build` + `wrangler deploy --dry-run` (size logged in the PR).
-- Screenshots at 1440×900 and 390×844, plus a reduced-motion pass.
+- Screenshots at 1440×900 and 390×844 next to the matching prototype shots, plus a reduced-motion pass.
 - Lighthouse mobile on `bun run preview`.
 - A citation check via `#r-…` deep links.
 
 Servers run on 3190 (integration) and 3291–3296 (worktrees). **Never 3000.**
 
-| PR | Scope | Owns (files) | Wave |
-|---|---|---|---|
-| **P0 Foundation** | Tokens (`night`, `coral-ink`, `coral-glow`, `--font-display`) and the coral small-text fix, Anton; the inline head script (`data-boot`, `data-motion`); split `resume.tsx` into `profile.tsx`, `work.tsx`, `skills.tsx`, `builds.tsx`, `community.tsx` and `hero.tsx` (pure move, no visual change); the `focusAnchor` + `<details>` + print + hash mechanics; `use-in-view`, `use-motion-tier` and `use-local-time`; `stats.ts` and timeline data with tests; the anchors test; new `SectionHeading` style; final `page.tsx` composition with stub slots for new pieces | global.css, layout.tsx, page.tsx, site-context.tsx, resume*.tsx, app/lib/*; coral class swaps only in answer-text.tsx, ask-panel.tsx and fit-check.tsx | 1 (me, sequential) |
-| **P1 Hero** | Curly-cloud renderer + sampler, poster export, source stars, prompt bar + disclosure, system log | `hero.tsx`, `app/components/site/cloud/**`, `public/hero-cloud.webp` | 2 |
-| **P2 Chrome** | Bracket top bar + scroll-spy, mobile dock (replaces `AskFab`), persistent footer bar, boot overlay + tiers, marquee, Ask panel restyle (presentation only) | `top-bar.tsx` (`ModeSwitch` API unchanged), `dock.tsx`, `boot.tsx`, `marquee.tsx`, `footer-bar.tsx`, `ask-panel.tsx` (markup and classes only; `useChat`, `replayTurns` and `STARTERS` untouched) | 2 |
-| **P3 Work** | Skill lens, swimlane timeline, role rows, education strip | `work.tsx`, `skills.tsx`, `timeline.tsx` | 2 |
-| **P4 Profile + numbers** | Path visual, summary disclosure, counters and bars | `profile.tsx`, `numbers.tsx` | 3 |
-| **P5 Builds + community** | Project cards, animated eval chart, search pipeline, Open Invite ticket | `builds.tsx`, `community.tsx` | 3 |
-| **P6 Lower page** | Fit restyle + meters, agents compact, how-it-works pipeline, contact, footer | `fit-check.tsx` (presentation only), `agents-section.tsx`, `closing.tsx` | 3 |
-| **P7 Integration** | Full QA on desktop, mobile and reduced motion; Lighthouse; bundle; docs (CLAUDE.md traps, README, CLONE-PLAN §5 ownership); final PR → `main` | docs | 4 (needs your go-ahead) |
+Builders read the component in `docs/redesign/prototype/src.html` (§1a) for the agreed look, then write it
+properly in React + Tailwind with the project's tokens. Prototype code is a reference, not a source to
+paste: it has no tests, inline hex values and prototype-only branches.
+
+| PR | Components | Scope | Owns (files) | Wave |
+|---|---|---|---|---|
+| **P0 Foundation** | — | Tokens (`night`, `night-deep`, `coral-ink`, `coral-glow`, `--font-display`) and the coral small-text fix, Anton; the inline head script (`data-boot`, `data-motion`); split `resume.tsx` into `profile.tsx`, `work.tsx`, `skills.tsx`, `builds.tsx`, `community.tsx` and `hero.tsx` (pure move, no visual change); the `focusAnchor` + `<details>` + print + hash mechanics; `use-in-view`, `use-motion-tier` and `use-local-time`; `stats.ts` and timeline data with tests; the anchors test; new `SectionHeading` style; final `page.tsx` composition with stub slots for new pieces | global.css, layout.tsx, page.tsx, site-context.tsx, resume*.tsx, app/lib/*; coral class swaps only in answer-text.tsx, ask-panel.tsx and fit-check.tsx | 1 (me, sequential) |
+| **P1 Hero** | C2 | Curly-cloud WebGL renderer + sampler ported from the prototype, `hero-cloud-src.png`, poster export, source stars, prompt bar + disclosure, caption, system log | `hero.tsx`, `app/components/site/cloud/**`, `public/hero-cloud-src.png`, `public/hero-cloud.webp` | 2 |
+| **P2 Chrome** | C0, C1, C3, C16–C19 | Bracket top bar + scroll-spy, mobile dock and menu (replaces `AskFab`), persistent footer bar, boot overlay + tiers, marquee, footer, Ask panel restyle (presentation only) | `top-bar.tsx` (`ModeSwitch` API unchanged), `dock.tsx`, `boot.tsx`, `marquee.tsx`, `footer-bar.tsx`, `ask-panel.tsx` (markup and classes only; `useChat`, `replayTurns` and `STARTERS` untouched) | 2 |
+| **P3 Work** | C6, C7, C8, C11 | Skill lens with the floating filter pill and bordered matches, swimlane timeline (builds lane, mobile pinned labels), role rows with badges, "Ask about this" placement, study strip | `work.tsx`, `skills.tsx`, `timeline.tsx` | 2 |
+| **P4 Profile + numbers** | C4, C5 | Path visual (line through the dot centres), quotes, summary disclosure, counters and unit charts | `profile.tsx`, `numbers.tsx` | 3 |
+| **P5 Builds + community** | C9, C10 | Featured and compact build cards with links, animated eval chart, search pipeline, Open Invite ticket | `builds.tsx`, `community.tsx` | 3 |
+| **P6 Lower page** | C12–C15 | Fit restyle + meters, agents compact, how-it-works pipeline, contact | `fit-check.tsx` (presentation only), `agents-section.tsx`, `closing.tsx` | 3 |
+| **P7 Integration** | all | Full QA on desktop, mobile and reduced motion; Lighthouse; bundle; docs (CLAUDE.md traps, README, CLONE-PLAN §5 ownership); final PR → `main` | docs | 4 (needs Raj's go-ahead) |
 
 Waves 2 and 3 each run as parallel worktree subagents: plan first, I review, then they build. Each PR owns
 disjoint files, and `page.tsx` is only edited in P0 and P7.
@@ -370,46 +437,41 @@ disjoint files, and `page.tsx` is only edited in P0 and P7.
 
 - **iOS WebGL and low-power mode.** The renderer handles `webglcontextlost` and drops to the poster. It is
   capped by tier and paused off-screen.
-- **A preloader on a recruiting site.** ≤ 1.2 s once per session, skippable, content painted underneath.
+- **A preloader on a recruiting site.** ≤ 1.4 s once per session, skippable, content painted underneath.
   If it tests badly, it goes behind a flag.
 - **Collapsed lines are less scannable.** That's mitigated by headline metrics, cited badges, the skill lens
   opening matches, and `Expand all`.
 - **Dark stage next to a light Ask panel on desktop.** The panel starts below the hero, so they never meet
   side by side.
-- **Stale anchors after future `resume.ts` edits.** Caught by the anchors and stats tests.
+- **Stale anchors after future `resume.ts` edits.** Caught by the anchors and stats tests. The prototype
+  also reads `resume.ts`, so rebuilding it after an edit shows what moved.
+- **The cloud depends on one illustration.** A new illustration means re-running `cloud-src.py` and
+  re-checking the layout at 1440, 1280, 1024 and 390 wide; the sampler weights were tuned for this one.
+- **Page length.** The prototype lands at 12.5 mobile screens against the original 8-screen target. The
+  biggest remaining blocks are the builds and the lower page; P7 re-measures.
 
-## 9. Decisions for Raj
+## 9. Decisions
 
-1. **Hero visual.**
-   - **(A) The curly cloud** (recommended; see the probe).
-   - (B) An abstract retrieval-graph field with no likeness.
-   - (C) A real point-cloud head, which needs a photo you're happy with, a depth pass and a ~100 KB asset.
-2. **Display font.**
-   - **Anton** (recommended).
-   - Plex Sans Condensed 700.
-   - Archivo at width 62.
-3. **How dark.**
-   - **A dark stage for the hero, marquee, how-it-works and contact; paper for reading** (recommended).
-   - A fully dark site.
-4. **Ask panel on desktop.**
-   - **Starts below the hero, with a hero prompt bar** (recommended).
-   - Visible from the first screen, beside the hero.
-5. **Boot overlay.**
-   - **Auto-enters at ≤ 1.2 s, once per session** (recommended).
-   - Requires an `Enter` click like saifullah.
-   - No overlay.
-6. **Availability chip** (e.g. "Open to AI engineering roles"). This isn't in `resume.ts`; it would be a
-   copy edit there that needs your approval and exact wording. Default: leave it out.
-7. **Default expansion.**
-   - **All rows collapsed** (recommended).
-   - The current role (Eddy) open by default.
-8. **Build dates.**
-   - **Parse the `period` strings in presentation code with a test** (recommended, no `resume.ts` change).
-   - Add `start`/`end` fields to `builds` in `resume.ts` (data-only, needs approval).
-9. **PR flow.**
-   - **Stack into `feat/visual-refresh`, then one PR to `main`** (recommended).
-   - Separate PRs to `main`.
-10. **Cloudflare bot script** (§0). Turn off JavaScript detections for the zone to get mobile Performance
-    from ~46 to ~90+? This is a dashboard change; I won't touch it.
-11. **Probe images.** `docs/redesign/*.jpg` are untracked. Keep them in git as design references, or leave
-    them local.
+Settled in the prototype review (2026-09-27). Items marked *default* are the recommendation Raj saw in the
+prototype and didn't ask to change.
+
+1. **Hero visual:** the curly cloud, sampled from the new illustration. *Raj's call.*
+2. **Display font:** Anton. *Default.*
+3. **How dark:** a dark stage for the hero, marquee, how-it-works and contact; paper for reading. *Default.*
+4. **Ask panel on desktop:** starts below the hero, with a hero prompt bar. *Default.*
+5. **Boot overlay:** auto-enters within 1.4 s, once per session. *Default.*
+6. **Availability chip:** left out (it would need a `resume.ts` copy edit). *Default.*
+7. **Default expansion:** all rows collapsed. *Default.*
+8. **Build dates:** parsed from the `period` strings in presentation code, with a test. *Default.*
+9. **PR flow:** stack into `feat/visual-refresh`, then one PR to `main`. *Default.*
+10. **Hero subtitle:** removed. *Raj's call.*
+11. **Filter pill and matched lines:** floating pill, full border. *Raj's call.*
+12. **Prototype and probe images:** kept on the local branch `prototype/visual-refresh`, out of `main`
+    (§1a).
+
+**Still open (Raj):**
+
+- **Cloudflare bot script** (§0). Turning off JavaScript detections for the zone would take mobile
+  Performance from ~46 to ~90+. This is a dashboard change; I won't touch it. It doesn't block the build.
+- **Chat avatar.** The Ask panel and dock still use the old avatar. Say if the new illustration should
+  replace it too.
