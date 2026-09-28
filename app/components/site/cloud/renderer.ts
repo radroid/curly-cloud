@@ -3,8 +3,9 @@ import { pickStars, POINTS, sample, scatter, SRC_SIZE } from './sampler'
 
 /**
  * The curly-cloud renderer (REDESIGN-PLAN.md §4, M2/M3): one `gl.POINTS` draw for the cloud and
- * one for the stars. The vertex shader does the assembly, rotation, perspective and cursor brush;
- * the fragment shader draws round points. GLSL ES 1.00, so the same code runs on WebGL2 and WebGL1.
+ * one for the stars. The vertex shader does the assembly, rotation, perspective and cursor brush (the
+ * brush parts the points but leaves the stars where they are); the fragment shader draws round
+ * points. GLSL ES 1.00, so the same code runs on WebGL2 and WebGL1.
  *
  * Loaded with `import()` by the hero, only when it's on screen and the tier isn't Saver.
  */
@@ -16,8 +17,8 @@ export interface CloudOptions {
   canvas: HTMLCanvasElement
   /** The source illustration (same origin). */
   src: string
-  /** How many stars to pick: one per public source. */
-  stars: number
+  /** How many stars to pick: one per public source (yellow), then the personal dots (white). */
+  stars: { work: number; personal: number }
   tier: CloudTier
   onStage: (stage: CloudStage) => void
   /** Frames drawn in the last second, reported once a second while running. */
@@ -55,7 +56,9 @@ const TIERS: Record<CloudTier, { points: number; dpr: number; fps: number; radiu
 const ASSEMBLE_MS = 1400
 const BRUSH_R = 95
 const BRUSH_PUSH = 26
-const HIT_R = 18
+/** Stars are picked within HIT_R px of the pointer, and stay picked until it is HOLD_R px away. */
+const HIT_R = 24
+const HOLD_R = 34
 // The brush is a damped spring (about 0.1 s rise, 27% overshoot), applied as a weighted sum over
 // the cursor's recent positions, so the shader needs no per-point state.
 const TAPS = 16
@@ -86,35 +89,40 @@ void main() {
   float y1 = p.y * uRot.z - z1 * uRot.w;
   float z2 = p.y * uRot.w + z1 * uRot.z;
   vec2 q = uFig.xy + vec2(x1, y1) * uFig.z * (1.9 / (1.9 - z2));
-  vec2 push = vec2(0.0);
-  for (int i = 0; i < ${TAPS}; i++) {
-    vec2 d = q - uTap[i].xy;
-    float l = length(d);
-    float f = max(0.0, 1.0 - l / ${BRUSH_R}.0);
-    if (l > 0.01) push += d / l * f * f * uTap[i].z;
-  }
-  q += push;
-  gl_Position = vec4(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0, 0.0, 1.0);
   float dpr = uView.z;
   if (uKind.x < 0.5) {
+    // The brush pushes the points aside; the stars hold still so the cursor can land on them.
+    vec2 push = vec2(0.0);
+    for (int i = 0; i < ${TAPS}; i++) {
+      vec2 d = q - uTap[i].xy;
+      float l = length(d);
+      float f = max(0.0, 1.0 - l / ${BRUSH_R}.0);
+      if (l > 0.01) push += d / l * f * f * uTap[i].z;
+    }
+    q += push;
     float a = clamp(aMeta.y * (0.3 + (z2 + 0.2) * 1.5) * min(1.0, (0.5 - aPos.y) * 9.0), 0.06, 1.0);
     float r = uKind.y * dpr;
     vDot = vec4(r, 0.0, ceil(r * 2.0 + 2.0), min(1.0, a + 0.08) * 0.95);
     vHue = 0.0;
   } else {
+    // State: hover + 2 × cited + 4 × personal.
     float hover = mod(aMeta.y, 2.0);
-    float cited = step(1.5, aMeta.y);
+    float cited = step(1.5, mod(aMeta.y, 4.0));
+    float personal = step(3.5, aMeta.y);
     float halo = hover > 0.5 ? 11.0 : cited > 0.5 ? 9.0 + sin(uClock.y / 260.0) * 2.5 : 6.0;
     float core = hover > 0.5 ? 4.5 : cited > 0.5 ? 3.6 : 2.6;
-    vDot = vec4(halo * dpr, core * dpr, ceil(halo * dpr * 2.0 + 2.0), uKind.y);
-    vHue = 1.0 + cited;
+    // Smaller figures get smaller stars, so they don't crowd the face (the hit area stays the same).
+    float k = clamp(uFig.z / 560.0, 0.6, 1.0) * dpr;
+    vDot = vec4(halo * k, core * k, ceil(halo * k * 2.0 + 2.0), uKind.y);
+    vHue = personal > 0.5 ? 3.0 : 1.0 + cited;
   }
+  gl_Position = vec4(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0, 0.0, 1.0);
   gl_PointSize = vDot.z;
 }`
 
 const FRAG = `
 precision mediump float;
-uniform vec3 uHue[3];
+uniform vec3 uHue[4];
 varying vec4 vDot;
 varying float vHue;
 void main() {
@@ -123,7 +131,7 @@ void main() {
   if (outer <= 0.0) discard;
   float core = clamp(vDot.y + 0.5 - d, 0.0, 1.0);
   float a = (vDot.y > 0.0 ? core + (1.0 - core) * 0.28 * outer : outer) * vDot.w;
-  vec3 c = vHue < 0.5 ? uHue[0] : vHue < 1.5 ? uHue[1] : uHue[2];
+  vec3 c = vHue < 0.5 ? uHue[0] : vHue < 1.5 ? uHue[1] : vHue < 2.5 ? uHue[2] : uHue[3];
   gl_FragColor = vec4(c * a, a);
 }`
 
@@ -193,7 +201,8 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   const pts = sample(g2.getImageData(0, 0, SRC_SIZE, SRC_SIZE).data)
   await pause()
   const from = scatter(pts)
-  const starIdx = pickStars(pts, o.stars)
+  // Work stars first, so their indices match the hero's; the personal dots fill the gaps between them.
+  const starIdx = pickStars(pts, o.stars.work + o.stars.personal)
   o.onStage('sampled')
 
   if (!(await linked(gl, prog))) return null
@@ -207,7 +216,10 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     pointData.set([pts.x[i], pts.y[i], pts.z[i], from.x[i], from.y[i], from.z[i], from.delay[i], pts.b[i]], i * STRIDE)
   }
   const starData = new Float32Array(starIdx.length * STRIDE)
-  starIdx.forEach((i, k) => starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE - 1), k * STRIDE))
+  starIdx.forEach((i, k) => {
+    starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE - 1), k * STRIDE)
+    starData[k * STRIDE + 7] = k >= o.stars.work ? 4 : 0
+  })
   const pointBuf = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf)
   gl.bufferData(gl.ARRAY_BUFFER, pointData, gl.STATIC_DRAW)
@@ -226,7 +238,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   gl.enable(gl.BLEND)
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
   gl.clearColor(0, 0, 0, 0)
-  gl.uniform3fv(U.hue, [...themeColor(g2, 'term-accent'), ...themeColor(g2, 'sun'), ...themeColor(g2, 'coral-glow')])
+  gl.uniform3fv(U.hue, ['term-accent', 'sun', 'coral-glow', 'term-text'].flatMap((c) => themeColor(g2, c)))
 
   let tier = TIERS[o.tier]
   let fig: FigureLayout = { cx: 0, cy: 0, s: 0 }
@@ -270,7 +282,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   }
 
   const uploadStars = (): void => {
-    starIdx.forEach((_, k) => (starData[k * STRIDE + 7] = (k === hover ? 1 : 0) + (cited.has(k) ? 2 : 0)))
+    starIdx.forEach((_, k) => (starData[k * STRIDE + 7] = (k === hover ? 1 : 0) + (cited.has(k) ? 2 : 0) + (k >= o.stars.work ? 4 : 0)))
     gl.bindBuffer(gl.ARRAY_BUFFER, starBuf)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, starData)
   }
@@ -292,7 +304,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     }
   }
 
-  /** The same projection and brush as the vertex shader, for the stars' hit targets. */
+  /** The same projection as the vertex shader, for the stars' hit targets. */
   const placeStars = (): void => {
     const ca = Math.cos(rot.a)
     const sa = Math.sin(rot.a)
@@ -307,29 +319,15 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
       const y1 = y * cb - z1 * sb
       const z2 = y * sb + z1 * cb
       const p = 1.9 / (1.9 - z2)
-      let qx = fig.cx + x1 * fig.s * p
-      let qy = fig.cy + y1 * fig.s * p
-      let px = 0
-      let py = 0
-      for (let n = 0; n < TAPS; n++) {
-        const dx = qx - taps[n * 3]
-        const dy = qy - taps[n * 3 + 1]
-        const l = Math.hypot(dx, dy)
-        const f = Math.max(0, 1 - l / BRUSH_R)
-        if (l > 0.01) {
-          px += (dx / l) * f * f * taps[n * 3 + 2]
-          py += (dy / l) * f * f * taps[n * 3 + 2]
-        }
-      }
-      qx += px
-      qy += py
-      starPos[k * 2] = qx
-      starPos[k * 2 + 1] = qy
+      starPos[k * 2] = fig.cx + x1 * fig.s * p
+      starPos[k * 2 + 1] = fig.cy + y1 * fig.s * p
     })
   }
 
   const hit = (x: number, y: number): number => {
     if (showStars < 1) return -1
+    // A hovered star keeps the pointer until it's clearly moved off.
+    if (hover >= 0 && (starPos[hover * 2] - x) ** 2 + (starPos[hover * 2 + 1] - y) ** 2 < HOLD_R * HOLD_R) return hover
     let best = -1
     let bd = HIT_R * HIT_R
     for (let k = 0; k < starIdx.length; k++) {
@@ -343,9 +341,12 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   }
 
   const draw = (t: number, dt: number): void => {
-    const ease = 1 - Math.pow(0.95, dt / 16.67)
-    rot.a += (Math.sin(t / 5200) * 0.2 + mouse.nx * 0.5 - rot.a) * ease
-    rot.b += (mouse.ny * 0.22 - rot.b) * ease
+    // The figure holds still while a star is hovered, so the star stays under the cursor.
+    if (hover < 0) {
+      const ease = 1 - Math.pow(0.95, dt / 16.67)
+      rot.a += (Math.sin(t / 5200) * 0.2 + mouse.nx * 0.5 - rot.a) * ease
+      rot.b += (mouse.ny * 0.22 - rot.b) * ease
+    }
     const clock = t0 === null ? -1 : Math.min(t - t0, assembledAt + 1)
     if (t0 !== null && clock > assembledAt) showStars = Math.min(1, (t - t0 - assembledAt) / 400)
     updateTaps(t)

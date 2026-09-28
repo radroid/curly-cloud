@@ -1,7 +1,8 @@
 /**
- * The curly cloud's point set, sampled from `public/hero-cloud-src.png` (REDESIGN-PLAN.md §4).
- * Pure and seeded, so the same image always gives the same cloud and the same stars. Ported from
- * the prototype's `sample()`, `depth()` and `pickStars()`; the weights were tuned in review.
+ * The curly cloud's point set, sampled from `public/hero-cloud-src.png` (REDESIGN-PLAN.md §4): a line
+ * sketch of Raj's cartoon, made by `scripts/portrait-images.py`. Pure and seeded, so the same image always
+ * gives the same cloud and the same stars. Ported from the prototype's `sample()`, `depth()` and
+ * `pickStars()`; the weights were tuned in review.
  *
  * Coordinates are normalised: x and y in -0.5..0.5 of the figure's size `s`, y down, z towards
  * the viewer.
@@ -47,8 +48,8 @@ export function rng(seed: number): () => number {
 type Ellipse = readonly [cx: number, cy: number, rx: number, ry: number]
 
 // Two ellipsoids fitted to the source image: the head (with hair and beard) and the shoulders.
-const HEAD: Ellipse = [-0.03, -0.19, 0.28, 0.31]
-const BODY: Ellipse = [-0.04, 0.52, 0.6, 0.5]
+const HEAD: Ellipse = [0, -0.18, 0.26, 0.31]
+const BODY: Ellipse = [0, 0.52, 0.62, 0.5]
 
 /** > 0 inside the ellipse, 1 at its centre. */
 function inside(e: Ellipse, x: number, y: number): number {
@@ -117,7 +118,7 @@ export function sample(rgba: ArrayLike<number>, size = SRC_SIZE, count: number =
 }
 
 /**
- * Pick one star per source: points on the dark outline, above the faded bottom rows, each as far
+ * Pick `n` stars: points on the dark outline, above the faded bottom rows, each as far
  * as possible from the ones already chosen (best of 300 random candidates). Only the first `pool`
  * points are candidates, so every tier shows the same stars. Returns point indices.
  */

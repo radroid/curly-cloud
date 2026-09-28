@@ -8,7 +8,10 @@ import { RESUME } from '@/content/resume'
 import { topicLabel } from '@/content/topics'
 import { motionOff } from '@/app/lib/motion'
 import { useMediaQuery } from '@/app/lib/use-media-query'
+import { useRenderStatus } from '@/app/lib/use-render-status'
 import { AnswerText } from './answer-text'
+import { SOURCE_COUNT } from './cloud/stars'
+import { RESUME_LINE_COUNT } from './resume-helpers'
 import { useSite } from './site-context'
 
 // ── Chat state ───────────────────────────────────────────────────────────────
@@ -427,19 +430,58 @@ export function AskPanel() {
   )
 }
 
+/** The clone's status, behind the avatar: hover it, tab to it, or tap it. */
+function CloneStatus({ open }: { open: boolean }) {
+  const render = useRenderStatus()
+  return (
+    <div
+      id="clone-status"
+      className={`absolute left-0 top-[calc(100%_+_10px)] z-30 w-[268px] rounded-lg bg-term-bg px-4 py-2.5 font-mono text-xs leading-[1.95] text-term-dim shadow-[0_16px_40px_-12px_rgb(0_0_0/0.45)] print:hidden ${open ? 'block' : 'hidden group-hover/avatar:block'}`}
+    >
+      <p className="m-0 mb-1 text-term-accent">$ clone status</p>
+      {[
+        ['corpus', `${SOURCE_COUNT} public sources`],
+        ['lines', `${RESUME_LINE_COUNT} citable`],
+        ['retrieval', 'bm25 + bge-m3, fused, reranked'],
+        ['guard', 'checks answers as they stream'],
+        ['render', render],
+      ].map(([k, v]) => (
+        <div key={k} className="grid grid-cols-[80px_1fr]">
+          <span>{k}</span>
+          <span className="font-medium text-term-text">{v}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function PanelHeader({ state, onReset, onClose }: { state: CloneState; onReset?: () => void; onClose?: () => void }) {
+  const [statusOpen, setStatusOpen] = useState(false)
   return (
     <header className="relative flex items-center gap-3 border-b border-rule px-[18px] py-3.5">
       {onClose && <span aria-hidden className="absolute left-1/2 top-1.5 h-1 w-10 -translate-x-1/2 rounded-full bg-rule lg:hidden" />}
-      <div className="relative shrink-0">
+      <div className="group/avatar relative shrink-0">
         {/* Thinking: a mint ring circles the avatar. With motion off, the status text beside the name stands in. */}
         <span
           aria-hidden
           className={`absolute -inset-[3px] rounded-full bg-[conic-gradient(transparent_25%,var(--color-term-accent)_75%)] still:hidden ${state === 'thinking' ? 'animate-spin' : 'hidden'}`}
         />
         <span aria-hidden data-pulse className="absolute -inset-[3px] rounded-full border-2 border-coral opacity-0" />
-        <Image data-nod src="/raj-avatar.webp" alt="" width={38} height={38} className="relative size-[38px] rounded-full ring-1 ring-white" />
+        <button
+          type="button"
+          aria-label="Clone status"
+          aria-expanded={statusOpen}
+          aria-controls="clone-status"
+          onClick={() => setStatusOpen((o) => !o)}
+          onFocus={(e) => e.currentTarget.matches(':focus-visible') && setStatusOpen(true)}
+          onBlur={() => setStatusOpen(false)}
+          onKeyDown={(e) => e.key === 'Escape' && setStatusOpen(false)}
+          className="relative block cursor-help rounded-full"
+        >
+          <Image data-nod src="/raj-avatar.webp" alt="" width={38} height={38} className="relative size-[38px] rounded-full ring-1 ring-white" />
+        </button>
         <span aria-hidden className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-white bg-forest" />
+        <CloneStatus open={statusOpen} />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">

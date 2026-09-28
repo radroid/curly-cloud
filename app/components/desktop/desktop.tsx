@@ -33,11 +33,21 @@ export function Desktop(props: DesktopProps) {
 
 function DesktopInner({ prefersReduced, isMaximized, onToggleMaximize }: DesktopProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { windows, selectIcon } = useWindowManager()
+  const { windows, selectIcon, openApp } = useWindowManager()
   const trashApp = APP_MAP['trash']
 
   // Prefetch Spotify data so the Music app loads instantly when opened
   useEffect(() => { prefetchSpotify() }, [])
+
+  // `/mac?open=music` (the hero's Music dot) opens that app. The query goes, so a reload doesn't reopen it.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const id = url.searchParams.get('open')
+    if (!id) return
+    openApp(id)
+    url.searchParams.delete('open')
+    window.history.replaceState(window.history.state, '', url)
+  }, [openApp])
 
   const pad = isMaximized ? 14 : 8
   return (
