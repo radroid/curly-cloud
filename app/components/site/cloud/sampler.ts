@@ -1,5 +1,8 @@
 /**
- * The curly cloud's point set, sampled from `public/hero-cloud-src.png` (REDESIGN-PLAN.md §4): a line
+ * Legacy image sampler (kept for rebuilding the original illustration assets). The live hero now
+ * loads the shared 3D mesh samples from surface.ts; rng, scatter and pickStars are shared.
+ *
+ * The original curly cloud's point set, sampled from `public/hero-cloud-src.png` (REDESIGN-PLAN.md §4): a line
  * sketch of Raj's cartoon, made by `scripts/portrait-images.py`. Pure and seeded, so the same image always
  * gives the same cloud and the same stars. Ported from the prototype's `sample()`, `depth()` and
  * `pickStars()`; the weights were tuned in review.
@@ -11,8 +14,8 @@
 /** Side of the source image, in pixels. */
 export const SRC_SIZE = 320
 
-/** Points per render tier. Medium draws the first 4,200 of the same set. */
-export const POINTS = { high: 9000, medium: 4200 } as const
+/** Points per render tier. Medium draws the first 8,000 of the same set. */
+export const POINTS = { high: 18000, medium: 8000 } as const
 
 export interface PointSet {
   x: Float32Array
@@ -21,6 +24,10 @@ export interface PointSet {
   /** 1 on dark ink (outlines, hair, beard), 0.55 elsewhere. */
   b: Float32Array
   count: number
+  /** Present on the reconstructed mesh; absent on the legacy image sampler. */
+  nx?: Float32Array
+  ny?: Float32Array
+  nz?: Float32Array
 }
 
 /** Where each point starts before the assembly, and how long it waits. */
@@ -124,7 +131,7 @@ export function sample(rgba: ArrayLike<number>, size = SRC_SIZE, count: number =
  */
 export function pickStars(points: PointSet, n: number, seed = 11, pool: number = POINTS.medium): number[] {
   const outline: number[] = []
-  for (let i = 0; i < Math.min(pool, points.count); i++) if (points.b[i] === 1 && points.y[i] < 0.38) outline.push(i)
+  for (let i = 0; i < Math.min(pool, points.count); i++) if (points.b[i] === 1 && points.y[i] < 0.30 && (!points.nz || points.nz[i] > 0.45)) outline.push(i)
   if (!outline.length) return []
   const r = rng(seed)
   const chosen: number[] = []

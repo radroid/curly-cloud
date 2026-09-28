@@ -9,6 +9,11 @@
 > `main`, and so production, in one PR once Raj gives the go-ahead. The content was first aligned with Raj's
 > final PDF CV in PR #10, which is merged, deployed and re-seeded into the production clone.
 
+> **3D portrait update (2026-09-28):** The active hero now samples a fitted 3D mesh with facial
+> landmark depth, a complete rear surface and curl geometry. The same surface is exported as a
+> textured GLB for the future colored agent. See [asset/rebuild notes](docs/avatar/README.md).
+> Earlier image-sampler descriptions and asset-size measurements below describe the prior build.
+
 ## 0. What we measured (2026-09-26)
 
 **curlycloud.dev before the redesign**

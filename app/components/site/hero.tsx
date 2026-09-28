@@ -24,15 +24,15 @@ import { HERO_PROMPT_ID, useSite } from './site-context'
 /** Height of the fixed top bar that floats over the hero. */
 const BAR_H = 56
 
-// Browsers keep public images for an hour, so a cached source image could redraw the old figure over
-// a new poster. Bump the version whenever scripts/portrait-images.py rewrites them.
-const CLOUD_SRC = '/hero-cloud-src.png?v=4'
-const CLOUD_POSTER = '/hero-cloud.webp?v=4'
+// Browsers keep public images for an hour, so a cached model could redraw the old figure over
+// a new poster. Bump the version whenever scripts/avatar/build-model.py rewrites the model or poster.
+const CLOUD_SRC = '/models/raj-cloud.bin?v=3'
+const CLOUD_POSTER = '/models/raj-cloud-poster.webp?v=3'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
 
-/** Progress for the boot overlay: `loaded` (chunk), `sampled` (source image), `ready` (first frame). */
+/** Progress for the boot overlay: `loaded` (chunk), `sampled` (3D surface), `ready` (first frame). */
 function emitStage(stage: 'loaded' | 'sampled' | 'ready'): void {
   window.dispatchEvent(new CustomEvent('curlycloud:cloud', { detail: { stage } }))
 }
@@ -178,6 +178,7 @@ export function Hero() {
     const canvas = canvasRef.current
     const load = loadRenderer()
     if (!canvas || !load) return
+    const abort = new AbortController()
     let dead = false
     let ready = false
     let cloud: Cloud | null = null
@@ -193,6 +194,7 @@ export function Hero() {
         const c = await m.createCloud({
           canvas,
           src: CLOUD_SRC,
+          signal: abort.signal,
           stars: { work: STARS.length, personal: PERSONAL.length },
           tier: now.current.tier as CloudTier,
           onStage: (stage) => {
@@ -215,6 +217,7 @@ export function Hero() {
       .catch(fail)
     return () => {
       dead = true
+      abort.abort()
       cloud?.destroy()
       cloudRef.current = null
       setDrawn(false)

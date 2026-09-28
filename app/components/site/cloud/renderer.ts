@@ -1,8 +1,9 @@
 import type { FigureLayout } from './figure'
-import { pickStars, POINTS, sample, scatter, SRC_SIZE } from './sampler'
+import { pickStars, POINTS, scatter } from './sampler'
+import { cameraAt, readSurface, visibleFrom } from './surface'
 
 /**
- * The curly-cloud renderer (REDESIGN-PLAN.md §4, M2/M3): one `gl.POINTS` draw for the cloud and
+ * The curly-cloud renderer (REDESIGN-PLAN.md §4, M2/M3): a mesh depth prepass, one `gl.POINTS` draw for the cloud and
  * one for the stars. The vertex shader does the assembly, rotation, perspective and cursor brush (the
  * brush parts the points but leaves the stars where they are); the fragment shader draws round
  * points. GLSL ES 1.00, so the same code runs on WebGL2 and WebGL1.
@@ -15,8 +16,10 @@ export type CloudStage = 'sampled' | 'ready'
 
 export interface CloudOptions {
   canvas: HTMLCanvasElement
-  /** The source illustration (same origin). */
+  /** The reconstructed surface (same origin, RJC2 binary). */
   src: string
+  /** Cancel an in-flight asset load when the hero unmounts or switches to Saver. */
+  signal?: AbortSignal
   /** How many stars to pick: one per public source (yellow), then the personal dots (white). */
   stars: { work: number; personal: number }
   tier: CloudTier
@@ -72,6 +75,7 @@ const TAP_W = (() => {
 const VERT = `
 attribute vec3 aPos;
 attribute vec3 aFrom;
+attribute vec3 aNormal;
 attribute vec2 aMeta;
 uniform vec4 uRot;
 uniform vec3 uFig;
@@ -90,6 +94,13 @@ void main() {
   float z2 = p.y * uRot.w + z1 * uRot.z;
   vec2 q = uFig.xy + vec2(x1, y1) * uFig.z * (1.9 / (1.9 - z2));
   float dpr = uView.z;
+  // Rotate the surface normal with the head. Far-side points must not show through the face.
+  float nx = aNormal.x * uRot.x + aNormal.z * uRot.y;
+  float nz = aNormal.z * uRot.x - aNormal.x * uRot.y;
+  vec3 normal = vec3(nx, aNormal.y * uRot.z - nz * uRot.w, aNormal.y * uRot.w + nz * uRot.z);
+  float facing = dot(normal, normalize(vec3(-x1, -y1, 1.9 - z2)));
+  float visibility = mix(1.0, smoothstep(-0.05, 0.16, facing), e);
+
   if (uKind.x < 0.5) {
     // The brush pushes the points aside; the stars hold still so the cursor can land on them.
     vec2 push = vec2(0.0);
@@ -100,9 +111,9 @@ void main() {
       if (l > 0.01) push += d / l * f * f * uTap[i].z;
     }
     q += push;
-    float a = clamp(aMeta.y * (0.3 + (z2 + 0.2) * 1.5) * min(1.0, (0.5 - aPos.y) * 9.0), 0.06, 1.0);
+    float a = clamp(aMeta.y * (0.3 + (z2 + 0.2) * 1.5) * min(1.0, (0.385 - aPos.y) * 11.0), 0.06, 1.0);
     float r = uKind.y * dpr;
-    vDot = vec4(r, 0.0, ceil(r * 2.0 + 2.0), min(1.0, a + 0.08) * 0.95);
+    vDot = vec4(r, 0.0, ceil(r * 2.0 + 2.0), min(1.0, a + 0.08) * 0.95 * visibility);
     vHue = 0.0;
   } else {
     // State: hover + 2 × cited + 4 × personal.
@@ -113,10 +124,12 @@ void main() {
     float core = hover > 0.5 ? 4.5 : cited > 0.5 ? 3.6 : 2.6;
     // Smaller figures get smaller stars, so they don't crowd the face (the hit area stays the same).
     float k = clamp(uFig.z / 560.0, 0.6, 1.0) * dpr;
-    vDot = vec4(halo * k, core * k, ceil(halo * k * 2.0 + 2.0), uKind.y);
+    vDot = vec4(halo * k, core * k, ceil(halo * k * 2.0 + 2.0), uKind.y * visibility);
     vHue = personal > 0.5 ? 3.0 : 1.0 + cited;
   }
-  gl_Position = vec4(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0, 0.0, 1.0);
+  float w = 1.9 - z2;
+  // A real perspective depth, shared by the surface prepass. A small bias keeps splats on skin.
+  gl_Position = vec4(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0, (2.0 * w - 3.0 - 0.008) / w, 1.0);
   gl_PointSize = vDot.z;
 }`
 
@@ -135,23 +148,43 @@ void main() {
   gl_FragColor = vec4(c * a, a);
 }`
 
+const DEPTH_VERT = `
+attribute vec3 aPos;
+uniform vec4 uRot;
+uniform vec3 uFig;
+uniform vec3 uView;
+void main() {
+  float x = aPos.x * uRot.x + aPos.z * uRot.y;
+  float z = aPos.z * uRot.x - aPos.x * uRot.y;
+  float y = aPos.y * uRot.z - z * uRot.w;
+  z = aPos.y * uRot.w + z * uRot.z;
+  float w = 1.9 - z;
+  vec2 q = uFig.xy + vec2(x, y) * uFig.z * 1.9 / w;
+  gl_Position = vec4(vec2(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0) * w, 2.0 * w - 3.0, w);
+}`
+const DEPTH_FRAG = `precision mediump float; void main() { gl_FragColor = vec4(0.0); }`
+
 type GL = WebGLRenderingContext
 
 /** Start compiling and linking. Nothing here waits on the GPU; `linked` does. */
-function compile(gl: GL): WebGLProgram | null {
+function compile(gl: GL, vertex = VERT, fragment = FRAG): WebGLProgram | null {
   const prog = gl.createProgram()
+  if (!prog) return null
   for (const [type, src] of [
-    [gl.VERTEX_SHADER, VERT],
-    [gl.FRAGMENT_SHADER, FRAG],
+    [gl.VERTEX_SHADER, vertex],
+    [gl.FRAGMENT_SHADER, fragment],
   ] as const) {
     const sh = gl.createShader(type)
-    if (!sh) return null
+    if (!sh) {
+      gl.deleteProgram(prog)
+      return null
+    }
     gl.shaderSource(sh, src)
     gl.compileShader(sh)
     gl.attachShader(prog, sh)
     gl.deleteShader(sh)
   }
-  ;['aPos', 'aFrom', 'aMeta'].forEach((name, i) => gl.bindAttribLocation(prog, i, name))
+  ;['aPos', 'aFrom', 'aMeta', 'aNormal'].forEach((name, i) => gl.bindAttribLocation(prog, i, name))
   gl.linkProgram(prog)
   return prog
 }
@@ -181,45 +214,72 @@ function themeColor(probe: CanvasRenderingContext2D, name: string): number[] {
   return [r / 255, g / 255, b / 255]
 }
 
-/** Resolves to null when there's no WebGL; rejects if the source image won't load. */
+/** Resolves to null when there's no WebGL; rejects if the model won't load. */
 export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
-  const attrs: WebGLContextAttributes = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' }
+  const attrs: WebGLContextAttributes = { alpha: true, premultipliedAlpha: true, antialias: false, depth: true, stencil: false, powerPreference: 'low-power' }
   const gl = (o.canvas.getContext('webgl2', attrs) ?? o.canvas.getContext('webgl', attrs)) as GL | null
   if (!gl || gl.isContextLost()) return null
-  // Compile first so the GPU works on it while the image is decoded and sampled.
+  // Compile both programs while the surface asset downloads.
   const prog = compile(gl)
-  if (!prog) return null
-
-  const img = new Image()
-  img.src = o.src
-  await img.decode()
+  const depthProg = compile(gl, DEPTH_VERT, DEPTH_FRAG)
+  if (!prog || !depthProg) {
+    gl.deleteProgram(prog)
+    gl.deleteProgram(depthProg)
+    return null
+  }
+  let surface: ReturnType<typeof readSurface>
+  try {
+    const response = await fetch(o.src, { signal: o.signal })
+    if (!response.ok) throw new Error('Portrait surface unavailable')
+    surface = readSurface(await response.arrayBuffer())
+  } catch (error) {
+    gl.deleteProgram(prog)
+    gl.deleteProgram(depthProg)
+    throw error
+  }
+  const pts = surface.points
   const scratch = document.createElement('canvas')
-  scratch.width = scratch.height = SRC_SIZE
+  scratch.width = scratch.height = 1
   const g2 = scratch.getContext('2d', { willReadFrequently: true })
-  if (!g2) return null
-  g2.drawImage(img, 0, 0, SRC_SIZE, SRC_SIZE)
-  const pts = sample(g2.getImageData(0, 0, SRC_SIZE, SRC_SIZE).data)
+  if (!g2) {
+    gl.deleteProgram(prog)
+    gl.deleteProgram(depthProg)
+    return null
+  }
   await pause()
   const from = scatter(pts)
   // Work stars first, so their indices match the hero's; the personal dots fill the gaps between them.
   const starIdx = pickStars(pts, o.stars.work + o.stars.personal)
   o.onStage('sampled')
 
-  if (!(await linked(gl, prog))) return null
+  const links = await Promise.all([linked(gl, prog), linked(gl, depthProg)])
+  if (o.signal?.aborted || links.some((ok) => !ok)) {
+    gl.deleteProgram(prog)
+    gl.deleteProgram(depthProg)
+    return null
+  }
   const u = (name: string): WebGLUniformLocation | null => gl.getUniformLocation(prog, name)
   const U = { rot: u('uRot'), fig: u('uFig'), view: u('uView'), clock: u('uClock'), tap: u('uTap'), kind: u('uKind'), hue: u('uHue') }
 
-  // Interleaved per vertex: target xyz, start xyz, delay, brightness (points) or state (stars).
-  const STRIDE = 8
+  const D = { rot: gl.getUniformLocation(depthProg, 'uRot'), fig: gl.getUniformLocation(depthProg, 'uFig'), view: gl.getUniformLocation(depthProg, 'uView') }
+
+  // Target xyz, start xyz, delay, brightness/state, surface normal xyz.
+  const STRIDE = 11
   const pointData = new Float32Array(pts.count * STRIDE)
   for (let i = 0; i < pts.count; i++) {
-    pointData.set([pts.x[i], pts.y[i], pts.z[i], from.x[i], from.y[i], from.z[i], from.delay[i], pts.b[i]], i * STRIDE)
+    pointData.set([pts.x[i], pts.y[i], pts.z[i], from.x[i], from.y[i], from.z[i], from.delay[i], pts.b[i], pts.nx[i], pts.ny[i], pts.nz[i]], i * STRIDE)
   }
   const starData = new Float32Array(starIdx.length * STRIDE)
   starIdx.forEach((i, k) => {
-    starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE - 1), k * STRIDE)
+    starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE), k * STRIDE)
     starData[k * STRIDE + 7] = k >= o.stars.work ? 4 : 0
   })
+  const meshBuf = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf)
+  gl.bufferData(gl.ARRAY_BUFFER, surface.vertices, gl.STATIC_DRAW)
+  const indexBuf = gl.createBuffer()
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuf)
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, surface.indices, gl.STATIC_DRAW)
   const pointBuf = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf)
   gl.bufferData(gl.ARRAY_BUFFER, pointData, gl.STATIC_DRAW)
@@ -231,10 +291,11 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     gl.vertexAttribPointer(0, 3, gl.FLOAT, false, STRIDE * 4, 0)
     gl.vertexAttribPointer(1, 3, gl.FLOAT, false, STRIDE * 4, 12)
     gl.vertexAttribPointer(2, 2, gl.FLOAT, false, STRIDE * 4, 24)
+    gl.vertexAttribPointer(3, 3, gl.FLOAT, false, STRIDE * 4, 32)
   }
 
   gl.useProgram(prog)
-  for (let i = 0; i < 3; i++) gl.enableVertexAttribArray(i)
+  for (let i = 0; i < 4; i++) gl.enableVertexAttribArray(i)
   gl.enable(gl.BLEND)
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
   gl.clearColor(0, 0, 0, 0)
@@ -326,13 +387,15 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
 
   const hit = (x: number, y: number): number => {
     if (showStars < 1) return -1
+    const camera = cameraAt(rot.a, rot.b)
+    const visible = (k: number) => visibleFrom(surface, starIdx[k], camera)
     // A hovered star keeps the pointer until it's clearly moved off.
-    if (hover >= 0 && (starPos[hover * 2] - x) ** 2 + (starPos[hover * 2 + 1] - y) ** 2 < HOLD_R * HOLD_R) return hover
+    if (hover >= 0 && visible(hover) && (starPos[hover * 2] - x) ** 2 + (starPos[hover * 2 + 1] - y) ** 2 < HOLD_R * HOLD_R) return hover
     let best = -1
     let bd = HIT_R * HIT_R
     for (let k = 0; k < starIdx.length; k++) {
       const d = (starPos[k * 2] - x) ** 2 + (starPos[k * 2 + 1] - y) ** 2
-      if (d < bd) {
+      if (d < bd && visible(k)) {
         bd = d
         best = k
       }
@@ -344,15 +407,35 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     // The figure holds still while a star is hovered, so the star stays under the cursor.
     if (hover < 0) {
       const ease = 1 - Math.pow(0.95, dt / 16.67)
-      rot.a += (Math.sin(t / 5200) * 0.2 + mouse.nx * 0.5 - rot.a) * ease
+      rot.a += (Math.sin(t / 5200) * 0.2 + mouse.nx * 0.9 - rot.a) * ease
       rot.b += (mouse.ny * 0.22 - rot.b) * ease
     }
     const clock = t0 === null ? -1 : Math.min(t - t0, assembledAt + 1)
     if (t0 !== null && clock > assembledAt) showStars = Math.min(1, (t - t0 - assembledAt) / 400)
     updateTaps(t)
 
+    gl.depthMask(true)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    // The invisible mesh writes depth, so nose/cheek/hair occlude far-side points correctly.
+    // Let the initial scattered cloud assemble freely, then enable the solid surface.
+    if (clock > assembledAt) {
+      gl.enable(gl.DEPTH_TEST)
+      gl.depthFunc(gl.LEQUAL)
+      gl.colorMask(false, false, false, false)
+      gl.useProgram(depthProg)
+      gl.uniform4f(D.rot, Math.cos(rot.a), Math.sin(rot.a), Math.cos(rot.b), Math.sin(rot.b))
+      gl.uniform3f(D.fig, fig.cx, fig.cy, fig.s)
+      gl.uniform3f(D.view, w, h, dpr)
+      for (let i = 1; i < 4; i++) gl.disableVertexAttribArray(i)
+      gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf)
+      gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 12, 0)
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuf)
+      gl.drawElements(gl.TRIANGLES, surface.indices.length, gl.UNSIGNED_SHORT, 0)
+      gl.colorMask(true, true, true, true)
+      for (let i = 1; i < 4; i++) gl.enableVertexAttribArray(i)
+    } else gl.disable(gl.DEPTH_TEST)
+    gl.depthMask(false)
     gl.useProgram(prog)
-    gl.clear(gl.COLOR_BUFFER_BIT)
     gl.uniform4f(U.rot, Math.cos(rot.a), Math.sin(rot.a), Math.cos(rot.b), Math.sin(rot.b))
     gl.uniform3f(U.fig, fig.cx, fig.cy, fig.s)
     gl.uniform3f(U.view, w, h, dpr)
@@ -360,7 +443,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     gl.uniform3fv(U.tap, taps)
     gl.uniform2f(U.kind, 0, tier.radius)
     bindAttrs(pointBuf)
-    gl.drawArrays(gl.POINTS, 0, tier.points)
+    gl.drawArrays(gl.POINTS, 0, Math.min(tier.points, pts.count))
     if (showStars > 0) {
       placeStars()
       gl.uniform2f(U.kind, 1, showStars)
@@ -458,6 +541,9 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
       run()
       o.canvas.removeEventListener('webglcontextlost', onLost)
       document.removeEventListener('visibilitychange', run)
+      gl.deleteBuffer(meshBuf)
+      gl.deleteBuffer(indexBuf)
+      gl.deleteProgram(depthProg)
       gl.deleteBuffer(pointBuf)
       gl.deleteBuffer(starBuf)
       gl.deleteProgram(prog)
