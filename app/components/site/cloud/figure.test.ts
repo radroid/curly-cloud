@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { layout, posterBox, type HeroBox } from './figure'
+import { FULL_SIZE, layout, pointsFor, posterBox, type HeroBox } from './figure'
 
 // Boxes measured on the prototype, with the figure it drew there.
 const DESKTOP: HeroBox = { w: 1440, h: 900, top: 70, copyTop: 404.2, copyRight: 604.16 }
@@ -34,6 +34,16 @@ describe('figure layout', () => {
     const l = layout({ w: 900, h: 768, top: 70, copyTop: 361, copyRight: 585 })
     expect(l.cy + l.s * 0.54).toBeCloseTo(361 - 14)
     expect(l.s).toBeLessThan(768 * 0.5)
+  })
+
+  it('draws every point on a desktop and thins a phone figure to similar spacing', () => {
+    expect(pointsFor(18000, layout(DESKTOP).s)).toBe(18000)
+    expect(pointsFor(8000, FULL_SIZE)).toBe(8000)
+    const phone = layout(MOBILE).s
+    expect(pointsFor(8000, phone)).toBe(Math.round(8000 * (phone / FULL_SIZE) ** 2))
+    // About 3,600 of Medium's 8,000: a phone default no longer packs them into a quarter of the area.
+    expect(pointsFor(8000, phone)).toBeGreaterThan(3000)
+    expect(pointsFor(8000, phone)).toBeLessThan(4000)
   })
 
   it('sizes the poster to cover -0.6..0.6 of the figure', () => {

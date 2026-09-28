@@ -42,6 +42,18 @@ export function layout(b: HeroBox): FigureLayout {
   return { cx: Math.min(b.w * 0.5, rb - k * 0.5), cy: b.copyTop - 14 - k * 0.54, s: k }
 }
 
+/**
+ * A figure narrower than this (CSS px) draws only the first part of its tier's points, so a phone keeps
+ * the desktop's spacing instead of packing every point into a quarter of the area. The points are
+ * stored in random order, so the part it draws thins the whole figure evenly.
+ */
+export const FULL_SIZE = 560
+
+/** How many of a tier's `budget` points to draw for a figure of size `s`. */
+export function pointsFor(budget: number, s: number): number {
+  return Math.round(budget * Math.min(1, (s / FULL_SIZE) ** 2))
+}
+
 /** The poster covers normalised -0.6..0.6 around the figure's centre (room for perspective and drift). */
 export const POSTER_SPAN = 1.2
 

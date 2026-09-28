@@ -9,6 +9,11 @@
 > `main`, and so production, in one PR once Raj gives the go-ahead. The content was first aligned with Raj's
 > final PDF CV in PR #10, which is merged, deployed and re-seeded into the production clone.
 
+> **3D portrait update (2026-09-28):** The active hero now samples a fitted 3D mesh with facial
+> landmark depth, a complete rear surface and curl geometry. The same surface is exported as a
+> textured GLB for the future colored agent. See [asset/rebuild notes](docs/avatar/README.md).
+> Earlier image-sampler descriptions and asset-size measurements below describe the prior build.
+
 ## 0. What we measured (2026-09-26)
 
 **curlycloud.dev before the redesign**
@@ -248,8 +253,9 @@ prototype.
   element), and the overlay leaves with a `clip-path` wipe. If JS never runs, a CSS fallback animation
   removes the overlay at 2.5 s.
 - **Tiers:**
-  - **High:** ~9k points, DPR ≤ 2, 60 fps.
-  - **Medium:** ~4k points, DPR 1, 30 fps cap.
+  - **High:** 18k points, DPR ≤ 2, 60 fps.
+  - **Medium:** 8k points, DPR 1 (up to 2 on a phone's smaller canvas), 30 fps cap.
+  - A figure under 560 px (phones) draws fewer points, scaled by area, so the dots keep desktop spacing.
   - **Saver:** static poster, and all motion off.
   - **Default:** auto from reduced motion, Save-Data, WebGL support, pointer type, cores and memory.
     It auto-downgrades if the measured frame rate stays under 40 fps for 2 s.
