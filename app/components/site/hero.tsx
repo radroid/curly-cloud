@@ -9,13 +9,14 @@ import { setRenderStatus } from '@/app/lib/use-render-status'
 import { STARTERS } from './ask-panel'
 import { layout, posterBox, type HeroBox } from './cloud/figure'
 import type { Cloud, CloudTier } from './cloud/renderer'
-import { ALL_STARS, PERSONAL, STARS } from './cloud/stars'
+import { ALL_STARS, PERSONAL, STARS, starCitations } from './cloud/stars'
 import { HERO_PROMPT_ID, useSite } from './site-context'
 
 /**
  * C2 Hero: the curly cloud (REDESIGN-PLAN.md §2, §4). A dark stage with Raj's portrait drawn
- * as a point cloud, one yellow star per public source the clone can cite and a white one per personal
- * interest (HERO-STARS-PLAN.md), the name, and a prompt bar that hands its question to the Ask panel.
+ * as a point cloud, one yellow star per company, build and community entry the clone can cite (plus
+ * Education) and a white one per personal interest (HERO-STARS-PLAN.md), the name, and a prompt bar
+ * that hands its question to the Ask panel.
  *
  * The server renders the poster (and so do Saver, reduced motion and no WebGL). Once hydrated, on
  * screen and not on Saver, the WebGL renderer loads as its own chunk and replaces it.
@@ -26,8 +27,8 @@ const BAR_H = 56
 
 // Browsers keep public images for an hour, so a cached source image could redraw the old figure over
 // a new poster. Bump the version whenever scripts/portrait-images.py rewrites them.
-const CLOUD_SRC = '/hero-cloud-src.png?v=4'
-const CLOUD_POSTER = '/hero-cloud.webp?v=4'
+const CLOUD_SRC = '/hero-cloud-src.png?v=6'
+const CLOUD_POSTER = '/hero-cloud.webp?v=6'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
@@ -111,7 +112,8 @@ export function Hero() {
   const [hover, setHover] = useState<{ i: number; x: number; y: number; flip: boolean } | null>(null)
   const live = !still && !failed
 
-  const citedStars = STARS.flatMap((s, i) => (cited[s.anchor ?? ''] ? [i] : []))
+  // A work star lights up when any source in its block is cited.
+  const citedStars = STARS.flatMap((s, i) => (s.sources.some((a) => cited[a]) ? [i] : []))
   const citedKey = citedStars.join()
   // Latest values for the renderer, which arrives asynchronously.
   const now = useRef({ tier, auto, inView, booted, citedStars })
@@ -306,7 +308,7 @@ export function Hero() {
   const magnet = useMagnetic<HTMLButtonElement>()
 
   const star = hover ? ALL_STARS[hover.i] : null
-  const starCited = star?.anchor ? cited[star.anchor] : undefined
+  const starCited = star ? starCitations(star, cited) : []
   // Shown in the clone status card on the Ask panel's avatar.
   const render = still ? 'saver, static' : failed ? 'static poster' : `${tier}, ${fps ?? '…'} fps`
   useEffect(() => setRenderStatus(render), [render])
@@ -352,9 +354,9 @@ export function Hero() {
           className={`pointer-events-none absolute z-[3] max-w-[280px] -translate-y-1/2 rounded-lg border bg-night-deep/95 px-2.5 py-2 text-[13px] leading-[1.4] text-term-text ${star.kind === 'work' ? 'border-sun/55' : 'border-term-text/40'} ${hover.flip ? '-translate-x-[calc(100%_+_14px)]' : 'translate-x-3.5'}`}
           style={{ left: hover.x, top: hover.y }}
         >
-          <span className={`block font-mono text-[11px] font-medium ${starCited ? 'text-coral-glow' : star.kind === 'work' ? 'text-sun' : 'text-term-text'}`}>
+          <span className={`block font-mono text-[11px] font-medium ${starCited.length ? 'text-coral-glow' : star.kind === 'work' ? 'text-sun' : 'text-term-text'}`}>
             {star.name}
-            {starCited && ` · cited [${starCited.join(', ')}]`}
+            {starCited.length > 0 && ` · cited [${starCited.join(', ')}]`}
           </span>
           {star.words.length > 0 && <span className="mt-[3px] block">{star.words.join(' · ')}</span>}
         </div>
