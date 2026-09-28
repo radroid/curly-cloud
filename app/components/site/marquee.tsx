@@ -10,30 +10,70 @@ const firstYear = Math.min(...RESUME.experience.map((r) => Number(r.start.slice(
 const ITEMS: [key: string, value: string][] = [
   ['now', `${current.role}, ${current.company}`],
   ['base', RESUME.location.split(',')[0]],
-  ['building', 'MCP servers, RAG pipelines, agents, evals'],
   ['stack', 'TypeScript, Python, C#'],
   ['shipping since', String(firstYear)],
-  ['for agents', 'curlycloud.dev/mcp'],
-  ...RESUME.community.slice(0, 1).map((c): [string, string] => ['community', c.company]),
 ]
 
+/**
+ * Companies Raj would love to join. Logos are one-colour SVGs in public/logos (inner detail kept as
+ * opacity), drawn as masks so they take the stage's text colour. `ratio` is the viewBox's width over
+ * height; `height` (px) is tuned by eye so each logo carries about the same visual weight.
+ */
+const DREAM_TEAMS: { name: string; file: string; ratio: number; height: number }[] = [
+  { name: 'Anthropic', file: 'anthropic', ratio: 8.906, height: 15 },
+  { name: 'Google', file: 'google', ratio: 3.038, height: 24 },
+  { name: 'Apple', file: 'apple', ratio: 0.814, height: 25 },
+  { name: 'Vercel', file: 'vercel', ratio: 5.032, height: 19 },
+  { name: 'Clipboard', file: 'clipboard', ratio: 3.522, height: 21 },
+  { name: 'Wealthsimple', file: 'wealthsimple', ratio: 6.175, height: 18 },
+  { name: 'FreshBooks', file: 'freshbooks', ratio: 4.617, height: 21 },
+  { name: 'Purpose Investments', file: 'purpose', ratio: 2.997, height: 26 },
+  { name: 'FrontFundr', file: 'frontfundr', ratio: 5.364, height: 20 },
+  { name: 'Hubdoc', file: 'hubdoc', ratio: 3.544, height: 26 },
+  { name: 'KOHO', file: 'koho', ratio: 4, height: 17 },
+]
+
+function Key({ children }: { children: string }) {
+  return (
+    <>
+      <span aria-hidden className="mr-3.5 size-[5px] shrink-0 rounded-full bg-term-accent/60" />
+      <span className="rounded border border-term-text/25 px-1.5 py-1 font-mono text-[11px] font-medium leading-none text-term-dim">{children}</span>
+    </>
+  )
+}
+
 function Items({ copy = false }: { copy?: boolean }) {
+  const li = 'flex items-center gap-3 whitespace-nowrap py-[17px] pr-[26px] still:whitespace-normal still:py-2.5'
   return (
     <ul aria-hidden={copy || undefined} className={`m-0 flex list-none p-0 still:flex-wrap ${copy ? 'still:hidden' : ''}`}>
       {ITEMS.map(([k, v]) => (
-        <li key={k} className="flex items-center gap-3 whitespace-nowrap py-[17px] pr-[26px] still:whitespace-normal still:py-2.5">
-          <span aria-hidden className="mr-3.5 size-[5px] shrink-0 rounded-full bg-term-accent/60" />
-          <span className="rounded border border-term-text/25 px-1.5 py-1 font-mono text-[11px] font-medium leading-none text-term-dim">{k}</span>
+        <li key={k} className={li}>
+          <Key>{k}</Key>
           <span className="type-display text-[26px] leading-none tracking-[0.02em]">{v}</span>
         </li>
       ))}
+      <li className={`${li} still:basis-full still:flex-wrap`}>
+        <Key>dream teams</Key>
+        <span className="flex items-center gap-x-9 gap-y-3 pl-2 still:flex-[1_1_18rem] still:flex-wrap still:gap-x-8">
+          {DREAM_TEAMS.map((t) => (
+            <span
+              key={t.file}
+              role="img"
+              aria-label={t.name}
+              className="shrink-0 bg-term-text mask-contain mask-center mask-no-repeat"
+              style={{ height: t.height, aspectRatio: t.ratio, maskImage: `url(/logos/${t.file}.svg)` }}
+            />
+          ))}
+        </span>
+      </li>
     </ul>
   )
 }
 
 /**
- * C3. A looping status ticker on the stage. It pauses on hover and focus, and the button pauses it
- * for good (WCAG 2.2.2). With motion off it's a static, wrapped row.
+ * C3. A looping status ticker on the stage: where Raj is now, then the teams he'd love to join. It
+ * pauses on hover and focus, and the button pauses it for good (WCAG 2.2.2). With motion off it's a
+ * static, wrapped row.
  */
 export function Marquee(): React.ReactNode {
   const [paused, setPaused] = useState(false)

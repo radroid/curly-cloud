@@ -37,7 +37,7 @@
 
   /* Motion used by the resume page. Every one of these stops under the `still` variant below. */
   --animate-flash: flash 2.4s ease-out;
-  --animate-marquee: marquee 56s linear infinite;
+  --animate-marquee: marquee 61s linear infinite;
   --animate-grow-x: grow-x 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-travel: travel 5s cubic-bezier(0.6, 0, 0.4, 1) 3 both;
   --animate-blink: blink 1s steps(2) infinite;
