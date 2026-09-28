@@ -31,15 +31,6 @@ LM = np.array(FIT['landmarks'])
 SCALE = 830 / 926
 Y_OFFSET = -11 / 926 - .5
 RNG = np.random.default_rng(73)
-# MediaPipe's eye contours (right, then left), grown by EYE_REACH source px to reach the lash line.
-# Pixels darker than EYE_DARK inside them (lashes, iris) get EYE_EXTRA more candidates and a sampling
-# weight of EYE_INK. More candidates make the eyes brighter; past ~1500 they turn into solid blobs.
-EYES = [[33,7,163,144,145,153,154,155,133,173,157,158,159,160,161,246],
-        [263,249,390,373,374,380,381,382,362,398,384,385,386,387,388,466]]
-EYE_REACH = 11
-EYE_DARK = .33
-EYE_EXTRA = 800
-EYE_INK = 40
 
 
 def at(field, uv):
@@ -275,44 +266,20 @@ glb=struct.pack('<III',0x46546c67,2,28+len(j)+len(blob))+struct.pack('<II',len(j
 p=verts[faces]
 area=np.linalg.norm(np.cross(p[:,1]-p[:,0],p[:,2]-p[:,0]),axis=1)/2
 candidate_count=240000
-def on_faces(chosen):
-    t=faces[chosen];r=np.sqrt(RNG.random(len(chosen)));s=RNG.random(len(chosen))
-    bary=np.c_[1-r,r*(1-s),r*s]
-    n=np.einsum('ij,ijk->ik',bary,normal[t]);n/=np.maximum(np.linalg.norm(n,axis=1,keepdims=True),1e-9)
-    return np.einsum('ij,ijk->ik',bary,verts[t]),n,np.einsum('ij,ijk->ik',bary,all_uv[t])
-
 chosen=RNG.choice(len(faces),candidate_count,p=area/area.sum())
-points,pn,puv=on_faces(chosen)
+t=faces[chosen];r=np.sqrt(RNG.random(candidate_count));s=RNG.random(candidate_count)
+bary=np.c_[1-r,r*(1-s),r*s]
+points=np.einsum('ij,ijk->ik',bary,verts[t]);pn=np.einsum('ij,ijk->ik',bary,normal[t]);pn/=np.maximum(np.linalg.norm(pn,axis=1,keepdims=True),1e-9)
+puv=np.einsum('ij,ijk->ik',bary,all_uv[t])
 front_sample=chosen<len(front_faces)
-# The eyes are small in the cartoon, so by area they get a few scattered dots. Add candidates on the
-# lash lines and irises (dark pixels inside the landmark eye contours, grown to reach the lashes),
-# weight them heavily below, and thin the whites so the iris reads against them.
-eye_mask=np.zeros((H,W),np.uint8)
-for ring in EYES:
-    cv2.fillPoly(eye_mask,[np.round(LM[ring,:2]*[W-1,H-1]).astype(np.int32)],1)
-eye_mask=cv2.dilate(eye_mask,cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(EYE_REACH,EYE_REACH)))
-eye_field=gaussian_filter(eye_mask.astype(float),2)
-eye_faces=np.flatnonzero(at(eye_mask,all_uv[front_faces].mean(axis=1))>0)
-extra=RNG.choice(eye_faces,EYE_EXTRA,p=area[eye_faces]/area[eye_faces].sum())
-ep,en,euv=on_faces(extra)
-keep=(at(eye_field,euv)>.5)&(at(lum,euv)<EYE_DARK)
-points=np.vstack([points,ep[keep]]);pn=np.vstack([pn,en[keep]]);puv=np.vstack([puv,euv[keep]])
-front_sample=np.r_[front_sample,np.ones(keep.sum(),bool)]
 grad=np.hypot(*np.gradient(gaussian_filter(lum,1)))
 ink=at(lum,puv);detail=np.clip(at(grad,puv)*22,0,1)
 # More budget for the face, less for the shirt and back, but every view has real surface points.
 weights=np.where(front_sample,.20+detail*3.8+np.where(ink<.28,.45,0),.25)
-eye=at(eye_field,puv)*front_sample
-eye_ink=ink<EYE_DARK
-weights=weights*(1-eye)+eye*np.where(eye_ink,EYE_INK,.05)
 weights*=np.where(puv[:,1]<.72,1.6,.42)
-selected=RNG.choice(len(points),18000,replace=False,p=weights/weights.sum())
+selected=RNG.choice(candidate_count,18000,replace=False,p=weights/weights.sum())
 points=points[selected];pn=pn[selected];puv=puv[selected];front_sample=front_sample[selected]
-brightness=np.where(front_sample & ((ink[selected]<.3)|(detail[selected]>.24)|((eye[selected]>.5)&eye_ink[selected])),1,.60)
-# Points on and around the eyes sit just under full brightness: pickStars only takes points at 1,
-# and a star's halo on an eye would hide it.
-near_eye=at(cv2.dilate(eye_mask,np.ones((61,61),np.uint8)),puv)>0
-brightness[front_sample&near_eye&(brightness==1)]=254/255
+brightness=np.where(front_sample & ((ink[selected]<.3)|(detail[selected]>.24)),1,.60)
 # Quantized transport: 1/65534 model units is under .02px at a 1000px figure.
 # glTF stays full precision; the hero expands this compact asset once at load time.
 assert np.max(np.abs(verts)) < .5 and np.max(np.abs(points)) < .5, 'Quantized coordinate range exceeded.'
