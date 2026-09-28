@@ -1,6 +1,7 @@
 import './global.css'
 import type { Metadata, Viewport } from 'next'
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google'
+import { BOOT_SCRIPT } from '@/app/lib/motion'
 
 const baseUrl = 'https://curlycloud.dev'
 const TITLE = 'Raj Dholakia — AI Engineer'
@@ -24,7 +25,12 @@ const plexMono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], var
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`}>
+    // The head script sets data-motion and data-boot on <html> before first paint (app/lib/motion.ts),
+    // so React must not treat those attributes as a hydration mismatch.
+    <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: BOOT_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   )

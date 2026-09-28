@@ -123,6 +123,22 @@ owned by another stream; if a contract needs to change, note it in the stream's 
 | Interview | `feat/clone-interview` | `interview/**`, `content/questions/**`, `lib/interview/**`, `app/api/admin/import`, `scripts/clone.ts`, `scripts/build-interview.ts`, `.claude/skills/ingest-answers/**` |
 | Website | `feat/clone-site` (lead) | `app/page.tsx`, `app/components/site/**`, integration of all streams |
 
+The site under `app/components/site/` was rebuilt in the visual refresh (`REDESIGN-PLAN.md`, PRs #11–#18 and
+P7). One file per section keeps later changes small:
+
+| File | Section |
+|------|---------|
+| `site-context.tsx` | Shared state: citations (`focusAnchor`, `data-flash`), skill filter, Ask panel requests, deep links, print |
+| `resume.tsx`, `resume-helpers.tsx` | `SectionHeading`, `Bullet`, `Lines`: one citable line per `resumeAnchor` |
+| `hero.tsx`, `cloud/*` | Curly-cloud hero: WebGL renderer (loaded with `import()`), sampler, source stars, static poster |
+| `profile.tsx`, `numbers.tsx`, `stats.ts` | Path and summary; the six numbers drawn as charts |
+| `skills.tsx`, `timeline.tsx`, `timeline-data.ts`, `work.tsx` | Skill lens, swimlane timeline, role rows, study |
+| `builds.tsx`, `community.tsx` | Build cards with diagrams; Open Invite |
+| `fit-check.tsx`, `agents-section.tsx`, `closing.tsx` | Fit check, MCP setup, how the clone answers, contact, footer |
+| `top-bar.tsx`, `dock.tsx`, `boot.tsx`, `marquee.tsx`, `footer-bar.tsx`, `ask-panel.tsx` | Chrome and the Ask panel |
+
+Hooks live in `app/lib/` (`motion.ts` holds the motion tiers and the inline head script).
+
 ### 5.1 Admin API contracts (all require `requireAdmin`)
 
 | Route | Body → Response |
@@ -167,6 +183,7 @@ per-client fit bucket. `/api/chat` and `/api/fit` accept same-origin `applicatio
 - [x] Interview stack + ingest skill (211 questions)
 - [x] Website
 - [x] Integration: typecheck, 609 tests, `next build`, OpenNext build, smoke on `wrangler dev` (chat SSE with signed history, fit, MCP tools, admin auth + session revocation, full evals)
+- [x] Visual refresh of `/` (`REDESIGN-PLAN.md`): built in PRs #11–#18 plus the P7 integration PR, into `feat/visual-refresh`
 
 ### Next (needs Raj)
 - Answer interview cards → `ingest my answers` in Claude Code. The persona builds from them.
