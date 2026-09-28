@@ -281,7 +281,7 @@ export function AskPanel() {
     const target = el?.querySelector<HTMLElement>(`[data-msg="${lastUserId}"]`)
     if (!el || !target) return
     // Restored history: jump to the latest exchange without animating.
-    el.scrollTo({ top: target.offsetTop - 16, behavior: first || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+    el.scrollTo({ top: target.offsetTop - 16, behavior: first || motionOff() ? 'auto' : 'smooth' })
   }, [lastUserId])
 
   // Sheet: focus moves in on open and back on close; Escape closes.

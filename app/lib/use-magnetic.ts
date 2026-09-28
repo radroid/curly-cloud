@@ -1,16 +1,9 @@
 'use client'
 
 import { useCallback } from 'react'
+import { motionOff } from './motion'
 
 const MAX_PX = 6
-
-/** Same rule as the `still:` variant: Saver, or reduced motion without a High/Medium opt-in. */
-function motionOff(): boolean {
-  const m = document.documentElement.dataset.motion
-  if (m === 'saver') return true
-  if (m === 'high' || m === 'medium') return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-}
 
 /**
  * M15 magnetic button: the element leans up to 6 px toward a mouse pointer moving over it and

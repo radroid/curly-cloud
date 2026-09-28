@@ -4,7 +4,7 @@ Raj Dholakia's AI-Engineer resume, with an AI clone of Raj built in.
 
 | Where | What |
 |-------|------|
-| `/` | The interactive resume. Every line is a source the clone can cite, and cited lines light up. It also has a skill filter, a role-fit check, and setup instructions for agents. |
+| `/` | The interactive resume. A point-cloud portrait opens it, and each bright point is a source the clone can cite. Numbers are drawn as charts and the work history as a timeline. Every line is a citable source: a citation opens it and lights it up. It also has a skill filter, a role-fit check and setup instructions for agents. Motion comes in High, Medium and Saver tiers and respects reduced motion. |
 | `/terminal` | The same information as a shell, which also teaches how a terminal works: commands, variables, quoting, pipes, `learn`. |
 | `/mcp` | An MCP server so a company's agent can interview the clone and assess fit (`ask_raj`, `assess_fit`, `get_profile`, `get_resume`, `list_topics`). |
 | `/llms.txt` | A plain-text brief for agents. |
@@ -12,7 +12,7 @@ Raj Dholakia's AI-Engineer resume, with an AI clone of Raj built in.
 | `/mac` | The 1984 Macintosh version of the site. |
 | `interview/raj-interview.html` | An offline, HyperCard-style interview stack Raj uses to feed the clone. |
 
-Read [`CLONE-PLAN.md`](CLONE-PLAN.md) for the architecture, privacy model and API contracts, and [`CLAUDE.md`](CLAUDE.md) for working conventions.
+Read [`CLONE-PLAN.md`](CLONE-PLAN.md) for the architecture, privacy model and API contracts, [`REDESIGN-PLAN.md`](REDESIGN-PLAN.md) for the design of `/`, and [`CLAUDE.md`](CLAUDE.md) for working conventions.
 
 ## How the clone works
 

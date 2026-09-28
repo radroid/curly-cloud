@@ -84,14 +84,16 @@ export function Dock() {
           aria-haspopup="dialog"
           aria-expanded={menuOpen}
           aria-controls="dock-menu"
-          aria-label={`${NAV_SECTIONS[index].label}, open the menu`}
           onClick={() => setMenuOpen(true)}
           className="flex h-[52px] min-w-0 flex-1 items-center gap-2.5 rounded-2xl border border-term-text/18 bg-night-deep/92 px-3.5 font-mono text-[12.5px] font-medium uppercase tracking-[0.06em] text-term-text backdrop-blur-[10px]"
         >
           <span aria-hidden className="text-sun">
             [{index + 1}]
           </span>
-          <span className="truncate">{NAV_SECTIONS[index].label}</span>
+          <span className="truncate">
+            {NAV_SECTIONS[index].label}
+            <span className="sr-only">, open the menu</span>
+          </span>
           <svg aria-hidden viewBox="0 0 16 16" className="ml-auto size-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
             <path d="M3 4.5h10M3 8h10M3 11.5h10" />
           </svg>

@@ -72,13 +72,13 @@ export function AgentsSection() {
         Point your screening agent here. It can interview my clone, pull my resume and run a fit check over MCP.
       </p>
 
-      <div className="max-w-[820px] overflow-hidden rounded-[18px] bg-night text-term-text">
-        <div className="flex items-center gap-3 border-b border-term-text/15 py-3.5 pl-4 pr-3">
+      <div className="max-w-[820px] overflow-hidden rounded-[18px] bg-night text-term-text print:border print:border-rule print:bg-transparent print:text-ink">
+        <div className="flex items-center gap-3 border-b border-term-text/15 py-3.5 pl-4 pr-3 print:border-rule">
           <span className="sr-only">MCP endpoint:</span>
           <code className="min-w-0 flex-1 truncate font-mono text-[15px]">{url}</code>
           <CopyButton text={url} label="Copy the endpoint" />
         </div>
-        <div className="flex items-center gap-2 px-3 pt-3">
+        <div className="flex items-center gap-2 px-3 pt-3 print:hidden">
           <div role="tablist" aria-label="Setup snippets" className="flex min-w-0 flex-1 gap-1 overflow-x-auto [scrollbar-width:none]">
             {tabs.map((k, i) => (
               <button
@@ -108,8 +108,8 @@ export function AgentsSection() {
         >
           <code>{snippets[tab].code}</code>
         </pre>
-        <p className="border-t border-term-text/15 px-4 py-3 text-xs text-term-dim">
-          With a key, add the header <span className="font-mono text-term-text">Authorization: Bearer rc_…</span>
+        <p className="border-t border-term-text/15 px-4 py-3 text-xs text-term-dim print:border-rule print:text-muted">
+          With a key, add the header <span className="font-mono text-term-text print:text-ink">Authorization: Bearer rc_…</span>
         </p>
       </div>
 
@@ -174,7 +174,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
           setTimeout(() => setDone(false), 1600)
         })
       }}
-      className="shrink-0 rounded-md border border-term-text/30 px-2.5 py-1 text-xs text-term-dim transition-colors hover:border-term-text hover:text-term-text pointer-coarse:min-h-11 pointer-coarse:px-3.5"
+      className="shrink-0 rounded-md border border-term-text/30 px-2.5 py-1 text-xs text-term-dim transition-colors hover:border-term-text hover:text-term-text pointer-coarse:min-h-11 pointer-coarse:px-3.5 print:hidden"
     >
       {done ? 'Copied' : 'Copy'}
     </button>

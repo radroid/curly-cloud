@@ -9,6 +9,7 @@ voice with citations (RAG), a terminal mode, an MCP server for visiting agents, 
 offline interview stack Raj uses to feed the clone. The 1984 Mac desktop lives on at `/mac`.
 
 **Read `CLONE-PLAN.md` first.** It holds the architecture, privacy model, contracts and module ownership.
+`REDESIGN-PLAN.md` records the design of `/` (the curly-cloud hero, motion tiers, how citations open lines).
 
 ## Commands
 
@@ -40,6 +41,7 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 ## Layout
 
 - `app/` — routes. `page.tsx` is the resume site, `terminal/`, `studio/`, `mac/`, `api/` (chat, fit, mcp, admin, auth).
+- `app/components/site/` — one file per section of `/` (`hero.tsx` + `cloud/`, `profile`, `numbers`, `work`, `builds`, …), plus `site-context.tsx` (citations, skill filter, the Ask panel) and the chrome (`top-bar`, `dock`, `boot`, `footer-bar`).
 - `lib/` — server and shared modules: `rag/`, `llm/`, `mcp/`, `auth/`, `security/`, `db/`, `shell/`, `client/`.
 - `content/` — public data: `resume.ts` (single source for site, terminal, MCP, public corpus), `topics.ts`, `questions/`.
 - `interview/raj-interview.html` — standalone interview stack. Answers export to `private/` (gitignored).
@@ -73,3 +75,11 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 - **Replayed assistant turns need their `sig`.** The clone drops assistant turns without the signature from that answer's `done` event (`lib/rag/turns.ts`), so a test or eval history with plain assistant turns loses them silently. Sign admin-trusted histories with `signTurns`.
 - **Rerank is a vote, not a verdict.** `bge-reranker-base` scores long chunks near zero; it's fused into RRF with BM25 and dense. Keep it that way unless evals say otherwise.
 - **Mac theme is scoped** to `.mac-root` (set by `app/mac/layout.tsx`). Don't style `body` for it.
+- **Motion has tiers.** `BOOT_SCRIPT` (`app/lib/motion.ts`, inlined in `<head>`) sets `html[data-motion]` (`high`, `medium`, `saver`) and `data-boot` before first paint. For "no motion" styles use the `still:` variant (Saver, or reduced motion unless the visitor picked a tier), and `motionOff()` in scripts. Don't check `prefers-reduced-motion` on its own.
+- **Every resume line renders exactly once**, under its `resumeAnchor` id (`anchors.test.ts`). Jump to one with `focusAnchor` (`site-context.tsx`): it opens ancestor `<details>` and `data-opens` targets, scrolls, then sets `data-flash`. Anything collapsible that can hide a line must be a `<details>` or declare `data-opens`.
+- **Every number on `/` comes from `content/resume.ts`.** The stats, numbers, work, builds and community tests fail if a figure on screen isn't in the resume. Change the resume (with Raj's approval), not the component.
+- **Print.** `beforeprint` opens every `<details>`. Browsers drop background colours, so a dark block needs `print:bg-transparent print:text-ink` (or `print-color-adjust: exact` for a chart).
+- **Anton is loaded in `app/page.tsx` only** (on its wrapper `div`), so `/terminal` and `/mac` don't download it. `type-display` works only inside that wrapper; elsewhere `--font-anton` is unset and the text inherits the body font.
+- **Keep heavy client code behind `import()`.** The hero's WebGL renderer (`cloud/renderer.ts`) loads in an effect and links its shaders with `KHR_parallel_shader_compile`, yielding between steps; a synchronous link cost a 500 ms long task.
+- **Vitest renders TSX via `oxc.jsx.runtime: 'automatic'`** (`vitest.config.mts`), because tsconfig keeps `jsx: preserve`.
+- **The global focus ring is in `@layer base`**, so a component's `outline-none` (with its own border or ring) wins.

@@ -116,7 +116,7 @@ export function Timeline(): React.ReactNode {
       {/* Touch swipes with no scrollbar; a mouse needs a thin one to reach the earlier years. */}
       <div ref={scroller} className="overflow-x-auto [scrollbar-width:none] pointer-fine:[scrollbar-width:thin]">
         {/* A labelled group, not role="img": an image's children are hidden, and the bars are buttons. */}
-        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Career timeline, study, work, builds and community, to now" className="block h-auto w-full min-w-[760px] font-mono">
+        <svg viewBox={`0 0 ${W} ${H}`} role="group" aria-label="Career timeline, study, work, builds and community, to now" className="block h-auto w-full min-w-[720px] font-mono">
           <defs>
             <linearGradient id="tl-soft" x1="0" x2="1">
               <stop offset="0" style={{ stopColor: 'var(--color-muted)', stopOpacity: 0 }} />
@@ -221,47 +221,54 @@ function Bar({ bar: b, x, label, ticks, dimmed, cited, grow, onOpen }: BarProps)
   }[b.lane]
   const stroke = cited ? 'stroke-coral [stroke-width:2.5]' : b.lane === 'community' ? 'stroke-forest [stroke-width:1.5] [stroke-dasharray:4_3]' : ''
 
+  // The builds' count labels the lane, so it sits outside any one bar's button.
+  const laneLabel = b.lane === 'build' && label
   return (
-    <g
-      className={`group/bar outline-offset-4 transition-opacity duration-300 ${onOpen ? 'cursor-pointer' : ''} ${dimmed ? 'opacity-25' : ''}`}
-      {...(onOpen
-        ? {
-            role: 'button',
-            tabIndex: 0,
-            'aria-label': `Open ${b.title}`,
-            onClick: () => onOpen(false),
-            // Like a native button: Enter acts on key down, Space on key up, so no key up is left
-            // to land on the summary that focus moves to.
-            onKeyDown: (e: React.KeyboardEvent) => {
-              if (e.key !== 'Enter' && e.key !== ' ') return
-              e.preventDefault()
-              if (e.key === 'Enter' && !e.repeat) onOpen(true)
-            },
-            onKeyUp: (e: React.KeyboardEvent) => e.key === ' ' && onOpen(true),
-          }
-        : { 'aria-hidden': true })}
-    >
-      {b.lane === 'build' && <title>{b.title}</title>}
-      <rect
-        x={x0}
-        y={y}
-        width={w}
-        height={BAR_H}
-        rx="3"
-        fill={b.soft ? 'url(#tl-soft)' : undefined}
-        className={`origin-left [transform-box:fill-box] ${fill} ${stroke} ${grow ? 'animate-grow-x still:animate-none' : ''}`}
-      />
-      {label && <BarLabel lane={b.lane} label={label} x0={x0} w={w} y={y} />}
-      {Array.from({ length: ticks }, (_, i) => (
-        <circle
-          key={i}
-          cx={x0 + 8 + i * 9}
-          cy={y - 6}
-          r="3.2"
-          className="fill-sun stroke-ink transition-opacity duration-300 [stroke-width:0.75] starting:opacity-0"
-        />
-      ))}
-    </g>
+    <>
+      {laneLabel && <BarLabel lane={b.lane} label={label} x0={x0} w={w} y={y} />}
+      <g
+        className={`group/bar outline-offset-4 transition-opacity duration-300 ${onOpen ? 'cursor-pointer' : ''} ${dimmed ? 'opacity-25' : ''}`}
+        {...(onOpen
+          ? {
+              role: 'button',
+              tabIndex: 0,
+              'aria-label': `Open ${b.title}`,
+              onClick: () => onOpen(false),
+              // Like a native button: Enter acts on key down, Space on key up, so no key up is left
+              // to land on the summary that focus moves to.
+              onKeyDown: (e: React.KeyboardEvent) => {
+                if (e.key !== 'Enter' && e.key !== ' ') return
+                e.preventDefault()
+                if (e.key === 'Enter' && !e.repeat) onOpen(true)
+              },
+              onKeyUp: (e: React.KeyboardEvent) => e.key === ' ' && onOpen(true),
+            }
+          : { 'aria-hidden': true })}
+      >
+        <rect
+          x={x0}
+          y={y}
+          width={w}
+          height={BAR_H}
+          rx="3"
+          fill={b.soft ? 'url(#tl-soft)' : undefined}
+          className={`origin-left [transform-box:fill-box] ${fill} ${stroke} ${grow ? 'animate-grow-x still:animate-none' : ''}`}
+        >
+          {/* A hover tooltip on the shape, not the button, so screen readers don't hear the name twice. */}
+          {b.lane === 'build' && <title>{b.title}</title>}
+        </rect>
+        {label && !laneLabel && <BarLabel lane={b.lane} label={label} x0={x0} w={w} y={y} />}
+        {Array.from({ length: ticks }, (_, i) => (
+          <circle
+            key={i}
+            cx={x0 + 8 + i * 9}
+            cy={y - 6}
+            r="3.2"
+            className="fill-sun stroke-ink transition-opacity duration-300 [stroke-width:0.75] starting:opacity-0"
+          />
+        ))}
+      </g>
+    </>
   )
 }
 

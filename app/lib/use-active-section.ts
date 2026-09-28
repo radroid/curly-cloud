@@ -11,34 +11,49 @@ export const NAV_SECTIONS: { id: string; label: string }[] = [
   { id: 'contact', label: 'Contact' },
 ]
 
-// One observer for every subscriber. A section is current once it crosses a thin band just above
-// the middle of the viewport; between nav sections (profile, how-it-works) the last one holds.
+// One scroll listener for every subscriber. The current section is the last one whose top has
+// passed the middle of the viewport, so between nav sections (profile, how-it-works) the one above
+// holds. Measured from positions rather than crossings, so a jump (a citation, a deep link, reduced
+// motion) that skips a section still lands on the right label.
 let active = NAV_SECTIONS[0].id
-let io: IntersectionObserver | null = null
+let frame = 0
 const listeners = new Set<() => void>()
+
+function measure(): string {
+  let id = NAV_SECTIONS[0].id
+  for (const s of NAV_SECTIONS) {
+    const top = document.getElementById(s.id)?.getBoundingClientRect().top
+    if (top !== undefined && top <= innerHeight / 2) id = s.id
+  }
+  return id
+}
+
+function update(): void {
+  frame = 0
+  const next = measure()
+  if (next === active) return
+  active = next
+  for (const l of listeners) l()
+}
+
+function schedule(): void {
+  if (!frame) frame = requestAnimationFrame(update)
+}
 
 function subscribe(onChange: () => void): () => void {
   listeners.add(onChange)
-  if (!io && typeof IntersectionObserver !== 'undefined') {
-    io = new IntersectionObserver(
-      (entries) => {
-        const hit = entries.find((e) => e.isIntersecting)
-        if (!hit || hit.target.id === active) return
-        active = hit.target.id
-        for (const l of listeners) l()
-      },
-      { rootMargin: '-45% 0px -50% 0px' },
-    )
-    for (const s of NAV_SECTIONS) {
-      const el = document.getElementById(s.id)
-      if (el) io.observe(el)
-    }
+  if (listeners.size === 1) {
+    addEventListener('scroll', schedule, { passive: true })
+    addEventListener('resize', schedule, { passive: true })
+    schedule()
   }
   return () => {
     listeners.delete(onChange)
     if (!listeners.size) {
-      io?.disconnect()
-      io = null
+      removeEventListener('scroll', schedule)
+      removeEventListener('resize', schedule)
+      cancelAnimationFrame(frame)
+      frame = 0
     }
   }
 }

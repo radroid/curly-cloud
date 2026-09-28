@@ -129,6 +129,7 @@ void main() {
 
 type GL = WebGLRenderingContext
 
+/** Start compiling and linking. Nothing here waits on the GPU; `linked` does. */
 function compile(gl: GL): WebGLProgram | null {
   const prog = gl.createProgram()
   for (const [type, src] of [
@@ -144,7 +145,23 @@ function compile(gl: GL): WebGLProgram | null {
   }
   ;['aPos', 'aFrom', 'aMeta'].forEach((name, i) => gl.bindAttribLocation(prog, i, name))
   gl.linkProgram(prog)
-  return gl.getProgramParameter(prog, gl.LINK_STATUS) ? prog : null
+  return prog
+}
+
+/**
+ * Wait for the link without blocking the page: asking for LINK_STATUS straight away stalls the
+ * main thread until the GPU finishes (~200 ms on a throttled phone). With KHR_parallel_shader_compile
+ * the link runs off the main thread and we poll for it.
+ */
+async function linked(gl: GL, prog: WebGLProgram): Promise<boolean> {
+  const ext = gl.getExtension('KHR_parallel_shader_compile') as { COMPLETION_STATUS_KHR: number } | null
+  if (ext) while (!gl.isContextLost() && !gl.getProgramParameter(prog, ext.COMPLETION_STATUS_KHR)) await pause()
+  return !gl.isContextLost() && !!gl.getProgramParameter(prog, gl.LINK_STATUS)
+}
+
+/** Yield to the browser so input and painting can run between setup steps. */
+function pause(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 16))
 }
 
 /** A theme colour (`--color-*` on <html>) as linear 0..1 RGB, whatever format the token uses. */
@@ -161,6 +178,9 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   const attrs: WebGLContextAttributes = { alpha: true, premultipliedAlpha: true, antialias: false, depth: false, stencil: false, powerPreference: 'low-power' }
   const gl = (o.canvas.getContext('webgl2', attrs) ?? o.canvas.getContext('webgl', attrs)) as GL | null
   if (!gl || gl.isContextLost()) return null
+  // Compile first so the GPU works on it while the image is decoded and sampled.
+  const prog = compile(gl)
+  if (!prog) return null
 
   const img = new Image()
   img.src = o.src
@@ -171,12 +191,12 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   if (!g2) return null
   g2.drawImage(img, 0, 0, SRC_SIZE, SRC_SIZE)
   const pts = sample(g2.getImageData(0, 0, SRC_SIZE, SRC_SIZE).data)
+  await pause()
   const from = scatter(pts)
   const starIdx = pickStars(pts, o.stars)
   o.onStage('sampled')
 
-  const prog = compile(gl)
-  if (!prog) return null
+  if (!(await linked(gl, prog))) return null
   const u = (name: string): WebGLUniformLocation | null => gl.getUniformLocation(prog, name)
   const U = { rot: u('uRot'), fig: u('uFig'), view: u('uView'), clock: u('uClock'), tap: u('uTap'), kind: u('uKind'), hue: u('uHue') }
 

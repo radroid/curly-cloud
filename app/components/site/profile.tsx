@@ -64,8 +64,9 @@ export function Profile(): React.ReactNode {
             </li>
           ))}
         </ol>
+        {/* The full summary opens for print, so the pull quotes would print twice. */}
         {QUOTES.length > 0 && (
-          <ul className="grid gap-3.5">
+          <ul className="grid gap-3.5 print:hidden">
             {QUOTES.map((q) => (
               <li key={q} className="border-l-2 border-rule pl-[18px] text-[19px] leading-[1.4]">
                 {q}
