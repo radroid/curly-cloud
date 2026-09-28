@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useInView } from '@/app/lib/use-in-view'
+import { useMagnetic } from '@/app/lib/use-magnetic'
 import { useMotionTier } from '@/app/lib/use-motion-tier'
 import { STARTERS } from './ask-panel'
 import { layout, posterBox, type HeroBox } from './cloud/figure'
@@ -293,21 +294,8 @@ export function Hero() {
     ask(q)
   }
 
-  // M15: the Ask button leans towards a fine pointer, up to 6 px.
-  const lean = useRef(0)
-  const onMagnet = (e: React.PointerEvent<HTMLButtonElement>) => {
-    if (still || e.pointerType !== 'mouse' || !window.matchMedia('(pointer: fine)').matches) return
-    const el = e.currentTarget
-    const r = el.getBoundingClientRect()
-    const dx = Math.max(-6, Math.min(6, (e.clientX - r.left - r.width / 2) * 0.2))
-    const dy = Math.max(-6, Math.min(6, (e.clientY - r.top - r.height / 2) * 0.3))
-    cancelAnimationFrame(lean.current)
-    lean.current = requestAnimationFrame(() => (el.style.transform = `translate(${dx}px, ${dy}px)`))
-  }
-  const onMagnetLeave = (e: React.PointerEvent<HTMLButtonElement>) => {
-    cancelAnimationFrame(lean.current)
-    e.currentTarget.style.transform = ''
-  }
+  // M15: the Ask button leans towards a mouse pointer, up to 6 px.
+  const magnet = useMagnetic<HTMLButtonElement>()
 
   const star = hover ? STARS[hover.i] : null
   const render = still ? 'saver, static' : failed ? 'static poster' : `${tier}, ${fps ?? '…'} fps`
@@ -319,7 +307,7 @@ export function Hero() {
       aria-labelledby="hero-name"
       onPointerMove={live ? onPointerMove : undefined}
       onPointerLeave={live ? onPointerLeave : undefined}
-      className="@container relative h-svh max-h-[1000px] min-h-[620px] overflow-hidden bg-[radial-gradient(110%_90%_at_66%_44%,var(--color-forest)_0%,var(--color-night)_50%,var(--color-night-deep)_100%)] text-term-text print:h-auto print:min-h-0 print:bg-none print:text-ink"
+      className="@container relative h-svh max-h-[1000px] min-h-[620px] overflow-hidden bg-[radial-gradient(110%_90%_at_66%_44%,var(--color-forest)_0%,var(--color-night)_50%,var(--color-night-deep)_100%)] text-term-text print:h-auto print:min-h-0 print:overflow-visible print:bg-none print:pt-2 print:text-ink"
     >
       <div
         ref={posterRef}
@@ -368,9 +356,9 @@ export function Hero() {
       <div
         ref={copyRef}
         data-hero-ui
-        className="absolute bottom-[clamp(28px,7vh,72px)] left-gutter z-[2] w-[min(40rem,calc(100%_-_2*var(--spacing-gutter)))] @max-[700px]:bottom-[calc(84px_+_env(safe-area-inset-bottom))] print:static print:w-auto"
+        className="absolute bottom-[clamp(28px,7vh,72px)] left-gutter z-[2] w-[min(40rem,calc(100%_-_2*var(--spacing-gutter)))] @max-[700px]:bottom-[calc(84px_+_env(safe-area-inset-bottom))] print:static print:w-auto print:px-gutter"
       >
-        <h1 id="hero-name" className="type-display m-0 text-[clamp(64px,10.5cqi,168px)]">
+        <h1 id="hero-name" className="type-display m-0 text-[clamp(64px,10.5cqi,168px)] print:text-7xl">
           <span className="block">Raj</span> <span className="block">Dholakia</span>
         </h1>
         <form
@@ -392,10 +380,9 @@ export function Hero() {
             className={`min-w-0 flex-1 rounded-lg bg-transparent px-3 py-2.5 text-base text-term-text placeholder:text-term-dim placeholder:transition-opacity placeholder:duration-300 ${fade ? 'placeholder:opacity-0' : ''}`}
           />
           <button
+            ref={magnet}
             type="submit"
-            onPointerMove={onMagnet}
-            onPointerLeave={onMagnetLeave}
-            className="shrink-0 rounded-[10px] bg-term-accent px-5 text-[15px] font-semibold text-pine transition-[transform,background-color] duration-200 ease-out hover:bg-term-text"
+            className="shrink-0 rounded-[10px] bg-term-accent px-5 text-[15px] font-semibold text-pine transition-[translate,background-color] duration-200 ease-out hover:bg-term-text"
           >
             Ask
           </button>

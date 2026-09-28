@@ -1,3 +1,4 @@
+import type { Viewport } from 'next'
 import { Anton } from 'next/font/google'
 import { RESUME } from '@/content/resume'
 import { AgentsSection } from '@/app/components/site/agents-section'
@@ -22,6 +23,9 @@ import { Roles, Study } from '@/app/components/site/work'
 
 // The display face, loaded here rather than in the root layout so /terminal and /mac don't fetch it.
 const anton = Anton({ subsets: ['latin'], weight: '400', variable: '--font-anton', display: 'swap' })
+
+// The page opens on the dark stage (hero), so mobile browser chrome matches it (--color-night).
+export const viewport: Viewport = { themeColor: '#0b2a26', colorScheme: 'light' }
 
 const personJsonLd = {
   '@context': 'https://schema.org',

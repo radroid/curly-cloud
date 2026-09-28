@@ -56,15 +56,18 @@ export function SkillLens(): React.ReactNode {
                     type="button"
                     data-skill={i.id}
                     aria-pressed={on}
-                    aria-label={`${i.label}, ${nLines(TAG_COUNTS[i.id])}`}
                     onClick={() => setSkill(on ? null : i.id)}
                     className={[
                       'inline-flex min-h-[34px] items-center gap-2 rounded-full border py-[5px] pl-3 pr-2.5 text-sm transition-colors duration-200 pointer-coarse:min-h-11',
                       on ? 'border-forest bg-forest text-paper' : hover === i.id ? 'border-forest bg-white' : 'border-rule bg-white hover:border-forest',
                     ].join(' ')}
                   >
-                    {i.label}
-                    <span className={`font-mono text-[11px] tabular-nums ${on ? 'text-paper/75' : 'text-muted'}`}>{TAG_COUNTS[i.id]}</span>
+                    {/* The name is the visible text plus "lines", so voice control can say what it sees. */}
+                    {i.label}{' '}
+                    <span className={`font-mono text-[11px] tabular-nums ${on ? 'text-paper/75' : 'text-muted'}`}>
+                      {TAG_COUNTS[i.id]}
+                      <span className="sr-only">{TAG_COUNTS[i.id] === 1 ? ' line' : ' lines'}</span>
+                    </span>
                   </button>
                 )
               })}

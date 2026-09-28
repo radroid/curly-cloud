@@ -142,7 +142,7 @@ export function Contact() {
           <a
             ref={magnetic}
             href={`mailto:${RESUME.email}`}
-            className="inline-flex h-[60px] max-w-full items-center rounded-full bg-term-accent px-[26px] font-mono text-[clamp(16px,2.2cqi,22px)] font-medium text-pine transition-[translate,background-color] duration-200 hover:bg-term-text print:h-auto print:px-0"
+            className="inline-flex h-[60px] max-w-full items-center rounded-full bg-term-accent px-[26px] font-mono text-[clamp(16px,2.2cqi,22px)] font-medium text-pine transition-[translate,background-color] duration-200 hover:bg-term-text print:h-auto print:bg-transparent print:px-0 print:text-ink"
           >
             <span className="truncate">{RESUME.email}</span>
           </a>

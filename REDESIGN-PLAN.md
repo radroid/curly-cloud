@@ -4,10 +4,10 @@
 > reference is saifullah.dev. Humans and agents should treat this file as the source of truth for the
 > redesign and update it when a decision changes. `CLONE-PLAN.md` still governs architecture and privacy.
 >
-> **Status: design agreed, ready to build (2026-09-27).** Raj reviewed a clickable prototype, asked for five
-> changes and approved the rest (§1a). The content it shows was first aligned with Raj's final PDF CV in
-> PR #10, which is merged, deployed and re-seeded into the production clone. Branch: `feat/visual-refresh`
-> = `main` + this plan.
+> **Status: built (2026-09-27).** Raj reviewed a clickable prototype, asked for five changes and approved the
+> rest (§1a). P0–P7 are merged into `feat/visual-refresh` (§7); measured results are in §0a. It reaches
+> `main`, and so production, in one PR once Raj gives the go-ahead. The content was first aligned with Raj's
+> final PDF CV in PR #10, which is merged, deployed and re-seeded into the production clone.
 
 ## 0. What we measured (2026-09-26)
 
@@ -53,6 +53,43 @@ limit is 3 MiB (3,072 KiB), so there is about 805 KiB of headroom.
 **Worth taking:** the typographic system (condensed display, mono labels, bracket indices), one strong
 hero visual, a marquee, numbers shown as instruments, and the persistent footer.
 **Not worth taking:** the content gate, music, the 1 MB of 3D, and a one-screen home that hides the content.
+
+## 0a. What we measured after the build (2026-09-27)
+
+Measured on `bun run preview` (OpenNext build on `wrangler dev`), which doesn't inject Cloudflare's bot script.
+
+| | Before | After |
+|---|---|---|
+| Page height, desktop 1440×900 | 9,806 px | 7,877 px (8.8 screens) |
+| Page height, mobile 390×844 | 14,686 px (17.4 screens) | 11,030 px (13.1 screens) |
+| Words visible in `<main>` on load | 2,364 | 1,110; the rest is one click away and still citable |
+| Worker bundle, gzipped | 2,266.66 KiB | 2,297.77 KiB of 3,072 |
+| First-load JS for `/` | 137 kB at P0 | 157 kB (the +20 kB budget) |
+| Lighthouse mobile | Performance 46 on the live site | Performance 91–95 over seven runs; Accessibility, Best Practices and SEO 100 |
+| Total blocking time | 1,860 ms (live) | 10–27 ms |
+| CLS | 0 | 0.014–0.016 |
+
+Simulated LCP is 2.9–3.3 s, because Lighthouse's model counts the JavaScript that runs before the name
+paints. On a throttled trace (4× CPU, Fast 4G) the name painted at 683 ms. The renderer used to link its
+shaders synchronously, a 500 ms long task on slow CPUs; it now links in parallel and yields.
+
+One more run, taken right after a build, scored 41: a single 6.2 s task in the renderer chunk. It didn't
+happen again in seven runs, including with another browser drawing the cloud at the same time. The likely
+cause is a cold GPU shader compiler on the first draw, which WebGL can't make asynchronous. Watch for it
+in production (PageSpeed Insights, or a long task in the renderer chunk).
+
+Checked in the browser at 1440, 1280 and 390 wide:
+
+- the first visit's boot, the cloud assembling, and skipping both on later visits;
+- reduced motion and Saver: a static poster, final numbers, no running animations, a still highlight ring;
+- every `#r-…` deep link opens and highlights its line, including under reduced motion;
+- keyboard focus, the mobile dock and menu, and the scroll-spy after jumps;
+- print: every line opens, dark blocks turn to ink on paper, the chrome hides.
+
+Known small issues, left for later:
+
+- The Agents heading overflows at a 200 px viewport.
+- A number waits at zero until 35 % of its chart is on screen.
 
 ## 1. Design direction: "the curly cloud"
 
@@ -430,6 +467,19 @@ paste: it has no tests, inline hex values and prototype-only branches.
 | **P6 Lower page** | C12–C15 | Fit restyle + meters, agents compact, how-it-works pipeline, contact | `fit-check.tsx` (presentation only), `agents-section.tsx`, `closing.tsx` | 3 |
 | **P7 Integration** | all | Full QA on desktop, mobile and reduced motion; Lighthouse; bundle; docs (CLAUDE.md traps, README, CLONE-PLAN §5 ownership); final PR → `main` | docs | 4 (needs Raj's go-ahead) |
 
+**As built:** P0 #11, P2 #12, P4 #13, P5 #14, P3 #15, P2b #16 (the chat avatar's states), P1 #17 and P6 #18,
+then P7. P7 also:
+
+- stopped the shader link blocking the main thread;
+- fixed the focus ring on script-focused containers;
+- fixed the skill chips' accessible names;
+- made the scroll-spy follow jumps;
+- fixed print for the hero and the Agents panel;
+- let the timeline fit its column at 1280 wide;
+- fixed label-in-name on the timeline's build bars and the dock's menu button, and stopped screen readers
+  hearing build names twice;
+- set a dark `theme-color` so mobile browser chrome matches the hero.
+
 Waves 2 and 3 each run as parallel worktree subagents: plan first, I review, then they build. Each PR owns
 disjoint files, and `page.tsx` is only edited in P0 and P7.
 
@@ -447,8 +497,8 @@ disjoint files, and `page.tsx` is only edited in P0 and P7.
   also reads `resume.ts`, so rebuilding it after an edit shows what moved.
 - **The cloud depends on one illustration.** A new illustration means re-running `cloud-src.py` and
   re-checking the layout at 1440, 1280, 1024 and 390 wide; the sampler weights were tuned for this one.
-- **Page length.** The prototype lands at 12.5 mobile screens against the original 8-screen target. The
-  biggest remaining blocks are the builds and the lower page; P7 re-measures.
+- **Page length.** The prototype landed at 12.5 mobile screens against the original 8-screen target; the
+  build is 13.1 (§0a). The biggest remaining blocks are the builds and the lower page.
 
 ## 9. Decisions
 
@@ -469,9 +519,7 @@ prototype and didn't ask to change.
 12. **Prototype and probe images:** kept on the local branch `prototype/visual-refresh`, out of `main`
     (§1a).
 
-**Still open (Raj):**
-
-- **Cloudflare bot script** (§0). Turning off JavaScript detections for the zone would take mobile
-  Performance from ~46 to ~90+. This is a dashboard change; I won't touch it. It doesn't block the build.
-- **Chat avatar.** The Ask panel and dock still use the old avatar. Say if the new illustration should
-  replace it too.
+13. **Chat avatar:** keep the old photo and animate it by state: a ring while thinking, a nod while answering,
+    and a pulse when it cites (P2b, #16). *Raj's call.*
+14. **Cloudflare bot script** (§0): Raj turns off JavaScript detections for the zone in the dashboard. It isn't
+    a code change. Re-run Lighthouse on production afterwards. *Raj's call.*
