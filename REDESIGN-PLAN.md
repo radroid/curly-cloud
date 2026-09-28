@@ -253,8 +253,9 @@ prototype.
   element), and the overlay leaves with a `clip-path` wipe. If JS never runs, a CSS fallback animation
   removes the overlay at 2.5 s.
 - **Tiers:**
-  - **High:** ~9k points, DPR ≤ 2, 60 fps.
-  - **Medium:** ~4k points, DPR 1, 30 fps cap.
+  - **High:** 18k points, DPR ≤ 2, 60 fps.
+  - **Medium:** 8k points, DPR 1 (up to 2 on a phone's smaller canvas), 30 fps cap.
+  - A figure under 560 px (phones) draws fewer points, scaled by area, so the dots keep desktop spacing.
   - **Saver:** static poster, and all motion off.
   - **Default:** auto from reduced motion, Save-Data, WebGL support, pointer type, cores and memory.
     It auto-downgrades if the measured frame rate stays under 40 fps for 2 s.

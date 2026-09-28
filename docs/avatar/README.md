@@ -66,8 +66,10 @@ describes the 3D landmark output. Its model is a build-time tool, not a shipped 
 ## Hero rendering
 
 The GLB and hero binary are generated from the same vertex/triangle arrays. High draws 18,000
-surface samples; Medium draws a deterministic 8,000-point prefix. Stars are selected from front-facing
-samples present in both tiers. The renderer rotates normals with the head and writes the mesh to the
+surface samples; Medium draws a deterministic 8,000-point prefix. A figure smaller than 560 px (phones)
+draws a shorter prefix, scaled by area (`pointsFor` in `figure.ts`), so its dots are spaced as on a
+desktop. Medium renders at 1× on a desktop, and sharper (up to 2×) on smaller canvases within the same
+pixel budget. Stars are selected from front-facing samples present in both tiers. The renderer rotates normals with the head and writes the mesh to the
 depth buffer before drawing points, so the far cheek, nose and rear surfaces occlude correctly.
 CPU ray intersections also prevent hidden stars from being clicked. Assembly runs before the depth
 prepass begins. Offscreen/tab-hidden pausing, brush interaction and motion-tier fallback are retained.

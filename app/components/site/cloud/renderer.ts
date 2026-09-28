@@ -1,4 +1,4 @@
-import type { FigureLayout } from './figure'
+import { pointsFor, type FigureLayout } from './figure'
 import { pickStars, POINTS, scatter } from './sampler'
 import { cameraAt, readSurface, visibleFrom } from './surface'
 
@@ -51,9 +51,10 @@ export interface Cloud {
 }
 
 // `radius` is the point's radius in CSS px: about the area of the prototype's 1.3 and 1.7 px squares.
-const TIERS: Record<CloudTier, { points: number; dpr: number; fps: number; radius: number }> = {
-  high: { points: POINTS.high, dpr: 2, fps: 60, radius: 0.8 },
-  medium: { points: POINTS.medium, dpr: 1, fps: 30, radius: 0.96 },
+// `pixels` caps the canvas: Medium draws a 1440 × 900 hero at 1×, and a phone's smaller one sharper.
+const TIERS: Record<CloudTier, { points: number; dpr: number; pixels: number; fps: number; radius: number }> = {
+  high: { points: POINTS.high, dpr: 2, pixels: Infinity, fps: 60, radius: 0.8 },
+  medium: { points: POINTS.medium, dpr: 2, pixels: 1440 * 900, fps: 30, radius: 0.96 },
 }
 
 const ASSEMBLE_MS = 1400
@@ -332,7 +333,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   const starPos = new Float32Array(starIdx.length * 2)
 
   const resize = (): void => {
-    dpr = Math.min(window.devicePixelRatio || 1, tier.dpr)
+    dpr = Math.min(window.devicePixelRatio || 1, tier.dpr, Math.max(1, Math.sqrt(tier.pixels / (w * h))))
     const cw = Math.max(1, Math.round(w * dpr))
     const ch = Math.max(1, Math.round(h * dpr))
     if (o.canvas.width !== cw || o.canvas.height !== ch) {
@@ -443,7 +444,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     gl.uniform3fv(U.tap, taps)
     gl.uniform2f(U.kind, 0, tier.radius)
     bindAttrs(pointBuf)
-    gl.drawArrays(gl.POINTS, 0, Math.min(tier.points, pts.count))
+    gl.drawArrays(gl.POINTS, 0, pointsFor(Math.min(tier.points, pts.count), fig.s))
     if (showStars > 0) {
       placeStars()
       gl.uniform2f(U.kind, 1, showStars)
