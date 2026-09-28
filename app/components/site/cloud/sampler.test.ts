@@ -37,7 +37,7 @@ describe('cloud sampler', () => {
   })
 
   it('bulges the head towards the viewer', () => {
-    expect(depth(-0.03, -0.19)).toBeCloseTo(0.24)
+    expect(depth(0, -0.18)).toBeCloseTo(0.24)
     expect(depth(0.49, -0.49)).toBe(0)
   })
 })

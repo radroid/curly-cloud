@@ -12,7 +12,7 @@ import { RESUME_LINE_COUNT } from './resume-helpers'
 import { HERO_PROMPT_ID, useSite } from './site-context'
 
 /**
- * C2 Hero: the curly cloud (REDESIGN-PLAN.md §2, §4). A dark stage with Raj's illustration drawn
+ * C2 Hero: the curly cloud (REDESIGN-PLAN.md §2, §4). A dark stage with Raj's portrait drawn
  * as a point cloud, one bright star per public source the clone can cite, the name, and a prompt
  * bar that hands its question to the Ask panel.
  *
@@ -22,6 +22,11 @@ import { HERO_PROMPT_ID, useSite } from './site-context'
 
 /** Height of the fixed top bar that floats over the hero. */
 const BAR_H = 56
+
+// Browsers keep public images for an hour, so a cached source image could redraw the old figure over
+// a new poster. Bump the version whenever scripts/hero-cloud-src.py rewrites them.
+const CLOUD_SRC = '/hero-cloud-src.png?v=2'
+const CLOUD_POSTER = '/hero-cloud.webp?v=2'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
@@ -65,7 +70,7 @@ const POSTER_BOX = [
   '[--copy-top:calc(var(--hh)_-_clamp(28px,7vh,72px)_-_var(--fs)*1.8_-_clamp(22px,2.4cqi,34px)_-_139px)]',
   '@max-[700px]:[--copy-top:calc(var(--hh)_-_84px_-_env(safe-area-inset-bottom)_-_var(--fs)*1.8_-_clamp(22px,2.4cqi,34px)_-_158px)]',
   '[--k:min(108cqi,(var(--copy-top)_-_84px)/1.05)] [--fig-w:calc(var(--k)*1.2)]',
-  '[--fig-x:calc(min(50cqi_+_var(--k)*0.045,100cqi_-_8px_-_var(--k)*0.41)_-_var(--k)*0.6)]',
+  '[--fig-x:calc(min(50cqi,100cqi_-_8px_-_var(--k)*0.5)_-_var(--k)*0.6)]',
   '[--fig-y:calc(var(--copy-top)_-_14px_-_var(--k)*1.14)]',
   '@min-[1250px]:[--lb:calc(var(--spacing-gutter)_+_max(34rem,var(--fs)*3.63)_+_24px)]',
   '@min-[1250px]:[--rb:calc(100cqi_-_var(--spacing-gutter)_-_292px)]',
@@ -187,7 +192,7 @@ export function Hero() {
         emitStage('loaded')
         const c = await m.createCloud({
           canvas,
-          src: '/hero-cloud-src.png',
+          src: CLOUD_SRC,
           stars: STARS.length,
           tier: now.current.tier as CloudTier,
           onStage: (stage) => {
@@ -316,10 +321,10 @@ export function Hero() {
       >
         <svg viewBox="0 0 1 1" className="block size-full">
           <mask id="hero-points" maskUnits="userSpaceOnUse" x="0" y="0" width="1" height="1">
-            <image href="/hero-cloud.webp" width="2" height="1" preserveAspectRatio="none" />
+            <image href={CLOUD_POSTER} width="2" height="1" preserveAspectRatio="none" />
           </mask>
           <mask id="hero-stars" maskUnits="userSpaceOnUse" x="0" y="0" width="1" height="1">
-            <image href="/hero-cloud.webp" x="-1" width="2" height="1" preserveAspectRatio="none" />
+            <image href={CLOUD_POSTER} x="-1" width="2" height="1" preserveAspectRatio="none" />
           </mask>
           <rect width="1" height="1" mask="url(#hero-points)" className="fill-term-accent" />
           <rect width="1" height="1" mask="url(#hero-stars)" className="fill-sun" />

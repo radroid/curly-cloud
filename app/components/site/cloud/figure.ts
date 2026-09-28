@@ -32,10 +32,10 @@ export const NARROW = 700
 const GAP = 24
 
 export function layout(b: HeroBox): FigureLayout {
-  // The bust spans x -0.5..0.41 of s; its head reaches about 0.23 as it turns. With the log shown,
+  // The bust spans x -0.5..0.5 of s; its head reaches about 0.23 as it turns. With the log shown,
   // only the head has to stay left of it (the shoulder passes below).
   const log = b.logLeft < b.w
-  const reach = log ? 0.23 : 0.41
+  const reach = log ? 0.23 : 0.5
   const lb = b.copyRight + GAP
   const rb = log ? b.logLeft - GAP : b.w - 8
   // Standing on the hero's bottom edge, between the copy and the log...
@@ -43,8 +43,8 @@ export function layout(b: HeroBox): FigureLayout {
   if (b.w >= NARROW && s >= b.h * 0.5) return { cx: (lb + s * 0.5 + rb - s * reach) / 2, cy: b.h - s * 0.5, s }
   // ...or, where that leaves it under half the hero's height, above the copy. Perspective lifts the
   // hair to about -0.51 and sinks the faded hem to 0.54.
-  const k = Math.min(b.w * 1.08, (b.copyTop - 14 - b.top) / 1.05, log ? (rb - 8) / 0.91 : Infinity)
-  return { cx: Math.min(b.w * 0.5 + k * 0.045, rb - k * 0.41), cy: b.copyTop - 14 - k * 0.54, s: k }
+  const k = Math.min(b.w * 1.08, (b.copyTop - 14 - b.top) / 1.05, log ? rb - 8 : Infinity)
+  return { cx: Math.min(b.w * 0.5, rb - k * 0.5), cy: b.copyTop - 14 - k * 0.54, s: k }
 }
 
 /** The poster covers normalised -0.6..0.6 around the figure's centre (room for perspective and drift). */

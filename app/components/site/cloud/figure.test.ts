@@ -20,10 +20,10 @@ describe('figure layout', () => {
     expect(l.cx + l.s * 0.23).toBeLessThanOrEqual(DESKTOP.logLeft - 24 + 0.01)
   })
 
-  it('matches the prototype on a 390 × 844 phone, above the copy', () => {
+  it('centres the bust above the copy on a 390 × 844 phone', () => {
     const l = layout(MOBILE)
     expect(l.s).toBeCloseTo(374.6, 0)
-    expect(l.cx).toBeCloseTo(211.9, 0)
+    expect(l.cx).toBeCloseTo(194.7, 0)
     expect(l.cy).toBeCloseTo(261.0, 0)
     // The faded hem ends 14 px above the name; the hair stays under the top bar.
     expect(l.cy + l.s * 0.54).toBeCloseTo(MOBILE.copyTop - 14)
@@ -38,7 +38,7 @@ describe('figure layout', () => {
 
   it('without the log, uses the full width to the right', () => {
     const l = layout({ ...DESKTOP, logLeft: DESKTOP.w })
-    expect(l.cx + l.s * 0.41).toBeLessThanOrEqual(DESKTOP.w - 8 + 0.01)
+    expect(l.cx + l.s * 0.5).toBeLessThanOrEqual(DESKTOP.w - 8 + 0.01)
   })
 
   it('sizes the poster to cover -0.6..0.6 of the figure', () => {
