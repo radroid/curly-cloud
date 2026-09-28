@@ -125,7 +125,7 @@ export function sample(rgba: ArrayLike<number>, size = SRC_SIZE, count: number =
 }
 
 /**
- * Pick one star per source: points on the dark outline, above the faded bottom rows, each as far
+ * Pick `n` stars: points on the dark outline, above the faded bottom rows, each as far
  * as possible from the ones already chosen (best of 300 random candidates). Only the first `pool`
  * points are candidates, so every tier shows the same stars. Returns point indices.
  */

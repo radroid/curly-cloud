@@ -14,8 +14,12 @@ Built. Changes from the design below:
   Without the log, `layout()` gives the figure all the width right of the copy. The AI and logging disclosure
   now shows only on hover or focus of the hero's `Privacy` link (first tap on touch). The two links and
   `Privacy` moved above the prompt bar, with `Privacy` over its top-right corner.
+- **One dot per company or project:** Raj then asked for one yellow dot per company, build and community entry,
+  plus Education: 11 instead of 38, so 30 dots in all. Summary, Skills and Contact have none. A dot opens its whole
+  role or build, its card has words for the whole block, and it turns coral when any of its lines is cited (the card
+  lists every citation number). The status card still counts 38 public sources (`SOURCE_COUNT`).
 - **Dot size:** dots now scale with the figure instead of shrinking only the personal ones. They are full size from a
-  560 px figure and 60% at the smallest, so 57 dots don't crowd the face at 1024 wide or on phones. The hit area
+  560 px figure and 60% at the smallest, so the dots don't crowd the face at 1024 wide or on phones. The hit area
   stays 24 px.
 - **Mac link:** there is no DOM test setup for the desktop, so `?open=music` was checked in the browser only.
 

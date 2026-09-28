@@ -45,7 +45,7 @@ describe('cloud sampler', () => {
 describe('source stars', () => {
   const points = sample(disc())
 
-  it('picks one star per public source, each a distinct point', () => {
+  it('picks one star per work dot, each a distinct point', () => {
     const stars = pickStars(points, STARS.length)
     expect(stars).toHaveLength(STARS.length)
     expect(new Set(stars).size).toBe(STARS.length)

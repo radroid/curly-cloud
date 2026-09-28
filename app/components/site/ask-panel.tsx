@@ -10,7 +10,7 @@ import { motionOff } from '@/app/lib/motion'
 import { useMediaQuery } from '@/app/lib/use-media-query'
 import { useRenderStatus } from '@/app/lib/use-render-status'
 import { AnswerText } from './answer-text'
-import { STARS } from './cloud/stars'
+import { SOURCE_COUNT } from './cloud/stars'
 import { RESUME_LINE_COUNT } from './resume-helpers'
 import { useSite } from './site-context'
 
@@ -440,7 +440,7 @@ function CloneStatus({ open }: { open: boolean }) {
     >
       <p className="m-0 mb-1 text-term-accent">$ clone status</p>
       {[
-        ['corpus', `${STARS.length} public sources`],
+        ['corpus', `${SOURCE_COUNT} public sources`],
         ['lines', `${RESUME_LINE_COUNT} citable`],
         ['retrieval', 'bm25 + bge-m3, fused, reranked'],
         ['guard', 'checks answers as they stream'],
