@@ -60,6 +60,25 @@ describe('reconstructed portrait assets', () => {
     expect(stars).toEqual(pickStars(readSurface(binary).points, ALL_STARS.length))
   })
 
+  it('draws the eyes densely enough to read in both tiers, with no star over them', () => {
+    const { points: p } = surface
+    // Each eye's lash line and iris in model units (x0, x1, y0, y1). Before the emphasis they held about 60 bright points.
+    const eyes = [[-.080, -.014, -.166, -.145], [.055, .118, -.164, -.143]]
+    const gap = (i: number, [x0, x1, y0, y1]: number[]): number => Math.hypot(Math.max(x0 - p.x[i], 0, p.x[i] - x1), Math.max(y0 - p.y[i], 0, p.y[i] - y1))
+    for (const eye of eyes) {
+      let high = 0
+      let medium = 0
+      for (let i = 0; i < p.count; i++) {
+        if (gap(i, eye) > 0 || p.b[i] < .9) continue
+        high++
+        if (i < POINTS.medium) medium++
+      }
+      expect(high).toBeGreaterThan(250)
+      expect(medium).toBeGreaterThan(200)
+    }
+    for (const i of pickStars(p, ALL_STARS.length)) for (const eye of eyes) expect(gap(i, eye)).toBeGreaterThan(.03)
+  })
+
   it('rejects missing, truncated and out-of-range geometry before touching WebGL', () => {
     expect(() => readSurface(new ArrayBuffer(0))).toThrow('Invalid portrait surface')
     expect(() => readSurface(binary.slice(0, -1))).toThrow('Incomplete portrait surface')

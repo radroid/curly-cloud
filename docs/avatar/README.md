@@ -67,7 +67,10 @@ describes the 3D landmark output. Its model is a build-time tool, not a shipped 
 
 The GLB and hero binary are generated from the same vertex/triangle arrays. High draws 18,000
 surface samples; Medium draws a deterministic 8,000-point prefix. Stars are selected from front-facing
-samples present in both tiers. The renderer rotates normals with the head and writes the mesh to the
+samples present in both tiers. By area the eyes would get only about 60 points each, so the lash
+lines and irises get extra samples (about 360 per eye; tune with the `EYE_*` constants in
+`build-model.py`). Points on and around the eyes are stored at 254/255 brightness, which keeps stars
+off them. The renderer rotates normals with the head and writes the mesh to the
 depth buffer before drawing points, so the far cheek, nose and rear surfaces occlude correctly.
 CPU ray intersections also prevent hidden stars from being clicked. Assembly runs before the depth
 prepass begins. Offscreen/tab-hidden pausing, brush interaction and motion-tier fallback are retained.

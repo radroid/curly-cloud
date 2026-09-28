@@ -27,8 +27,8 @@ const BAR_H = 56
 
 // Browsers keep public images for an hour, so a cached model could redraw the old figure over
 // a new poster. Bump the version whenever scripts/avatar/build-model.py rewrites the model or poster.
-const CLOUD_SRC = '/models/raj-cloud.bin?v=4'
-const CLOUD_POSTER = '/models/raj-cloud-poster.webp?v=4'
+const CLOUD_SRC = '/models/raj-cloud.bin?v=6'
+const CLOUD_POSTER = '/models/raj-cloud-poster.webp?v=6'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
