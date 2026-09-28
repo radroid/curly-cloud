@@ -62,18 +62,21 @@ function onScreen(el: HTMLElement): boolean {
 
 /**
  * Open every <details> around `el` (and `el` itself, and the disclosure named by its
- * `data-opens`) without animation, so a scroll that follows lands on the final layout.
+ * `data-opens`) without animation, so a scroll that follows lands on the final layout. Open ones
+ * count too: when the URL's hash points inside a closed <details>, Chrome opens it before
+ * `hashchange` fires, and its content stays hidden (so the scroll goes nowhere) until the
+ * animation ends. Turning transitions off finishes it.
  */
 function reveal(el: HTMLElement): void {
-  const closed: HTMLDetailsElement[] = []
-  for (let d = el.closest('details'); d; d = d.parentElement?.closest('details') ?? null) if (!d.open) closed.push(d)
+  const around: HTMLDetailsElement[] = []
+  for (let d = el.closest('details'); d; d = d.parentElement?.closest('details') ?? null) around.push(d)
   const linked = el.dataset.opens ? document.getElementById(el.dataset.opens) : null
-  if (linked instanceof HTMLDetailsElement && !linked.open) closed.push(linked)
-  if (!closed.length) return
+  if (linked instanceof HTMLDetailsElement) around.push(linked)
+  if (!around.length) return
   const root = document.documentElement
   root.dataset.jump = ''
-  for (const d of closed) d.open = true
-  root.getBoundingClientRect() // apply the open while transitions are off
+  for (const d of around) d.open = true
+  root.getBoundingClientRect() // apply the open, or finish one in progress, while transitions are off
   requestAnimationFrame(() => delete root.dataset.jump)
 }
 
