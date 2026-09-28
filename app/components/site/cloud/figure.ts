@@ -1,7 +1,7 @@
 /**
- * Where the figure sits on the hero stage, fitted around the copy and the system log so it never
- * collides with them (ported from the prototype's `layout()`). Pure: the hero measures the DOM and
- * passes the numbers in, and both the canvas and the poster use the result.
+ * Where the figure sits on the hero stage, fitted beside or above the copy so it never collides with
+ * it (ported from the prototype's `layout()`). Pure: the hero measures the DOM and passes the numbers
+ * in, and both the canvas and the poster use the result.
  */
 
 /** Hero measurements in CSS px, relative to the hero's top-left corner. */
@@ -15,8 +15,6 @@ export interface HeroBox {
   copyTop: number
   /** Right edge of the copy's text and prompt bar. */
   copyRight: number
-  /** Left edge of the system log, or `w` when it's hidden. */
-  logLeft: number
 }
 
 /** The figure's centre and size: normalised point (x, y) lands at (cx + x·s, cy + y·s), before perspective. */
@@ -32,18 +30,15 @@ export const NARROW = 700
 const GAP = 24
 
 export function layout(b: HeroBox): FigureLayout {
-  // The bust spans x -0.5..0.5 of s; its hair reaches about 0.26 as it turns. With the log shown,
-  // only the head has to stay left of it (the shoulder passes below).
-  const log = b.logLeft < b.w
-  const reach = log ? 0.26 : 0.5
+  // The bust spans x -0.5..0.5 of s.
   const lb = b.copyRight + GAP
-  const rb = log ? b.logLeft - GAP : b.w - 8
-  // Standing on the hero's bottom edge, between the copy and the log...
-  const s = Math.min((rb - lb) / (0.5 + reach), (b.h - b.top) / 0.98, b.h * 0.84)
-  if (b.w >= NARROW && s >= b.h * 0.5) return { cx: (lb + s * 0.5 + rb - s * reach) / 2, cy: b.h - s * 0.5, s }
+  const rb = b.w - 8
+  // Standing on the hero's bottom edge, right of the copy...
+  const s = Math.min(rb - lb, (b.h - b.top) / 0.98, b.h * 0.84)
+  if (b.w >= NARROW && s >= b.h * 0.5) return { cx: (lb + rb) / 2, cy: b.h - s * 0.5, s }
   // ...or, where that leaves it under half the hero's height, above the copy. Perspective lifts the
   // hair to about -0.51 and sinks the faded hem to 0.54.
-  const k = Math.min(b.w * 1.08, (b.copyTop - 14 - b.top) / 1.05, log ? rb - 8 : Infinity)
+  const k = Math.min(b.w * 1.08, (b.copyTop - 14 - b.top) / 1.05)
   return { cx: Math.min(b.w * 0.5, rb - k * 0.5), cy: b.copyTop - 14 - k * 0.54, s: k }
 }
 

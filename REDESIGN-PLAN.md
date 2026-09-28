@@ -115,8 +115,7 @@ explainer.
   say "Raj Dholakia"). It's used for the name, section titles, company names, numbers and the marquee.
 - **Micro-copy:** **IBM Plex Mono**, which is already loaded. Two voices:
   - Navigation stays uppercase and bracketed: `[2] WORK`.
-  - The system log, captions and counts are lowercase: `$ clone status`, `each bright point is one of the
-    38 sources my clone can cite. hover one.`, `5 lines`.
+  - The system log and counts are lowercase: `$ clone status`, `5 lines`.
 - **Body and resume lines:** **IBM Plex Sans**, unchanged.
 - Self-hosted through `next/font`, so no CSP change.
 
@@ -145,8 +144,8 @@ further `resume.ts` edits.** Anything that would need Raj's copy approval is lis
   dark tone. Below the hero is the two-column grid, with the page on the left and the **Ask panel sticky
   on the right**, starting just below the marquee instead of at y=0. The hero has its own prompt bar that sends to
   the panel.
-- **Mobile:** the hero stage fills the first screen: cloud on top, then the name, prompt bar, disclosure and
-  two links, all clear of the dock. A bottom **dock** replaces the Ask FAB, with the current section and
+- **Mobile:** the hero stage fills the first screen: cloud on top, then the name, two links, `Privacy` and
+  the prompt bar, all clear of the dock. A bottom **dock** replaces the Ask FAB, with the current section and
   menu on the left and `Ask Raj` on the right.
 
 ## 1a. Design reference and review outcome
@@ -177,7 +176,7 @@ performance), this plan wins.
    camp-collar shirt) instead of the old avatar. The small chat avatar is unchanged.
 2. **C4 path line.** The vertical line runs exactly through the centre of each dot, from the first dot to
    the last, with the dots drawn on top. The horizontal layout also ends at the last dot.
-3. **No subtitle under the name.** The hero is name, prompt bar, disclosure, links.
+3. **No subtitle under the name.** The hero is name, links (with `Privacy`), prompt bar.
 4. **Floating filter pill.** "Showing N lines about X · Clear" is fixed just under the top bar, centred on
    the reading column, with a shadow, and stays visible while the filter is on.
 5. **Full border on filtered lines.** Matching lines get a 1.5 px rounded border in the forest accent over
@@ -214,8 +213,8 @@ prototype.
 |---|---|---|---|
 | C0 | **Intro** (new) | none | Boot overlay: Anton `%` counter, a short `$ clone boot` log (points, fonts, corpus, render), render-quality chips High / Medium / Saver, `Enter`. Details below. |
 | C1 | **Top bar** | Name, For agents, Mac ’84, Website ⇄ Terminal | Anton wordmark + **bracket nav** `[1] HOME [2] WORK [3] FIT [4] AGENTS [5] CONTACT` with scroll-spy, then `mac ’84` and the `ModeSwitch` (API unchanged; dark over the hero, light after). |
-| C2 | **Hero** | Name, 23-word pitch, "Now:" line, 3 CTAs, 4 links (67 words) | Curly-cloud canvas with one star per public source. `RAJ DHOLAKIA` in Anton. **No subtitle.** **Prompt bar** whose placeholder cycles through the existing `STARTERS`. The required AI and logging disclosure with a `Privacy` link. Two quiet links: `Check my fit for a role`, `Connect your agent`. Caption (top right, lowercase mono): `each bright point is one of the 38 sources my clone can cite. hover one.` Desktop system log: `$ clone status` · corpus 38 public sources · lines 30 citable · retrieval bm25 + bge-m3, fused, reranked · guard checks answers as they stream · render high, 60 fps (measured). |
-| — | **How to read** | 50-word explainer card | **Removed.** The stars and the caption carry the idea. |
+| C2 | **Hero** | Name, 23-word pitch, "Now:" line, 3 CTAs, 4 links (67 words) | Curly-cloud canvas with one star per public source. `RAJ DHOLAKIA` in Anton. **No subtitle.** **Prompt bar** whose placeholder cycles through the existing `STARTERS`. Two quiet links between the name and the prompt bar: `Check my fit for a role`, `Connect your agent`. At the end of their row, over the bar's top-right corner, a `Privacy` link: hover or focus shows the AI and logging disclosure; on touch the first tap shows it and the second follows the link. No caption. The system log (`$ clone status` · corpus 38 public sources · lines 30 citable · retrieval bm25 + bge-m3, fused, reranked · guard checks answers as they stream · render high, 60 fps, measured) opens from the Ask panel's avatar on hover, focus or tap. |
+| — | **How to read** | 50-word explainer card | **Removed.** The stars and their hover cards carry the idea. |
 | C3 | **Marquee** (new) | "Now: …" sentence | Looping `key value` items: `now` Lead Software Developer, Eddy Solutions · `base` Toronto · `building` MCP servers, RAG pipelines, agents, evals · `stack` TypeScript, Python, C# · `shipping since` 2020 · `for agents` curlycloud.dev/mcp · `community` Open Invite. Pause button. |
 | C4 | **Profile** (was About, 89 words) | 3 paragraphs | A 3-node **path**: 2016 NUCLEAR ENGINEERING (BEng, University of Manchester) → 2020 SOFTWARE (Duit.io, then full-stack roles) → 2024 GENAI INFRASTRUCTURE (Create Club, now Eddy Solutions); vertical on narrow widths, the line through the dot centres. Beside it, three one-sentence quotes from the summary. `▸ Read the full summary` holds the pitch and the 3 paragraphs and keeps `id="r-summary"`. |
 | C5 | **Numbers** (new) | Numbers buried in bullets | 6 instruments, each with a unit chart and a `source: …` link to its line: **6** years shipping (summary) · **150,000+** LoRaWAN devices (`eddy/services`) · **80+** weekly processes replaced by agents, with a 60 % bar (`create-club/beverage-agents`) · **15 → 2** min deploys, a shrinking bar (`pinhous/cicd`) · **100K** job postings searchable, three vectors each (`jobsearch/vectors`) · **40+** regulatory documents grounded (`regdocs/corpus`). Count up once in view. Two columns on mobile. |
@@ -300,7 +299,7 @@ entrance effects read as templated and compete with the cloud.
 |---|---|---|---|---|
 | Point cloud | **Own WebGL2 renderer**: `gl.POINTS`, one vertex shader for rotation, brush and flare, round-point fragment shader; WebGL1 fallback; poster if neither | ~4–6 KB, lazy chunk loaded after first paint only when the tier isn't Saver and the hero is in view | ~few KB (SSR only renders the wrapper) | three.js adds about 150 KB+ gz for one draw call we can write in about 200 lines |
 | Cloud source image | **`public/hero-cloud-src.png`**: 320², ~20 KB, grey + alpha, a line sketch of Raj's cartoon made by `scripts/portrait-images.py` (background flood-filled away; DoG lines and a dark fill for hair and beard on the head; the shirt's stripes lifted out first; an ink outline). It replaced the prototype's illustration (`cloud-src.py`); the same script makes the avatar | ~20 KB, lazy with the renderer | 0 (static asset) | Deterministic input; no build step (the script needs Python with numpy/Pillow/scipy/scikit-image, and is run by hand) |
-| Sampling | At runtime in the renderer chunk, seeded: the image's alpha is the figure mask; edges on √luminance; solid dark fill down-weighted (hair and beard don't swallow points); head region weighted up; stars picked farthest-point on the outline and kept out of the faded bottom rows. Port the prototype's `sample()`, `depth()`, `pickStars()` and `layout()` | in the chunk | 0 | Tuned in review; the layout measures the name, prompt bar and system log so the figure never collides with them |
+| Sampling | At runtime in the renderer chunk, seeded: the image's alpha is the figure mask; edges on √luminance; solid dark fill down-weighted (hair and beard don't swallow points); head region weighted up; stars picked farthest-point on the outline and kept out of the faded bottom rows. Port the prototype's `sample()`, `depth()`, `pickStars()` and `layout()` | in the chunk | 0 | Tuned in review; the layout measures the name and prompt bar so the figure never collides with them |
 | Poster | `public/hero-cloud.webp` (≤ 40 KB), drawn from the renderer's sampler by `scripts/portrait-images.py` (points, work stars, personal dots) | image, lazy after LCP | 0 (static asset) | Reduced motion, Saver, no-WebGL, and the pre-hydration placeholder |
 | Display font | **Anton** via `next/font/google` (self-hosted, latin subset, `adjustFontFallback`) | ~25–30 KB woff2 (measured in P0) | 0 | Same-origin, so no CSP change |
 | Marquee, timeline, pipelines, counters | CSS keyframes + IntersectionObserver + WAAPI | ~0 | 0 | |

@@ -9,8 +9,11 @@ Built. Changes from the design below:
 
 - **Portrait:** Raj swapped his photo for his cartoon while this was being built. `scripts/portrait-images.py` makes
   the cloud's source, the poster and the avatar (`public/raj-avatar.webp`) from it.
-- **Head reach:** the cartoon's fuller hair reaches 0.26 of the figure's size as it turns, not 0.23. `layout()` and
-  the poster CSS leave that much room before the status log.
+- **Caption, log and disclosure:** Raj then dropped the hero caption and moved the `$ clone status` log to a card on
+  the Ask panel's avatar (hover, focus or tap). The render line reaches it through `app/lib/use-render-status.ts`.
+  Without the log, `layout()` gives the figure all the width right of the copy. The AI and logging disclosure
+  now shows only on hover or focus of the hero's `Privacy` link (first tap on touch). The two links and
+  `Privacy` moved above the prompt bar, with `Privacy` over its top-right corner.
 - **Dot size:** dots now scale with the figure instead of shrinking only the personal ones. They are full size from a
   560 px figure and 60% at the smallest, so 57 dots don't crowd the face at 1024 wide or on phones. The hit area
   stays 24 px.
@@ -151,7 +154,7 @@ That makes 19 personal dots and 57 in all.
   - Music calls `router.push('/mac?open=music')`.
   - Other personal dots do nothing.
 - Caption: "each yellow point is one of the 38 sources my clone can cite; each white one is something I
-  love. hover one." The count comes from `STARS`.
+  love. hover one." The count comes from `STARS`. (Later removed; see Status.)
 - The status box stays at 38 public sources.
 - The image URLs move to `?v=3`.
 

@@ -5,11 +5,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useInView } from '@/app/lib/use-in-view'
 import { useMagnetic } from '@/app/lib/use-magnetic'
 import { useMotionTier } from '@/app/lib/use-motion-tier'
+import { setRenderStatus } from '@/app/lib/use-render-status'
 import { STARTERS } from './ask-panel'
 import { layout, posterBox, type HeroBox } from './cloud/figure'
 import type { Cloud, CloudTier } from './cloud/renderer'
 import { ALL_STARS, PERSONAL, STARS } from './cloud/stars'
-import { RESUME_LINE_COUNT } from './resume-helpers'
 import { HERO_PROMPT_ID, useSite } from './site-context'
 
 /**
@@ -26,8 +26,8 @@ const BAR_H = 56
 
 // Browsers keep public images for an hour, so a cached source image could redraw the old figure over
 // a new poster. Bump the version whenever scripts/portrait-images.py rewrites them.
-const CLOUD_SRC = '/hero-cloud-src.png?v=3'
-const CLOUD_POSTER = '/hero-cloud.webp?v=3'
+const CLOUD_SRC = '/hero-cloud-src.png?v=4'
+const CLOUD_POSTER = '/hero-cloud.webp?v=4'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
@@ -37,8 +37,8 @@ function emitStage(stage: 'loaded' | 'sampled' | 'ready'): void {
   window.dispatchEvent(new CustomEvent('curlycloud:cloud', { detail: { stage } }))
 }
 
-/** The copy and system log, measured so the figure can be fitted around them. */
-function measure(hero: HTMLElement, copy: HTMLElement, form: HTMLElement, log: HTMLElement | null): HeroBox {
+/** The copy, measured so the figure can be fitted beside or above it. */
+function measure(hero: HTMLElement, copy: HTMLElement, form: HTMLElement): HeroBox {
   const hr = hero.getBoundingClientRect()
   // The name's spans are full-width blocks: use the right edge of the text itself.
   const range = document.createRange()
@@ -47,37 +47,36 @@ function measure(hero: HTMLElement, copy: HTMLElement, form: HTMLElement, log: H
     if (el === form) continue
     const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
     while (walk.nextNode()) {
+      if (walk.currentNode.parentElement?.closest('[role="tooltip"]')) continue
       range.selectNodeContents(walk.currentNode)
       right = Math.max(right, range.getBoundingClientRect().right)
     }
   }
-  const lr = log?.getBoundingClientRect()
   return {
     w: hr.width,
     h: hr.height,
     top: BAR_H + 14,
     copyTop: copy.getBoundingClientRect().top - hr.top,
     copyRight: right - hr.left,
-    logLeft: lr?.width ? lr.left - hr.left : hr.width,
   }
 }
 
 // Before hydration (and without JS) the poster is placed by CSS that approximates layout() in
 // cloud/figure.ts; once measured, the hero sets --fig-* exactly. The figure sits above the copy by
-// default, and stands on the bottom edge between the copy and the system log on wide stages.
-// 139 px (158 on mobile, where the disclosure wraps) is the copy's height below the name and prompt gap.
+// default, and stands on the bottom edge right of the copy on wide stages.
+// --below is the height of the links row and prompt bar under the name; Privacy wraps below 430 px.
 const POSTER_BOX = [
-  '[--fs:clamp(64px,10.5cqi,168px)] [--hh:clamp(620px,100svh,1000px)]',
-  '[--copy-top:calc(var(--hh)_-_clamp(28px,7vh,72px)_-_var(--fs)*1.8_-_clamp(22px,2.4cqi,34px)_-_139px)]',
-  '@max-[700px]:[--copy-top:calc(var(--hh)_-_84px_-_env(safe-area-inset-bottom)_-_var(--fs)*1.8_-_clamp(22px,2.4cqi,34px)_-_158px)]',
+  '[--fs:clamp(64px,10.5cqi,168px)] [--hh:clamp(620px,100svh,1000px)] [--below:110px] @max-[430px]:[--below:129px]',
+  '[--copy-top:calc(var(--hh)_-_clamp(28px,7vh,72px)_-_var(--fs)*1.8_-_clamp(10px,1.2cqi,20px)_-_var(--below))]',
+  '@max-[700px]:[--copy-top:calc(var(--hh)_-_84px_-_env(safe-area-inset-bottom)_-_var(--fs)*1.8_-_clamp(10px,1.2cqi,20px)_-_var(--below))]',
   '[--k:min(108cqi,(var(--copy-top)_-_84px)/1.05)] [--fig-w:calc(var(--k)*1.2)]',
   '[--fig-x:calc(min(50cqi,100cqi_-_8px_-_var(--k)*0.5)_-_var(--k)*0.6)]',
   '[--fig-y:calc(var(--copy-top)_-_14px_-_var(--k)*1.14)]',
-  '@min-[1250px]:[--lb:calc(var(--spacing-gutter)_+_max(34rem,var(--fs)*3.63)_+_24px)]',
-  '@min-[1250px]:[--rb:calc(100cqi_-_var(--spacing-gutter)_-_292px)]',
-  '@min-[1250px]:[--s:min((var(--rb)_-_var(--lb))/0.76,(var(--hh)_-_70px)/0.98,var(--hh)*0.84)]',
-  '@min-[1250px]:[--fig-w:calc(var(--s)*1.2)] @min-[1250px]:[--fig-x:calc((var(--lb)_+_var(--rb))/2_-_var(--s)*0.48)]',
-  '@min-[1250px]:[--fig-y:calc(var(--hh)_-_var(--s)*1.1)]',
+  '@min-[1000px]:[--lb:calc(var(--spacing-gutter)_+_max(34rem,var(--fs)*3.63)_+_24px)]',
+  '@min-[1000px]:[--rb:calc(100cqi_-_8px)]',
+  '@min-[1000px]:[--s:min(var(--rb)_-_var(--lb),(var(--hh)_-_70px)/0.98,var(--hh)*0.84)]',
+  '@min-[1000px]:[--fig-w:calc(var(--s)*1.2)] @min-[1000px]:[--fig-x:calc((var(--lb)_+_var(--rb))/2_-_var(--s)*0.6)]',
+  '@min-[1000px]:[--fig-y:calc(var(--hh)_-_var(--s)*1.1)]',
 ].join(' ')
 
 const LINK = 'underline decoration-current/45 decoration-1 underline-offset-4 hover:decoration-current'
@@ -99,7 +98,6 @@ export function Hero() {
   )
   const copyRef = useRef<HTMLDivElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
-  const logRef = useRef<HTMLDivElement>(null)
   const posterRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -136,7 +134,7 @@ export function Hero() {
   const relayout = useCallback(() => {
     const hero = heroEl.current
     if (!hero || !copyRef.current || !formRef.current) return
-    const box = measure(hero, copyRef.current, formRef.current, logRef.current)
+    const box = measure(hero, copyRef.current, formRef.current)
     const fig = layout(box)
     const p = posterBox(fig)
     const poster = posterRef.current?.style
@@ -236,7 +234,7 @@ export function Hero() {
 
   const onPointerMove = (e: React.PointerEvent) => {
     brush.current = e.pointerType === 'mouse'
-    // Over the copy or the log the cloud still follows the cursor, but stars aren't picked.
+    // Over the copy the cloud still follows the cursor, but stars aren't picked.
     const pick = !(e.target as Element).closest('[data-hero-ui]')
     const i = pointerAt(e, pick)
     if (canvasRef.current) canvasRef.current.style.cursor = i >= 0 && (ALL_STARS[i].anchor || ALL_STARS[i].href) ? 'pointer' : ''
@@ -309,7 +307,9 @@ export function Hero() {
 
   const star = hover ? ALL_STARS[hover.i] : null
   const starCited = star?.anchor ? cited[star.anchor] : undefined
+  // Shown in the clone status card on the Ask panel's avatar.
   const render = still ? 'saver, static' : failed ? 'static poster' : `${tier}, ${fps ?? '…'} fps`
+  useEffect(() => setRenderStatus(render), [render])
 
   return (
     <section
@@ -360,11 +360,6 @@ export function Hero() {
         </div>
       )}
 
-      <p className="absolute right-gutter top-[calc(56px_+_22px)] z-[2] m-0 w-[34ch] text-right font-mono text-xs text-term-dim @max-[700px]:hidden print:hidden">
-        each yellow point is one of the {STARS.length} sources my clone can cite; each white one is something I love.
-        {live && ' hover one.'}
-      </p>
-
       <div
         ref={copyRef}
         data-hero-ui
@@ -373,12 +368,22 @@ export function Hero() {
         <h1 id="hero-name" className="type-display m-0 text-[clamp(64px,10.5cqi,168px)] print:text-7xl">
           <span className="block">Raj</span> <span className="block">Dholakia</span>
         </h1>
+        <div className="mt-[clamp(10px,1.2cqi,20px)] flex max-w-[34rem] flex-wrap items-baseline gap-x-6 font-medium print:hidden">
+          <a href="#fit" className={`inline-flex min-h-11 items-center ${LINK}`}>
+            Check my fit for a role
+          </a>
+          <a href="#agents" className={`inline-flex min-h-11 items-center ${LINK}`}>
+            Connect your agent
+          </a>
+          {/* The AI and logging disclosure sits behind this link; the Ask panel shows it under its input. */}
+          <PrivacyLink />
+        </div>
         <form
           ref={formRef}
           role="search"
           aria-label="Ask my AI clone"
           onSubmit={onSubmit}
-          className="mt-[clamp(22px,2.4cqi,34px)] flex max-w-[34rem] gap-1.5 rounded-[14px] border border-term-text/30 bg-night-deep/55 p-1.5 backdrop-blur-[8px] focus-within:border-term-accent print:hidden"
+          className="mt-2 flex max-w-[34rem] gap-1.5 rounded-[14px] border border-term-text/30 bg-night-deep/55 p-1.5 backdrop-blur-[8px] focus-within:border-term-accent print:hidden"
         >
           <label htmlFor={HERO_PROMPT_ID} className="sr-only">
             Ask my AI clone a question
@@ -399,42 +404,54 @@ export function Hero() {
             Ask
           </button>
         </form>
-        <p className="mx-0.5 mb-0 mt-2.5 text-[13px] leading-[1.45] text-term-dim print:hidden">
-          An AI clone of me. It can be wrong, and questions are logged (never your IP).{' '}
-          <a href="#privacy" className={LINK}>
-            Privacy
-          </a>
-        </p>
-        <div className="mt-2 flex flex-wrap gap-x-6 font-medium print:hidden">
-          <a href="#fit" className={`inline-flex min-h-11 items-center ${LINK}`}>
-            Check my fit for a role
-          </a>
-          <a href="#agents" className={`inline-flex min-h-11 items-center ${LINK}`}>
-            Connect your agent
-          </a>
-        </div>
-      </div>
-
-      <div
-        ref={logRef}
-        data-hero-ui
-        aria-hidden
-        className="absolute right-gutter top-[36%] z-[2] w-[268px] border-l border-term-text/20 bg-night-deep/60 py-2 pl-4 pr-3 font-mono text-xs leading-[1.95] text-term-dim backdrop-blur-[5px] @max-[980px]:hidden print:hidden"
-      >
-        <p className="m-0 mb-1 text-term-accent">$ clone status</p>
-        {[
-          ['corpus', `${STARS.length} public sources`],
-          ['lines', `${RESUME_LINE_COUNT} citable`],
-          ['retrieval', 'bm25 + bge-m3, fused, reranked'],
-          ['guard', 'checks answers as they stream'],
-          ['render', render],
-        ].map(([k, v]) => (
-          <div key={k} className="grid grid-cols-[80px_1fr]">
-            <span>{k}</span>
-            <span className="font-medium text-term-text">{v}</span>
-          </div>
-        ))}
       </div>
     </section>
+  )
+}
+
+/**
+ * Hover or focus shows the disclosure. Touch has no hover, so there the first tap shows it and the second
+ * follows the link; a tap anywhere else hides it.
+ */
+function PrivacyLink() {
+  const [open, setOpen] = useState(false)
+  const wrap = useRef<HTMLSpanElement>(null)
+  const tapped = useRef(false)
+
+  useEffect(() => {
+    if (!open) return
+    const close = (e: PointerEvent): void => {
+      if (!wrap.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', close)
+    return () => document.removeEventListener('pointerdown', close)
+  }, [open])
+
+  return (
+    <span ref={wrap} className="group/privacy relative ml-auto inline-block text-[13px] font-normal leading-[1.45] text-term-dim">
+      <a
+        href="#privacy"
+        aria-describedby="hero-disclosure"
+        className={LINK}
+        onPointerDown={(e) => {
+          tapped.current = e.pointerType !== 'mouse'
+        }}
+        onClick={(e) => {
+          const tap = tapped.current
+          tapped.current = false
+          if (tap && !open) e.preventDefault()
+          setOpen(tap && !open)
+        }}
+      >
+        Privacy
+      </a>
+      <span
+        id="hero-disclosure"
+        role="tooltip"
+        className={`absolute bottom-full right-0 z-[3] mb-1.5 w-max max-w-[min(34rem,calc(100cqi_-_2*var(--spacing-gutter)))] rounded-md border border-term-text/20 bg-night-deep px-2.5 py-1.5 text-term-text group-focus-within/privacy:block group-hover/privacy:block ${open ? 'block' : 'hidden'}`}
+      >
+        An AI clone of me. It can be wrong, and questions are logged (never your IP).
+      </span>
+    </span>
   )
 }
