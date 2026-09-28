@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useInView } from '@/app/lib/use-in-view'
 import { useMagnetic } from '@/app/lib/use-magnetic'
@@ -7,14 +8,14 @@ import { useMotionTier } from '@/app/lib/use-motion-tier'
 import { STARTERS } from './ask-panel'
 import { layout, posterBox, type HeroBox } from './cloud/figure'
 import type { Cloud, CloudTier } from './cloud/renderer'
-import { STARS } from './cloud/stars'
+import { ALL_STARS, PERSONAL, STARS } from './cloud/stars'
 import { RESUME_LINE_COUNT } from './resume-helpers'
 import { HERO_PROMPT_ID, useSite } from './site-context'
 
 /**
  * C2 Hero: the curly cloud (REDESIGN-PLAN.md §2, §4). A dark stage with Raj's portrait drawn
- * as a point cloud, one bright star per public source the clone can cite, the name, and a prompt
- * bar that hands its question to the Ask panel.
+ * as a point cloud, one yellow star per public source the clone can cite and a white one per personal
+ * interest (HERO-STARS-PLAN.md), the name, and a prompt bar that hands its question to the Ask panel.
  *
  * The server renders the poster (and so do Saver, reduced motion and no WebGL). Once hydrated, on
  * screen and not on Saver, the WebGL renderer loads as its own chunk and replaces it.
@@ -24,9 +25,9 @@ import { HERO_PROMPT_ID, useSite } from './site-context'
 const BAR_H = 56
 
 // Browsers keep public images for an hour, so a cached source image could redraw the old figure over
-// a new poster. Bump the version whenever scripts/hero-cloud-src.py rewrites them.
-const CLOUD_SRC = '/hero-cloud-src.png?v=2'
-const CLOUD_POSTER = '/hero-cloud.webp?v=2'
+// a new poster. Bump the version whenever scripts/portrait-images.py rewrites them.
+const CLOUD_SRC = '/hero-cloud-src.png?v=3'
+const CLOUD_POSTER = '/hero-cloud.webp?v=3'
 
 // The server build sees `typeof window === 'undefined'` and drops the import, keeping the renderer out of the Worker.
 const loadRenderer = () => (typeof window === 'undefined' ? null : import('./cloud/renderer'))
@@ -74,8 +75,8 @@ const POSTER_BOX = [
   '[--fig-y:calc(var(--copy-top)_-_14px_-_var(--k)*1.14)]',
   '@min-[1250px]:[--lb:calc(var(--spacing-gutter)_+_max(34rem,var(--fs)*3.63)_+_24px)]',
   '@min-[1250px]:[--rb:calc(100cqi_-_var(--spacing-gutter)_-_292px)]',
-  '@min-[1250px]:[--s:min((var(--rb)_-_var(--lb))/0.73,(var(--hh)_-_70px)/0.98,var(--hh)*0.84)]',
-  '@min-[1250px]:[--fig-w:calc(var(--s)*1.2)] @min-[1250px]:[--fig-x:calc((var(--lb)_+_var(--rb))/2_-_var(--s)*0.465)]',
+  '@min-[1250px]:[--s:min((var(--rb)_-_var(--lb))/0.76,(var(--hh)_-_70px)/0.98,var(--hh)*0.84)]',
+  '@min-[1250px]:[--fig-w:calc(var(--s)*1.2)] @min-[1250px]:[--fig-x:calc((var(--lb)_+_var(--rb))/2_-_var(--s)*0.48)]',
   '@min-[1250px]:[--fig-y:calc(var(--hh)_-_var(--s)*1.1)]',
 ].join(' ')
 
@@ -83,6 +84,7 @@ const LINK = 'underline decoration-current/45 decoration-1 underline-offset-4 ho
 
 export function Hero() {
   const { ask, focusAnchor, cited } = useSite()
+  const router = useRouter()
   const { tier, auto, setTier } = useMotionTier()
   const still = tier === 'saver'
 
@@ -111,7 +113,7 @@ export function Hero() {
   const [hover, setHover] = useState<{ i: number; x: number; y: number; flip: boolean } | null>(null)
   const live = !still && !failed
 
-  const citedStars = STARS.flatMap((s, i) => (cited[s.anchor] ? [i] : []))
+  const citedStars = STARS.flatMap((s, i) => (cited[s.anchor ?? ''] ? [i] : []))
   const citedKey = citedStars.join()
   // Latest values for the renderer, which arrives asynchronously.
   const now = useRef({ tier, auto, inView, booted, citedStars })
@@ -193,7 +195,7 @@ export function Hero() {
         const c = await m.createCloud({
           canvas,
           src: CLOUD_SRC,
-          stars: STARS.length,
+          stars: { work: STARS.length, personal: PERSONAL.length },
           tier: now.current.tier as CloudTier,
           onStage: (stage) => {
             emitStage(stage)
@@ -237,7 +239,7 @@ export function Hero() {
     // Over the copy or the log the cloud still follows the cursor, but stars aren't picked.
     const pick = !(e.target as Element).closest('[data-hero-ui]')
     const i = pointerAt(e, pick)
-    if (canvasRef.current) canvasRef.current.style.cursor = i >= 0 ? 'pointer' : ''
+    if (canvasRef.current) canvasRef.current.style.cursor = i >= 0 && (ALL_STARS[i].anchor || ALL_STARS[i].href) ? 'pointer' : ''
     if (i === (hover?.i ?? -1)) return
     if (i < 0 || !cloudRef.current) return setHover(null)
     const at = cloudRef.current.starAt(i)
@@ -249,11 +251,14 @@ export function Hero() {
     setHover(null)
   }
 
+  // Work stars open their line; personal dots are hover only, unless they link somewhere (Music).
   const onCanvasClick = (e: React.MouseEvent) => {
     const i = pointerAt(e, true)
-    if (i < 0) return
+    const { anchor, href } = ALL_STARS[i] ?? {}
+    if (!anchor && !href) return
     onPointerLeave()
-    focusAnchor(STARS[i].anchor)
+    if (anchor) focusAnchor(anchor)
+    else if (href) router.push(href)
   }
 
   useEffect(() => {
@@ -302,7 +307,8 @@ export function Hero() {
   // M15: the Ask button leans towards a mouse pointer, up to 6 px.
   const magnet = useMagnetic<HTMLButtonElement>()
 
-  const star = hover ? STARS[hover.i] : null
+  const star = hover ? ALL_STARS[hover.i] : null
+  const starCited = star?.anchor ? cited[star.anchor] : undefined
   const render = still ? 'saver, static' : failed ? 'static poster' : `${tier}, ${fps ?? '…'} fps`
 
   return (
@@ -320,14 +326,15 @@ export function Hero() {
         className={`pointer-events-none absolute left-0 top-0 aspect-square w-(--fig-w) [translate:var(--fig-x)_var(--fig-y)] transition-opacity duration-700 print:hidden ${POSTER_BOX} ${live && drawn ? 'opacity-0' : ''}`}
       >
         <svg viewBox="0 0 1 1" className="block size-full">
-          <mask id="hero-points" maskUnits="userSpaceOnUse" x="0" y="0" width="1" height="1">
-            <image href={CLOUD_POSTER} width="2" height="1" preserveAspectRatio="none" />
-          </mask>
-          <mask id="hero-stars" maskUnits="userSpaceOnUse" x="0" y="0" width="1" height="1">
-            <image href={CLOUD_POSTER} x="-1" width="2" height="1" preserveAspectRatio="none" />
-          </mask>
+          {/* The poster's three panels: points, work stars, personal dots. */}
+          {['points', 'stars', 'personal'].map((id, k) => (
+            <mask key={id} id={`hero-${id}`} maskUnits="userSpaceOnUse" x="0" y="0" width="1" height="1">
+              <image href={CLOUD_POSTER} x={-k} width="3" height="1" preserveAspectRatio="none" />
+            </mask>
+          ))}
           <rect width="1" height="1" mask="url(#hero-points)" className="fill-term-accent" />
           <rect width="1" height="1" mask="url(#hero-stars)" className="fill-sun" />
+          <rect width="1" height="1" mask="url(#hero-personal)" className="fill-term-text" />
         </svg>
       </div>
       {live && (
@@ -342,20 +349,20 @@ export function Hero() {
       {star && hover && (
         <div
           aria-hidden
-          className={`pointer-events-none absolute z-[3] max-w-[280px] -translate-y-1/2 rounded-lg border border-sun/55 bg-night-deep/95 px-2.5 py-2 text-[13px] leading-[1.4] text-term-text ${hover.flip ? '-translate-x-[calc(100%_+_14px)]' : 'translate-x-3.5'}`}
+          className={`pointer-events-none absolute z-[3] max-w-[280px] -translate-y-1/2 rounded-lg border bg-night-deep/95 px-2.5 py-2 text-[13px] leading-[1.4] text-term-text ${star.kind === 'work' ? 'border-sun/55' : 'border-term-text/40'} ${hover.flip ? '-translate-x-[calc(100%_+_14px)]' : 'translate-x-3.5'}`}
           style={{ left: hover.x, top: hover.y }}
         >
-          <span className={`mb-[3px] block font-mono text-[11px] font-medium ${cited[star.anchor] ? 'text-coral-glow' : 'text-sun'}`}>
-            {star.title}
-            {cited[star.anchor] && ` · cited [${cited[star.anchor].join(', ')}]`}
+          <span className={`block font-mono text-[11px] font-medium ${starCited ? 'text-coral-glow' : star.kind === 'work' ? 'text-sun' : 'text-term-text'}`}>
+            {star.name}
+            {starCited && ` · cited [${starCited.join(', ')}]`}
           </span>
-          {star.snippet}
-          <span className="mt-1 block font-mono text-[11px] text-term-dim">click to see the line</span>
+          {star.words.length > 0 && <span className="mt-[3px] block">{star.words.join(' · ')}</span>}
         </div>
       )}
 
-      <p className="absolute right-gutter top-[calc(56px_+_22px)] z-[2] m-0 w-[30ch] text-right font-mono text-xs text-term-dim @max-[700px]:hidden print:hidden">
-        each bright point is one of the {STARS.length} sources my clone can cite.{live && ' hover one.'}
+      <p className="absolute right-gutter top-[calc(56px_+_22px)] z-[2] m-0 w-[34ch] text-right font-mono text-xs text-term-dim @max-[700px]:hidden print:hidden">
+        each yellow point is one of the {STARS.length} sources my clone can cite; each white one is something I love.
+        {live && ' hover one.'}
       </p>
 
       <div

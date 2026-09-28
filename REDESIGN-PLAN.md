@@ -299,9 +299,9 @@ entrance effects read as templated and compete with the cloud.
 | Piece | Choice | Client cost (gz) | Worker cost | Why |
 |---|---|---|---|---|
 | Point cloud | **Own WebGL2 renderer**: `gl.POINTS`, one vertex shader for rotation, brush and flare, round-point fragment shader; WebGL1 fallback; poster if neither | ~4–6 KB, lazy chunk loaded after first paint only when the tier isn't Saver and the hero is in view | ~few KB (SSR only renders the wrapper) | three.js adds about 150 KB+ gz for one draw call we can write in about 200 lines |
-| Cloud source image | **`public/hero-cloud-src.png`**: 320², ~20 KB, grey + alpha, a line sketch of Raj's cut-out photo made by `scripts/hero-cloud-src.py` (DoG lines and a dark fill for hair and beard on the head; the shirt's stripes lifted out first; an ink outline). It replaced the prototype's illustration (`cloud-src.py`) | ~20 KB, lazy with the renderer | 0 (static asset) | Deterministic input; no build step (the script needs Python with numpy/Pillow/scipy/scikit-image, and is run by hand) |
+| Cloud source image | **`public/hero-cloud-src.png`**: 320², ~20 KB, grey + alpha, a line sketch of Raj's cartoon made by `scripts/portrait-images.py` (background flood-filled away; DoG lines and a dark fill for hair and beard on the head; the shirt's stripes lifted out first; an ink outline). It replaced the prototype's illustration (`cloud-src.py`); the same script makes the avatar | ~20 KB, lazy with the renderer | 0 (static asset) | Deterministic input; no build step (the script needs Python with numpy/Pillow/scipy/scikit-image, and is run by hand) |
 | Sampling | At runtime in the renderer chunk, seeded: the image's alpha is the figure mask; edges on √luminance; solid dark fill down-weighted (hair and beard don't swallow points); head region weighted up; stars picked farthest-point on the outline and kept out of the faded bottom rows. Port the prototype's `sample()`, `depth()`, `pickStars()` and `layout()` | in the chunk | 0 | Tuned in review; the layout measures the name, prompt bar and system log so the figure never collides with them |
-| Poster | `public/hero-cloud.webp` (≤ 40 KB), drawn from the renderer's sampler by `scripts/hero-cloud-src.py` | image, lazy after LCP | 0 (static asset) | Reduced motion, Saver, no-WebGL, and the pre-hydration placeholder |
+| Poster | `public/hero-cloud.webp` (≤ 40 KB), drawn from the renderer's sampler by `scripts/portrait-images.py` (points, work stars, personal dots) | image, lazy after LCP | 0 (static asset) | Reduced motion, Saver, no-WebGL, and the pre-hydration placeholder |
 | Display font | **Anton** via `next/font/google` (self-hosted, latin subset, `adjustFontFallback`) | ~25–30 KB woff2 (measured in P0) | 0 | Same-origin, so no CSP change |
 | Marquee, timeline, pipelines, counters | CSS keyframes + IntersectionObserver + WAAPI | ~0 | 0 | |
 | Counters, magnetic, scroll-spy, local time | Small hooks in `app/lib/` (`use-in-view`, `use-motion-tier`, `use-local-time`) | ~3 KB | small | |
@@ -495,8 +495,8 @@ disjoint files, and `page.tsx` is only edited in P0 and P7.
   side by side.
 - **Stale anchors after future `resume.ts` edits.** Caught by the anchors and stats tests. The prototype
   also reads `resume.ts`, so rebuilding it after an edit shows what moved.
-- **The cloud depends on one photo.** A new photo means re-fitting the crop and head outline in
-  `scripts/hero-cloud-src.py`, re-running it, and re-checking the layout at 1440, 1280, 1024 and 390 wide;
+- **The cloud depends on one portrait.** A new one means re-fitting the crop and head outline in
+  `scripts/portrait-images.py`, re-running it, and re-checking the layout at 1440, 1280, 1024 and 390 wide;
   the sampler weights were tuned for line art.
 - **Page length.** The prototype landed at 12.5 mobile screens against the original 8-screen target; the
   build is 13.1 (§0a). The biggest remaining blocks are the builds and the lower page.

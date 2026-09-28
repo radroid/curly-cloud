@@ -6,18 +6,18 @@ const DESKTOP: HeroBox = { w: 1440, h: 900, top: 70, copyTop: 404.2, copyRight: 
 const MOBILE: HeroBox = { w: 390, h: 844, top: 70, copyTop: 477.33, copyRight: 370, logLeft: 390 }
 
 describe('figure layout', () => {
-  it('matches the prototype on a 1440 × 900 desktop', () => {
+  it('fits the bust between the copy and the log on a 1440 × 900 desktop', () => {
     const l = layout(DESKTOP)
-    expect(l.s).toBeCloseTo(635.4, 0)
-    expect(l.cx).toBeCloseTo(945.9, 0)
-    expect(l.cy).toBeCloseTo(582.3, 0)
+    expect(l.s).toBeCloseTo(610.3, 0)
+    expect(l.cx).toBeCloseTo(933.3, 0)
+    expect(l.cy).toBeCloseTo(594.8, 0)
   })
 
   it('stands the bust on the bottom edge, between the copy and the log', () => {
     const l = layout(DESKTOP)
     expect(l.cy + l.s / 2).toBeCloseTo(DESKTOP.h)
     expect(l.cx - l.s * 0.5).toBeGreaterThanOrEqual(DESKTOP.copyRight + 24 - 0.01)
-    expect(l.cx + l.s * 0.23).toBeLessThanOrEqual(DESKTOP.logLeft - 24 + 0.01)
+    expect(l.cx + l.s * 0.26).toBeLessThanOrEqual(DESKTOP.logLeft - 24 + 0.01)
   })
 
   it('centres the bust above the copy on a 390 × 844 phone', () => {

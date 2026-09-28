@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { depth, pickStars, POINTS, rng, sample, scatter } from './sampler'
-import { STARS } from './stars'
+import { ALL_STARS, STARS } from './stars'
 
 /** A stand-in for the illustration: a light disc with a dark outline on a transparent background. */
 function disc(size = 320): Uint8ClampedArray {
@@ -70,6 +70,16 @@ describe('source stars', () => {
     for (const a of stars) for (const b of stars) if (a !== b) closest = Math.min(closest, Math.hypot(points.x[a] - points.x[b], points.y[a] - points.y[b]))
     // Evenly spaced on this ring they'd be about 0.05 apart.
     expect(closest).toBeGreaterThan(0.02)
+  })
+
+  it('still spreads them out with the personal dots added', () => {
+    const stars = pickStars(points, ALL_STARS.length)
+    expect(new Set(stars).size).toBe(ALL_STARS.length)
+    // The work stars come first and are the same picks as without the personal dots.
+    expect(stars.slice(0, STARS.length)).toEqual(pickStars(points, STARS.length))
+    let closest = Infinity
+    for (const a of stars) for (const b of stars) if (a !== b) closest = Math.min(closest, Math.hypot(points.x[a] - points.x[b], points.y[a] - points.y[b]))
+    expect(closest).toBeGreaterThan(0.015)
   })
 })
 

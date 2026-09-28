@@ -32,10 +32,10 @@ export const NARROW = 700
 const GAP = 24
 
 export function layout(b: HeroBox): FigureLayout {
-  // The bust spans x -0.5..0.5 of s; its head reaches about 0.23 as it turns. With the log shown,
+  // The bust spans x -0.5..0.5 of s; its hair reaches about 0.26 as it turns. With the log shown,
   // only the head has to stay left of it (the shoulder passes below).
   const log = b.logLeft < b.w
-  const reach = log ? 0.23 : 0.5
+  const reach = log ? 0.26 : 0.5
   const lb = b.copyRight + GAP
   const rb = log ? b.logLeft - GAP : b.w - 8
   // Standing on the hero's bottom edge, between the copy and the log...

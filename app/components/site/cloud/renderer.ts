@@ -17,8 +17,8 @@ export interface CloudOptions {
   canvas: HTMLCanvasElement
   /** The source illustration (same origin). */
   src: string
-  /** How many stars to pick: one per public source. */
-  stars: number
+  /** How many stars to pick: one per public source (yellow), then the personal dots (white). */
+  stars: { work: number; personal: number }
   tier: CloudTier
   onStage: (stage: CloudStage) => void
   /** Frames drawn in the last second, reported once a second while running. */
@@ -105,12 +105,16 @@ void main() {
     vDot = vec4(r, 0.0, ceil(r * 2.0 + 2.0), min(1.0, a + 0.08) * 0.95);
     vHue = 0.0;
   } else {
+    // State: hover + 2 × cited + 4 × personal.
     float hover = mod(aMeta.y, 2.0);
-    float cited = step(1.5, aMeta.y);
+    float cited = step(1.5, mod(aMeta.y, 4.0));
+    float personal = step(3.5, aMeta.y);
     float halo = hover > 0.5 ? 11.0 : cited > 0.5 ? 9.0 + sin(uClock.y / 260.0) * 2.5 : 6.0;
     float core = hover > 0.5 ? 4.5 : cited > 0.5 ? 3.6 : 2.6;
-    vDot = vec4(halo * dpr, core * dpr, ceil(halo * dpr * 2.0 + 2.0), uKind.y);
-    vHue = 1.0 + cited;
+    // Smaller figures get smaller stars, so they don't crowd the face (the hit area stays the same).
+    float k = clamp(uFig.z / 560.0, 0.6, 1.0) * dpr;
+    vDot = vec4(halo * k, core * k, ceil(halo * k * 2.0 + 2.0), uKind.y);
+    vHue = personal > 0.5 ? 3.0 : 1.0 + cited;
   }
   gl_Position = vec4(q.x / uView.x * 2.0 - 1.0, 1.0 - q.y / uView.y * 2.0, 0.0, 1.0);
   gl_PointSize = vDot.z;
@@ -118,7 +122,7 @@ void main() {
 
 const FRAG = `
 precision mediump float;
-uniform vec3 uHue[3];
+uniform vec3 uHue[4];
 varying vec4 vDot;
 varying float vHue;
 void main() {
@@ -127,7 +131,7 @@ void main() {
   if (outer <= 0.0) discard;
   float core = clamp(vDot.y + 0.5 - d, 0.0, 1.0);
   float a = (vDot.y > 0.0 ? core + (1.0 - core) * 0.28 * outer : outer) * vDot.w;
-  vec3 c = vHue < 0.5 ? uHue[0] : vHue < 1.5 ? uHue[1] : uHue[2];
+  vec3 c = vHue < 0.5 ? uHue[0] : vHue < 1.5 ? uHue[1] : vHue < 2.5 ? uHue[2] : uHue[3];
   gl_FragColor = vec4(c * a, a);
 }`
 
@@ -197,7 +201,8 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   const pts = sample(g2.getImageData(0, 0, SRC_SIZE, SRC_SIZE).data)
   await pause()
   const from = scatter(pts)
-  const starIdx = pickStars(pts, o.stars)
+  // Work stars first, so their indices match the hero's; the personal dots fill the gaps between them.
+  const starIdx = pickStars(pts, o.stars.work + o.stars.personal)
   o.onStage('sampled')
 
   if (!(await linked(gl, prog))) return null
@@ -211,7 +216,10 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
     pointData.set([pts.x[i], pts.y[i], pts.z[i], from.x[i], from.y[i], from.z[i], from.delay[i], pts.b[i]], i * STRIDE)
   }
   const starData = new Float32Array(starIdx.length * STRIDE)
-  starIdx.forEach((i, k) => starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE - 1), k * STRIDE))
+  starIdx.forEach((i, k) => {
+    starData.set(pointData.subarray(i * STRIDE, i * STRIDE + STRIDE - 1), k * STRIDE)
+    starData[k * STRIDE + 7] = k >= o.stars.work ? 4 : 0
+  })
   const pointBuf = gl.createBuffer()
   gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf)
   gl.bufferData(gl.ARRAY_BUFFER, pointData, gl.STATIC_DRAW)
@@ -230,7 +238,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   gl.enable(gl.BLEND)
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
   gl.clearColor(0, 0, 0, 0)
-  gl.uniform3fv(U.hue, [...themeColor(g2, 'term-accent'), ...themeColor(g2, 'sun'), ...themeColor(g2, 'coral-glow')])
+  gl.uniform3fv(U.hue, ['term-accent', 'sun', 'coral-glow', 'term-text'].flatMap((c) => themeColor(g2, c)))
 
   let tier = TIERS[o.tier]
   let fig: FigureLayout = { cx: 0, cy: 0, s: 0 }
@@ -274,7 +282,7 @@ export async function createCloud(o: CloudOptions): Promise<Cloud | null> {
   }
 
   const uploadStars = (): void => {
-    starIdx.forEach((_, k) => (starData[k * STRIDE + 7] = (k === hover ? 1 : 0) + (cited.has(k) ? 2 : 0)))
+    starIdx.forEach((_, k) => (starData[k * STRIDE + 7] = (k === hover ? 1 : 0) + (cited.has(k) ? 2 : 0) + (k >= o.stars.work ? 4 : 0)))
     gl.bindBuffer(gl.ARRAY_BUFFER, starBuf)
     gl.bufferSubData(gl.ARRAY_BUFFER, 0, starData)
   }

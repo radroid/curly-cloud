@@ -3,6 +3,19 @@
 Design for the hero cloud's hover cards, agreed with Raj on 2026-09-28. It builds on the photo-based
 cloud in `REDESIGN-PLAN.md` §4.
 
+## Status (2026-09-28)
+
+Built. Changes from the design below:
+
+- **Portrait:** Raj swapped his photo for his cartoon while this was being built. `scripts/portrait-images.py` makes
+  the cloud's source, the poster and the avatar (`public/raj-avatar.webp`) from it.
+- **Head reach:** the cartoon's fuller hair reaches 0.26 of the figure's size as it turns, not 0.23. `layout()` and
+  the poster CSS leave that much room before the status log.
+- **Dot size:** dots now scale with the figure instead of shrinking only the personal ones. They are full size from a
+  560 px figure and 60% at the smallest, so 57 dots don't crowd the face at 1024 wide or on phones. The hit area
+  stays 24 px.
+- **Mac link:** there is no DOM test setup for the desktop, so `?open=music` was checked in the browser only.
+
 ## Goal
 
 Hovering the cloud should say who Raj is at a glance, not replay the resume. Each card gets shorter, and
@@ -142,7 +155,7 @@ That makes 19 personal dots and 57 in all.
 - The status box stays at 38 public sources.
 - The image URLs move to `?v=3`.
 
-## Poster (`public/hero-cloud.webp`, `scripts/hero-cloud-src.py`)
+## Poster (`public/hero-cloud.webp`, `scripts/portrait-images.py`)
 
 - The poster grows to three 1024² panels (3072 × 1024): points, work dots, personal dots.
 - `hero.tsx` masks the third panel with `fill-term-text`.
