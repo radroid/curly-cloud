@@ -56,3 +56,7 @@ clash-api-player-response.json
 # Local Claude Code state; project skills are committed.
 .claude/*
 !.claude/skills/
+
+# Local timelapse captures and generated image output.
+/.timelapse/
+/output/
