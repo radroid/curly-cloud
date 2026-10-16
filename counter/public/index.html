@@ -1,0 +1,1452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Score Counter</title>
+<meta name="description" content="Keep score for any game on your phone or laptop. Scores stay on this device.">
+<meta name="theme-color" content="#000000">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Counter">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<style>
+  :root {
+    --bg: #000;
+    --chrome: #1c1c1e;
+    --chrome-press: #2c2c2e;
+    --line: #2c2c2e;
+    --text: #fff;
+    --muted: #8e8e93;
+    --accent: #3a82f7;
+    --danger: #ff453a;
+    --gap: 8px;
+    --radius: 18px;
+    --font: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    --safe-t: env(safe-area-inset-top, 0px);
+    --safe-b: env(safe-area-inset-bottom, 0px);
+    --safe-l: env(safe-area-inset-left, 0px);
+    --safe-r: env(safe-area-inset-right, 0px);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+  body {
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { border: 0; background: none; padding: 0; cursor: pointer; touch-action: manipulation; }
+  :focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg { display: block; }
+
+  /* Screens */
+  .screen {
+    position: fixed; inset: 0;
+    display: flex; flex-direction: column;
+    padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 10px) calc(var(--safe-b) + 10px) calc(var(--safe-l) + 10px);
+    background: var(--bg);
+  }
+  /* Screens fade in: a slide fought the keyboard rising on Edit */
+  .screen.push { animation: fade-in 160ms ease-out; }
+  @keyframes fade-in { from { opacity: 0; } }
+  .inner { width: 100%; max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+  /* Top bar */
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 48px; flex: none; margin-bottom: 10px; padding: 0 2px; }
+  .bar h1 { font-size: 17px; font-weight: 600; margin: 0; flex: 1; text-align: center; }
+  .pill { display: flex; background: var(--chrome); border-radius: 999px; }
+  .icon-btn {
+    width: 46px; height: 46px; border-radius: 999px;
+    display: grid; place-items: center;
+    color: var(--accent); background: var(--chrome);
+    transition: background-color 120ms;
+  }
+  .pill .icon-btn { background: transparent; width: 52px; }
+  .icon-btn:active { background: var(--chrome-press); }
+  .icon-btn.danger { color: var(--danger); }
+  .icon-btn svg { width: 24px; height: 24px; }
+  .bar-spacer { width: 46px; flex: none; }
+
+  /* Board */
+  #board .inner { max-width: none; }
+  #board[data-layout="list"] .inner { max-width: 560px; }
+  .counters {
+    flex: 1; min-height: 0;
+    display: grid; gap: var(--gap);
+    grid-auto-rows: minmax(0, 1fr);
+  }
+  /* Cards forced on with many counters: keep each one tall enough to tap, and scroll */
+  .counters.cards { grid-auto-rows: minmax(150px, 1fr); overflow-y: auto; overscroll-behavior: contain; }
+  .counters.list {
+    grid-auto-rows: 88px; align-content: start;
+    overflow-y: auto; overscroll-behavior: contain;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .counter {
+    --fg: #fff;
+    --tint: rgba(255, 255, 255, .16);
+    position: relative; overflow: hidden;
+    background: var(--c); color: var(--fg);
+    border-radius: var(--radius);
+    min-height: 0;
+    user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+    transition: background-color 200ms;
+  }
+  .counter.ink { --fg: rgba(0, 0, 0, .86); --tint: rgba(0, 0, 0, .1); }
+  .counter.bump-in { animation: bump-in 260ms cubic-bezier(.2, .8, .2, 1); }
+  @keyframes bump-in { from { transform: scale(.94); opacity: 0; } }
+
+  .name-btn {
+    font-size: 21px; font-weight: 500; letter-spacing: -.01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    text-align: left; min-width: 0;
+  }
+  .delta {
+    font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums;
+    padding: 2px 8px; border-radius: 999px; background: var(--tint);
+    opacity: 0; transform: translateY(4px);
+    transition: opacity 180ms, transform 180ms;
+    flex: none;
+  }
+  .delta.show { opacity: 1; transform: none; }
+  .score { font-variant-numeric: tabular-nums; font-weight: 500; line-height: 1; letter-spacing: -.02em; border-radius: 14px; transition: opacity 120ms; }
+  .score:active { opacity: .7; }
+  .score.bump { animation: bump 180ms ease-out; }
+  @keyframes bump { 40% { transform: scale(1.08); } }
+  .glyph { width: 28px; height: 28px; pointer-events: none; }
+
+  /* Card layout: header band, then tap zones on each half */
+  .card { display: flex; flex-direction: column; }
+  .card .head {
+    display: flex; align-items: center; gap: 10px;
+    height: 52px; flex: none; padding: 0 8px 0 22px;
+    background: rgba(0, 0, 0, .05);
+  }
+  .card .name-btn { flex: 0 1 auto; height: 100%; }
+  .card .head .grow { flex: 1; }
+  .more { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 999px; flex: none; }
+  .more svg { width: 24px; height: 24px; }
+  .card .body { position: relative; flex: 1; min-height: 0; container-type: size; }
+  .card .zone {
+    position: absolute; top: 0; bottom: 0; width: 50%;
+    display: flex; align-items: center;
+    transition: background-color 120ms;
+  }
+  .card .zone.dec { left: 0; padding-left: 26px; }
+  .card .zone.inc { right: 0; justify-content: flex-end; padding-right: 26px; }
+  .card .zone:active, .card .zone.held { background: var(--tint); }
+  .card .score-wrap { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+  .card .score {
+    pointer-events: auto; padding: 0 .06em;
+    /* Shrink as the score grows so five digits still fit between − and + */
+    font-size: min(68cqh, 280px, calc((100cqw - 130px) / (var(--n, 1) * .6)));
+  }
+
+  /* List layout: one row, name then − score + */
+  .row { display: flex; align-items: center; padding-left: 22px; }
+  .row .name-btn { flex: 1; height: 100%; display: flex; align-items: center; gap: 10px; }
+  .row .name-btn span:first-child { overflow: hidden; text-overflow: ellipsis; }
+  .row .step {
+    width: 64px; height: 100%; flex: none;
+    display: grid; place-items: center;
+    transition: background-color 120ms;
+  }
+  .row .step:active, .row .step.held { background: var(--tint); }
+  /* Fixed width so − and + line up from row to row; long scores shrink instead of pushing them */
+  .row .score { align-self: stretch; display: grid; place-items: center; flex: none; width: 92px; font-size: min(48px, calc(86px / (var(--n, 1) * .6))); }
+  @media (max-width: 360px) {
+    .row .step { width: 48px; }
+    .row .score { width: 78px; font-size: min(42px, calc(74px / (var(--n, 1) * .6))); }
+  }
+  .row .glyph { width: 24px; height: 24px; }
+
+  /* Wide screens: cards sit side by side, a long list splits into two columns */
+  @media (min-aspect-ratio: 5/4) and (min-width: 640px) {
+    .counters.cards { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    #board[data-layout="list"][data-two] .inner { max-width: 1100px; }
+    .counters.list.two { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* Empty board */
+  .empty { flex: 1; display: grid; place-content: center; justify-items: center; gap: 18px; text-align: center; padding: 24px; }
+  .empty p { margin: 0; color: var(--muted); font-size: 17px; max-width: 26ch; line-height: 1.4; }
+  .primary {
+    background: var(--accent); color: #fff; font-weight: 600; font-size: 17px;
+    border-radius: 14px; padding: 14px 26px; min-height: 50px;
+  }
+  .primary:active { filter: brightness(.9); }
+
+  /* Edit screen */
+  .preview {
+    display: block; width: 100%;
+    background: var(--c); color: var(--fg, #fff);
+    border-radius: var(--radius); height: 128px; flex: none;
+    transition: background-color 200ms;
+  }
+  .preview.ink { --fg: rgba(0, 0, 0, .86); }
+  .preview input {
+    width: 100%; height: 100%; padding: 0 30px;
+    background: transparent; border: 0; outline: none;
+    color: var(--fg, #fff); caret-color: var(--fg, #fff);
+    font-size: 40px; font-weight: 600; letter-spacing: -.01em;
+    border-radius: var(--radius);
+  }
+  .preview input::placeholder { color: var(--fg, #fff); opacity: .45; }
+  /* Keep a selected name in the card's text colour; the default highlight turned it black */
+  .preview input::selection, .amount input::selection { background: rgba(255, 255, 255, .32); color: var(--fg, #fff); }
+  .preview.ink input::selection, .amount.ink input::selection { background: rgba(0, 0, 0, .16); }
+  .swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-top: 12px; }
+  .swatch {
+    position: relative; aspect-ratio: 1; border-radius: 16px; background: var(--c);
+    transition: transform 120ms;
+  }
+  .swatch:active { transform: scale(.94); }
+  .swatch[aria-pressed="true"]::after, .swatch.on::after {
+    content: ""; position: absolute; inset: -5px; border-radius: 20px;
+    border: 3px solid #fff;
+  }
+  .swatch.custom { background: conic-gradient(from 200deg, #ff453a, #ff9f0a, #ffd60a, #30d158, #64d2ff, #0a84ff, #bf5af2, #ff375f, #ff453a); overflow: visible; }
+  .swatch.custom::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(circle, rgba(255,255,255,.85), rgba(255,255,255,0) 62%); }
+  .swatch.custom input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+  .field {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--chrome); border-radius: 14px;
+    padding: 0 8px 0 18px; min-height: 56px; margin-top: 22px;
+  }
+  .field label, .field .label { font-size: 17px; }
+  .stepper { display: flex; align-items: center; gap: 4px; }
+  .stepper button { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: var(--accent); }
+  .stepper button:active { background: var(--chrome-press); }
+  .stepper button svg { width: 22px; height: 22px; }
+  .stepper input {
+    width: 5.5ch; text-align: center; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums;
+    background: transparent; border: 0; border-radius: 8px; padding: 6px 0;
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  .stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper input:focus { background: var(--chrome-press); outline: none; }
+
+  /* Settings */
+  .scroll { overflow-y: auto; flex: 1; min-height: 0; padding-bottom: 20px; }
+  .group-title { font-size: 13px; color: var(--muted); margin: 26px 18px 8px; font-weight: 400; }
+  .group { background: var(--chrome); border-radius: 14px; overflow: hidden; }
+  .group > * + * { border-top: 1px solid var(--line); }
+  .group .field { margin: 0; border-radius: 0; background: none; padding-right: 12px; }
+  .note { color: var(--muted); font-size: 13px; margin: 8px 18px 0; line-height: 1.4; max-width: 60ch; }
+  .seg { display: flex; background: #000; border-radius: 10px; padding: 3px; }
+  .seg button { padding: 7px 13px; border-radius: 8px; font-size: 15px; color: var(--muted); min-width: 44px; }
+  .seg button[aria-pressed="true"] { background: var(--chrome-press); color: #fff; font-weight: 600; }
+  .switch { position: relative; width: 51px; height: 31px; flex: none; }
+  .switch input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+  .switch span { position: absolute; inset: 0; border-radius: 999px; background: #39393d; transition: background-color 180ms; pointer-events: none; }
+  .switch span::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; transition: transform 180ms; box-shadow: 0 2px 4px rgba(0,0,0,.3); }
+  .switch input:checked + span { background: #30d158; }
+  .switch input:checked + span::after { transform: translateX(20px); }
+  .switch input:focus-visible + span { outline: 3px solid #fff; outline-offset: 2px; }
+  .row-btn { display: block; width: 100%; text-align: left; padding: 16px 18px; font-size: 17px; color: var(--accent); }
+  .row-btn.danger { color: var(--danger); }
+  .row-btn:active { background: var(--chrome-press); }
+
+  /* Type points: a sheet that sits on top of the keyboard */
+  .sheet-wrap { position: fixed; left: 0; right: 0; top: 0; height: 100%; z-index: 20; display: flex; flex-direction: column; justify-content: flex-end; }
+  .scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .6); }
+  .sheet {
+    position: relative; width: 100%; max-width: 560px; margin: 0 auto;
+    background: var(--chrome); border-radius: 24px 24px 0 0;
+    padding: 16px 14px calc(14px + var(--safe-b));
+    animation: sheet-in 240ms cubic-bezier(.2, .8, .2, 1);
+  }
+  @keyframes sheet-in { from { transform: translateY(40px); opacity: 0; } }
+  /* The keyboard already covers the home indicator */
+  .sheet-wrap.kb .sheet { padding-bottom: 12px; }
+  .sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin: 0 4px 12px; }
+  .sheet-name { font-size: 20px; font-weight: 600; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet-sub { color: var(--muted); font-size: 15px; margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+  .text-btn { color: var(--accent); font-size: 17px; padding: 8px 6px; margin: -6px -4px 0 0; border-radius: 10px; flex: none; }
+  .amount { --fg: #fff; display: block; background: var(--c); border-radius: 18px; transition: background-color 200ms; }
+  .amount.ink { --fg: rgba(0, 0, 0, .86); }
+  .amount input {
+    width: 100%; height: 96px; text-align: center;
+    font-size: 60px; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -.02em;
+    background: transparent; border: 0; outline: none; border-radius: 18px;
+    color: var(--fg); caret-color: var(--fg);
+  }
+  .amount input::placeholder { color: var(--fg); opacity: .4; }
+  .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+  .act {
+    min-height: 66px; border-radius: 16px; background: var(--chrome-press);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 18px; font-weight: 600;
+  }
+  .act small { font-size: 14px; font-weight: 400; color: var(--muted); font-variant-numeric: tabular-nums; }
+  /* White, not blue: it sits under the player's colour, which can be any hue */
+  .act.add { background: #fff; color: #000; }
+  .act.add small { color: rgba(0, 0, 0, .6); }
+  .act:disabled { opacity: .45; cursor: default; }
+  .act:not(:disabled):active { filter: brightness(.85); }
+  .hint { display: none; }
+  @media (hover: hover) and (pointer: fine) {
+    .sheet-wrap { justify-content: center; }
+    .sheet { max-width: 420px; border-radius: 24px; padding-bottom: 16px; }
+    .hint { display: block; text-align: center; color: var(--muted); font-size: 13px; margin: 12px 0 0; }
+  }
+
+  /* History */
+  #history .inner { max-width: 820px; }
+  .chart { position: relative; touch-action: pan-y; user-select: none; -webkit-user-select: none; border-radius: 12px; cursor: crosshair; }
+  .chart svg { width: 100%; overflow: visible; }
+  .chart text { font-family: var(--font); font-size: 12px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+  .chart text.end { fill: #d1d1d6; font-size: 13px; }
+  .chart .series { transition: opacity 160ms; }
+  .chart .series.dim { opacity: .18; }
+  .readout { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 16px 4px 8px; color: var(--muted); font-size: 15px; }
+  .readout span:first-child { white-space: nowrap; }
+  .readout span:last-child { font-size: 13px; text-align: right; }
+  #history .scroll { display: flex; flex-direction: column; }
+  .legend { list-style: none; margin: 0; padding: 0; }
+  .legend button {
+    width: 100%; min-height: 50px; padding: 0 18px;
+    display: grid; grid-template-columns: 18px 1fr auto; align-items: center; gap: 14px;
+    text-align: left; font-size: 17px; transition: color 160ms;
+  }
+  .legend button:active { background: var(--chrome-press); }
+  .legend button span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .legend.picked button[aria-pressed="false"] { color: var(--muted); }
+  .legend.picked button[aria-pressed="true"] { background: var(--chrome-press); }
+  .key { width: 18px; height: 3px; border-radius: 2px; background: var(--c); }
+  .legend .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .table-wrap { background: var(--chrome); border-radius: 14px; overflow: hidden; }
+  .changes { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .changes th { font-weight: 400; font-size: 13px; color: var(--muted); text-align: left; padding: 12px 8px 8px; }
+  .changes td { height: 48px; padding: 0 8px; border-top: 1px solid var(--line); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .changes th:first-child, .changes td:first-child { padding-left: 16px; }
+  .changes .num { text-align: right; }
+  .changes .when { color: var(--muted); }
+  .changes .amt { font-weight: 600; }
+  .changes .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--c); margin-right: 10px; vertical-align: 0; }
+  .changes tr.start td { color: var(--muted); }
+  .changes td.x { padding: 0 6px 0 0; text-align: right; }
+  .x button { width: 36px; height: 36px; border-radius: 999px; display: inline-grid; place-items: center; color: var(--muted); vertical-align: middle; }
+  .x button:active { background: var(--chrome-press); }
+  .x svg { width: 18px; height: 18px; }
+  @media (min-width: 640px) {
+    /* Two columns: dividers would stop halfway under an odd last row, so drop them */
+    .legend { display: grid; grid-template-columns: 1fr 1fr; padding: 4px 0; }
+    .legend.group > * + * { border-top: 0; }
+  }
+
+  /* Toast with undo */
+  .toast {
+    position: fixed; left: 50%; bottom: calc(var(--safe-b) + 20px); z-index: 10;
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    display: flex; align-items: center; gap: 14px;
+    background: #2c2c2e; color: #fff; border-radius: 14px;
+    padding: 8px 8px 8px 18px; font-size: 16px; white-space: nowrap;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .6);
+    transition: opacity 200ms, transform 200ms;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+  .toast button { color: var(--accent); font-weight: 600; padding: 10px 14px; border-radius: 10px; }
+  .toast button:active { background: #3a3a3c; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.2c.4-1.6 3-1.6 3.4 0a1.8 1.8 0 0 0 2.6 1.1c1.4-.9 3.3 1 2.4 2.4a1.8 1.8 0 0 0 1.1 2.6c1.6.4 1.6 3 0 3.4a1.8 1.8 0 0 0-1.1 2.6c.9 1.4-1 3.3-2.4 2.4a1.8 1.8 0 0 0-2.6 1.1c-.4 1.6-3 1.6-3.4 0a1.8 1.8 0 0 0-2.6-1.1c-1.4.9-3.3-1-2.4-2.4a1.8 1.8 0 0 0-1.1-2.6c-1.6-.4-1.6-3 0-3.4a1.8 1.8 0 0 0 1.1-2.6c-.9-1.4 1-3.3 2.4-2.4a1.8 1.8 0 0 0 2.6-1.1Z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.6 9.2A7.2 7.2 0 1 1 5 13"/><path d="M4.8 4.6v4.8h4.8"/></g></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4.5v15M4.5 12h15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M4.5 12h15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></g></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4.5 7.5 12l7.5 7.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4.5v15h16"/><path d="M7.5 15.5l3.5-4.5 3 2.5 5-6.5"/></g></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h16M9.5 6.5V4.8c0-.7.5-1.3 1.2-1.3h2.6c.7 0 1.2.6 1.2 1.3v1.7M6.2 6.5l.9 12.4c.1 1 .9 1.6 1.8 1.6h6.2c.9 0 1.7-.7 1.8-1.6l.9-12.4M10 10.5v6M14 10.5v6"/></g></symbol>
+</svg>
+
+<!-- Board: every counter -->
+<main id="board" class="screen">
+  <div class="inner">
+    <div class="bar">
+      <div class="pill">
+        <button class="icon-btn" id="open-settings" aria-label="Settings"><svg><use href="#i-gear"/></svg></button>
+        <button class="icon-btn" id="open-history" aria-label="History"><svg><use href="#i-chart"/></svg></button>
+      </div>
+      <div class="pill">
+        <button class="icon-btn" id="reset" aria-label="Reset scores"><svg><use href="#i-reset"/></svg></button>
+        <button class="icon-btn" id="add" aria-label="Add counter"><svg><use href="#i-plus"/></svg></button>
+      </div>
+    </div>
+    <div id="counters" class="counters"></div>
+    <div id="empty" class="empty" hidden>
+      <p>Add a counter for each player or team.</p>
+      <button class="primary" id="add-first">Add counter</button>
+    </div>
+  </div>
+</main>
+
+<!-- Edit one counter: name, colour, score -->
+<section id="edit" class="screen" hidden aria-label="Edit counter">
+  <div class="inner">
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Done"><svg><use href="#i-back"/></svg></button>
+      <button class="icon-btn danger" id="delete" aria-label="Delete counter"><svg><use href="#i-trash"/></svg></button>
+    </div>
+    <div class="scroll">
+      <form class="preview" id="preview" autocomplete="off">
+        <label class="sr-only" for="name">Name</label>
+        <input id="name" maxlength="24" placeholder="Name" enterkeyhint="done" spellcheck="false" autocapitalize="words">
+      </form>
+      <div class="swatches" id="swatches" role="group" aria-label="Colour"></div>
+      <div class="field">
+        <label for="score">Score</label>
+        <div class="stepper">
+          <button type="button" data-nudge="-1" aria-label="Decrease score"><svg><use href="#i-minus"/></svg></button>
+          <input id="score" type="number" inputmode="numeric" step="1">
+          <button type="button" data-nudge="1" aria-label="Increase score"><svg><use href="#i-plus"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- History: the score chart, then every change -->
+<section id="history" class="screen" hidden aria-labelledby="history-title">
+  <div class="inner">
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Back"><svg><use href="#i-back"/></svg></button>
+      <h1 id="history-title">History</h1>
+      <span class="bar-spacer"></span>
+    </div>
+    <div class="scroll">
+      <div id="history-body">
+        <div class="chart" id="chart" tabindex="0" role="group" aria-label="Scores over time. Use the left and right arrow keys to step through changes."></div>
+        <div class="readout"><span id="readout">Scores now</span><span id="readout-hint">Tap a name to pick out their line</span></div>
+        <ul class="legend group" id="legend"></ul>
+        <h2 class="group-title">Changes</h2>
+        <div class="table-wrap">
+          <table class="changes">
+            <colgroup><col><col style="width:84px"><col style="width:64px"><col style="width:64px"><col style="width:44px"></colgroup>
+            <thead><tr><th scope="col">Player</th><th scope="col">Time</th><th scope="col" class="num">Points</th><th scope="col" class="num">Score</th><th scope="col"><span class="sr-only">Remove</span></th></tr></thead>
+            <tbody id="changes"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="history-empty" class="empty" hidden>
+        <p>No points yet. Every change shows up here, with a chart of how the game went.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Settings -->
+<section id="settings" class="screen" hidden aria-labelledby="settings-title">
+  <div class="inner">
+    <div class="bar">
+      <button class="icon-btn" data-back aria-label="Back"><svg><use href="#i-back"/></svg></button>
+      <h1 id="settings-title">Settings</h1>
+      <span class="bar-spacer"></span>
+    </div>
+    <div class="scroll">
+      <h2 class="group-title">Board</h2>
+      <div class="group">
+        <div class="field">
+          <span class="label" id="layout-label">Layout</span>
+          <div class="seg" role="group" aria-labelledby="layout-label" data-setting="layout">
+            <button data-value="auto">Auto</button>
+            <button data-value="cards">Cards</button>
+            <button data-value="list">List</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="label" id="step-label">Points per tap</span>
+          <div class="seg" role="group" aria-labelledby="step-label" data-setting="step">
+            <button data-value="1">1</button>
+            <button data-value="5">5</button>
+            <button data-value="10">10</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="start">Starting score</label>
+          <div class="stepper">
+            <button type="button" data-start-nudge="-1" aria-label="Lower starting score"><svg><use href="#i-minus"/></svg></button>
+            <input id="start" type="number" inputmode="numeric" step="1">
+            <button type="button" data-start-nudge="1" aria-label="Raise starting score"><svg><use href="#i-plus"/></svg></button>
+          </div>
+        </div>
+      </div>
+      <p class="note">Auto shows big cards for up to four counters and a list after that. Reset puts every score back to the starting score and starts a new history.</p>
+
+      <h2 class="group-title">Device</h2>
+      <div class="group">
+        <div class="field">
+          <label for="awake">Keep screen on</label>
+          <span class="switch"><input type="checkbox" role="switch" id="awake"><span></span></span>
+        </div>
+      </div>
+      <p class="note" id="awake-note">Stops your phone dimming while the board is open.</p>
+
+      <h2 class="group-title">Counters</h2>
+      <div class="group">
+        <button class="row-btn" id="sort">Sort by score</button>
+        <button class="row-btn danger" id="clear">Delete all counters</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Type points for one player -->
+<div class="sheet-wrap" id="entry" hidden>
+  <div class="scrim" data-close></div>
+  <form class="sheet" id="entry-form" role="dialog" aria-modal="true" aria-labelledby="entry-name" autocomplete="off">
+    <div class="sheet-head">
+      <div style="min-width:0">
+        <p class="sheet-name" id="entry-name"></p>
+        <p class="sheet-sub">Score <span id="entry-current"></span></p>
+      </div>
+      <button type="button" class="text-btn" data-close>Cancel</button>
+    </div>
+    <label class="amount" id="amount">
+      <span class="sr-only">Points</span>
+      <input id="entry-input" type="text" inputmode="numeric" pattern="[0-9]*" enterkeyhint="done" placeholder="0" maxlength="7">
+    </label>
+    <div class="sheet-actions">
+      <button type="button" class="act" id="entry-sub" disabled><span>Subtract</span><small></small></button>
+      <button type="submit" class="act add" id="entry-add" disabled><span>Add</span><small></small></button>
+    </div>
+    <p class="hint">Enter adds. Shift+Enter subtracts.</p>
+  </form>
+</div>
+
+<div id="live" class="sr-only" aria-live="polite"></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-text"></span><button id="toast-undo">Undo</button></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const KEY = 'curlycloud.counter.v1';
+  const COLORS = ['#5e96f4', '#ba5af1', '#de63a7', '#e3604f', '#e07d3a', '#f5de6f', '#a7dd6e', '#75d2b4', '#a5895c', '#97a2b1', '#313a4c'];
+  const COLOR_NAMES = ['Blue', 'Purple', 'Pink', 'Red', 'Orange', 'Yellow', 'Green', 'Teal', 'Brown', 'Grey', 'Navy'];
+  const CARD_LIMIT = 4;
+  const HOLD_DELAY = 420;
+  // Taps on one counter less than this far apart count as one change, in the "+3" chip and in History.
+  const MERGE_MS = 1600;
+
+  const $ = (sel) => document.querySelector(sel);
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  // ---------- State ----------
+  // A game is a starting score per player plus a log of changes: score = base + every logged change.
+
+  function newGame(players, now = Date.now()) {
+    return { startedAt: now, base: Object.fromEntries(players.map((p) => [p.id, { score: p.score, t: now }])), log: [] };
+  }
+
+  const defaults = () => {
+    const players = [
+      { id: uid(), name: 'Player 1', color: COLORS[0], score: 0 },
+      { id: uid(), name: 'Player 2', color: COLORS[1], score: 0 },
+    ];
+    return { players, settings: { layout: 'auto', step: 1, start: 0, awake: true }, game: newGame(players) };
+  };
+
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+
+  const sumFor = (log, pid) => log.reduce((a, e) => (e.pid === pid ? a + e.d : a), 0);
+
+  // Saves from before History existed (or edited by hand) get a base that makes the sums add up.
+  function repairGame(s) {
+    const g = s.game;
+    if (!g || !g.base || typeof g.base !== 'object' || !Array.isArray(g.log)) s.game = newGame(s.players);
+    for (const p of s.players) {
+      const sum = sumFor(s.game.log, p.id);
+      const b = s.game.base[p.id];
+      if (!b || b.score + sum !== p.score) s.game.base[p.id] = { score: p.score - sum, t: b ? b.t : s.game.startedAt };
+    }
+    return s;
+  }
+
+  function load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY));
+      if (saved && Array.isArray(saved.players)) {
+        return repairGame({ players: saved.players, settings: { ...defaults().settings, ...saved.settings }, game: saved.game });
+      }
+    } catch (_) { /* fall through to a fresh board */ }
+    return defaults();
+  }
+
+  let state = load();
+  let saveTimer = 0;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) { /* private mode: scores last for the session */ }
+    }, 120);
+  }
+  addEventListener('pagehide', () => { clearTimeout(saveTimer); try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) {} });
+
+  const find = (id) => state.players.find((p) => p.id === id);
+
+  function record(pid, d, typed) {
+    const log = state.game.log;
+    const now = Date.now();
+    const last = log[log.length - 1];
+    if (!typed && last && !last.k && last.pid === pid && now - last.t < MERGE_MS) {
+      last.d += d;
+      last.t = now;
+      if (last.d === 0) log.pop();
+      return last;
+    }
+    const e = typed ? { t: now, pid, d, k: 1 } : { t: now, pid, d };
+    log.push(e);
+    return e;
+  }
+
+  // Take one change back out of the log. Returns where it was, so Undo can put it back.
+  function removeEntry(e) {
+    const log = state.game.log;
+    const i = log.indexOf(e);
+    if (i < 0) return -1;
+    log.splice(i, 1);
+    const p = find(e.pid);
+    if (p) p.score -= e.d;
+    save();
+    return i;
+  }
+
+  function restoreEntry(e, i) {
+    const log = state.game.log;
+    log.splice(Math.min(i, log.length), 0, e);
+    const p = find(e.pid);
+    if (p) p.score += e.d;
+    save();
+  }
+
+  // ---------- Colour ----------
+
+  const rgb = (hex) => { const n = parseInt(hex.slice(1), 16); return [n >> 16, (n >> 8) & 255, n & 255]; };
+  function luminance([r, g, b]) {
+    const ch = [r, g, b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  }
+
+  // Light colours (yellow, green, teal) take dark text, as in the reference.
+  const isLight = (hex) => luminance(rgb(hex)) > 0.45;
+
+  // Chart lines sit on black: lift dark colours (navy) until they clear 3:1.
+  function lineColor(hex) {
+    let c = rgb(hex);
+    for (let i = 0; i < 12 && luminance(c) < 0.12; i++) c = c.map((v) => v + (255 - v) * 0.15);
+    return '#' + c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('');
+  }
+
+  function nextColor() {
+    const used = new Set(state.players.map((p) => p.color));
+    return COLORS.find((c) => !used.has(c)) || COLORS[state.players.length % COLORS.length];
+  }
+
+  function nextName() {
+    const taken = new Set(state.players.map((p) => p.name));
+    let n = state.players.length + 1;
+    while (taken.has('Player ' + n)) n++;
+    return 'Player ' + n;
+  }
+
+  // A true minus sign reads better than a hyphen at display sizes.
+  const fmt = (n) => (n < 0 ? '−' + Math.abs(n) : String(n));
+  const signed = (n) => (n > 0 ? '+' + n : fmt(n));
+  const clock = (t) => new Date(t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+
+  function haptic() { if (navigator.vibrate) navigator.vibrate(8); }
+
+  const live = $('#live');
+  function announce(text) { live.textContent = text; }
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+  // ---------- Board ----------
+
+  const countersEl = $('#counters');
+  const emptyEl = $('#empty');
+
+  function layoutFor(count) {
+    const pref = state.settings.layout;
+    if (pref !== 'auto') return pref;
+    return count <= CARD_LIMIT ? 'cards' : 'list';
+  }
+
+  function renderBoard(opts = {}) {
+    const players = state.players;
+    emptyEl.hidden = players.length > 0;
+    countersEl.hidden = players.length === 0;
+    const layout = layoutFor(players.length);
+    const two = layout === 'list' && players.length > 5;
+    screens.board.dataset.layout = layout;
+    screens.board.toggleAttribute('data-two', two);
+    countersEl.className = 'counters ' + layout + (two ? ' two' : '');
+    countersEl.replaceChildren(...players.map((p) => counterEl(p, layout, p.id === opts.added)));
+  }
+
+  const scoreLabel = (p) => `${p.name}, ${fmt(p.score)}. Type points`;
+
+  function counterEl(p, layout, added) {
+    const el = document.createElement('div');
+    el.className = 'counter ' + (layout === 'cards' ? 'card' : 'row') + (isLight(p.color) ? ' ink' : '') + (added && !reduceMotion.matches ? ' bump-in' : '');
+    el.style.setProperty('--c', p.color);
+    el.dataset.id = p.id;
+    const name = esc(p.name);
+    const score = `<button class="score" data-entry aria-label="${esc(scoreLabel(p))}" style="--n:${fmt(p.score).length}">${fmt(p.score)}</button>`;
+    if (layout === 'cards') {
+      el.innerHTML =
+        `<div class="head">
+          <button class="name-btn" data-edit aria-label="Edit ${name}">${name}</button>
+          <span class="delta" aria-hidden="true"></span><span class="grow"></span>
+          <button class="more" data-edit aria-label="Edit ${name}"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="body">
+          <button class="zone dec" data-step="-1" aria-label="Take a point from ${name}"><svg class="glyph"><use href="#i-minus"/></svg></button>
+          <button class="zone inc" data-step="1" aria-label="Give ${name} a point"><svg class="glyph"><use href="#i-plus"/></svg></button>
+          <div class="score-wrap">${score}</div>
+        </div>`;
+    } else {
+      el.innerHTML =
+        `<button class="name-btn" data-edit aria-label="Edit ${name}"><span>${name}</span><span class="delta" aria-hidden="true"></span></button>
+        <button class="step" data-step="-1" aria-label="Take a point from ${name}"><svg class="glyph"><use href="#i-minus"/></svg></button>
+        ${score}
+        <button class="step" data-step="1" aria-label="Give ${name} a point"><svg class="glyph"><use href="#i-plus"/></svg></button>`;
+    }
+    return el;
+  }
+
+  // Running total of recent changes, shown next to the name ("+3") so you can check what you just added.
+  const deltas = new Map();
+
+  function addPoints(id, amount, typed = false) {
+    const p = find(id);
+    if (!p || !amount) return null;
+    p.score += amount;
+    const entry = record(id, amount, typed);
+    save();
+    showChange(p, amount);
+    haptic();
+    return entry;
+  }
+
+  function showChange(p, amount) {
+    announce(`${p.name} ${fmt(p.score)}`);
+    const el = countersEl.querySelector(`[data-id="${p.id}"]`);
+    if (!el) return;
+    const scoreEl = el.querySelector('.score');
+    scoreEl.textContent = fmt(p.score);
+    scoreEl.style.setProperty('--n', fmt(p.score).length);
+    scoreEl.setAttribute('aria-label', scoreLabel(p));
+    if (!reduceMotion.matches) {
+      scoreEl.classList.remove('bump');
+      void scoreEl.offsetWidth;
+      scoreEl.classList.add('bump');
+    }
+    const d = deltas.get(p.id) || { total: 0, timer: 0 };
+    d.total += amount;
+    clearTimeout(d.timer);
+    const chip = el.querySelector('.delta');
+    chip.textContent = d.total === 0 ? '±0' : signed(d.total);
+    chip.classList.add('show');
+    d.timer = setTimeout(() => { chip.classList.remove('show'); deltas.delete(p.id); }, MERGE_MS);
+    deltas.set(p.id, d);
+  }
+
+  // Tap to step once; hold to keep stepping, faster the longer you hold.
+  let hold = null;
+  countersEl.addEventListener('pointerdown', (e) => {
+    const btn = e.target.closest('[data-step]');
+    if (!btn || e.button > 0) return;
+    const id = btn.closest('.counter').dataset.id;
+    const dir = Number(btn.dataset.step);
+    hold = { btn, x: e.clientX, y: e.clientY, fired: false, timer: 0, count: 0 };
+    const tick = () => {
+      hold.fired = true;
+      btn.classList.add('held');
+      addPoints(id, dir * state.settings.step);
+      hold.count++;
+      hold.timer = setTimeout(tick, Math.max(45, 160 - hold.count * 9));
+    };
+    hold.timer = setTimeout(tick, HOLD_DELAY);
+  });
+  const endHold = () => {
+    if (!hold) return;
+    clearTimeout(hold.timer);
+    hold.btn.classList.remove('held');
+    if (!hold.fired) hold = null;
+  };
+  countersEl.addEventListener('pointerup', endHold);
+  countersEl.addEventListener('pointercancel', () => { endHold(); hold = null; });
+  countersEl.addEventListener('pointerleave', endHold);
+  countersEl.addEventListener('pointermove', (e) => {
+    if (hold && !hold.fired && Math.hypot(e.clientX - hold.x, e.clientY - hold.y) > 12) { clearTimeout(hold.timer); hold = null; }
+  });
+  countersEl.addEventListener('contextmenu', (e) => { if (e.target.closest('[data-step]')) e.preventDefault(); });
+
+  countersEl.addEventListener('click', (e) => {
+    const step = e.target.closest('[data-step]');
+    if (step) {
+      // A hold already counted its points; swallow the click that ends it.
+      if (hold && hold.fired) { hold = null; return; }
+      hold = null;
+      addPoints(step.closest('.counter').dataset.id, Number(step.dataset.step) * state.settings.step);
+      return;
+    }
+    const entryBtn = e.target.closest('[data-entry]');
+    if (entryBtn) { openEntry(entryBtn.closest('.counter').dataset.id, entryBtn); return; }
+    const edit = e.target.closest('[data-edit]');
+    if (edit) openEdit(edit.closest('.counter').dataset.id);
+  });
+
+  $('#add').addEventListener('click', addCounter);
+  $('#add-first').addEventListener('click', addCounter);
+
+  function addCounter() {
+    const p = { id: uid(), name: nextName(), color: nextColor(), score: state.settings.start };
+    state.players.push(p);
+    state.game.base[p.id] = { score: p.score, t: Date.now() };
+    save();
+    justAdded = p.id;
+    openEdit(p.id, { isNew: true });
+  }
+
+  $('#reset').addEventListener('click', () => {
+    if (!state.players.length) return;
+    const start = state.settings.start;
+    const played = state.game.log.some((e) => find(e.pid));
+    if (!played && state.players.every((p) => p.score === start)) { toast('Scores are already at ' + fmt(start)); return; }
+    const before = { scores: new Map(state.players.map((p) => [p.id, p.score])), game: state.game };
+    state.players.forEach((p) => { p.score = start; });
+    state.game = newGame(state.players);
+    save();
+    renderBoard();
+    haptic();
+    toast('Scores reset', () => {
+      state.players.forEach((p) => { if (before.scores.has(p.id)) p.score = before.scores.get(p.id); });
+      state.game = before.game;
+      repairGame(state);
+      save();
+      renderBoard();
+    });
+  });
+
+  // ---------- Navigation (the phone's back gesture closes screens and the sheet) ----------
+
+  const screens = { board: $('#board'), edit: $('#edit'), settings: $('#settings'), history: $('#history') };
+  let current = 'board';
+  let justAdded = null;
+
+  function show(name) {
+    if (name === current) return;
+    for (const [key, el] of Object.entries(screens)) el.hidden = key !== name;
+    const el = screens[name];
+    el.classList.remove('push');
+    if (name !== 'board' && !reduceMotion.matches) { void el.offsetWidth; el.classList.add('push'); }
+    current = name;
+    if (name === 'board') { requestWake(); renderBoard({ added: justAdded }); justAdded = null; }
+    if (name === 'history') renderHistory();
+  }
+
+  function go(name) {
+    history.pushState({ screen: name }, '');
+    show(name);
+  }
+
+  addEventListener('popstate', (e) => {
+    if (entry && !(e.state && e.state.sheet)) closeEntry(true);
+    const target = (e.state && e.state.screen) || 'board';
+    if (current === 'edit' && target !== 'edit') commitEdit();
+    show(target);
+  });
+
+  document.querySelectorAll('[data-back]').forEach((b) => b.addEventListener('click', back));
+  function back() {
+    if (history.state && history.state.screen && history.state.screen !== 'board') history.back();
+    else { if (current === 'edit') commitEdit(); show('board'); }
+  }
+
+  addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (entry) { e.preventDefault(); closeEntry(); return; }
+    if (current !== 'board') { e.preventDefault(); back(); }
+  });
+
+  history.replaceState({ screen: 'board' }, '');
+
+  // ---------- Type points ----------
+
+  const entryWrap = $('#entry');
+  const entryInput = $('#entry-input');
+  const amountBox = $('#amount');
+  const subBtn = $('#entry-sub');
+  const addBtn = $('#entry-add');
+  let entry = null;
+
+  function openEntry(id, trigger) {
+    const p = find(id);
+    if (!p) return;
+    entry = { id, trigger };
+    $('#entry-name').textContent = p.name;
+    $('#entry-current').textContent = fmt(p.score);
+    amountBox.style.setProperty('--c', p.color);
+    amountBox.classList.toggle('ink', isLight(p.color));
+    entryInput.value = '';
+    paintEntry();
+    entryWrap.hidden = false;
+    fitSheet();
+    // Focus inside the tap so phones raise the number pad.
+    entryInput.focus({ preventScroll: true });
+    history.pushState({ screen: 'board', sheet: true }, '');
+  }
+
+  function closeEntry(fromPop) {
+    if (!entry) return;
+    const { trigger } = entry;
+    entry = null;
+    entryInput.blur();
+    entryWrap.hidden = true;
+    if (!fromPop && history.state && history.state.sheet) history.back();
+    if (trigger && trigger.isConnected) trigger.focus({ preventScroll: true });
+  }
+
+  const entryAmount = () => parseInt(entryInput.value.replace(/\D/g, ''), 10) || 0;
+
+  function paintEntry() {
+    const p = find(entry.id);
+    const n = entryAmount();
+    subBtn.disabled = addBtn.disabled = n === 0;
+    subBtn.firstElementChild.textContent = n ? `Subtract ${n}` : 'Subtract';
+    addBtn.firstElementChild.textContent = n ? `Add ${n}` : 'Add';
+    subBtn.lastElementChild.textContent = `→ ${fmt(p.score - n)}`;
+    addBtn.lastElementChild.textContent = `→ ${fmt(p.score + n)}`;
+  }
+
+  // Digits only, with an optional leading minus for keyboards that have one.
+  entryInput.addEventListener('input', () => {
+    const v = entryInput.value;
+    const clean = (/^\s*[-−]/.test(v) ? '-' : '') + v.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 6);
+    if (clean !== v) entryInput.value = clean;
+    paintEntry();
+  });
+
+  entryInput.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    applyEntry(e.shiftKey || entryInput.value.startsWith('-') ? -1 : 1);
+  });
+
+  $('#entry-form').addEventListener('submit', (e) => { e.preventDefault(); applyEntry(1); });
+  subBtn.addEventListener('click', () => applyEntry(-1));
+  entryWrap.querySelectorAll('[data-close]').forEach((b) => b.addEventListener('click', () => closeEntry()));
+
+  function applyEntry(sign) {
+    if (!entry) return;
+    const n = entryAmount();
+    if (!n) return;
+    const p = find(entry.id);
+    closeEntry();
+    const e = addPoints(p.id, sign * n, true);
+    toast(sign > 0 ? `Added ${n} to ${p.name}` : `Subtracted ${n} from ${p.name}`, () => {
+      if (removeEntry(e) >= 0) renderBoard();
+    });
+  }
+
+  // Keep the sheet on top of the on-screen keyboard.
+  const vv = window.visualViewport;
+  function fitSheet() {
+    if (!vv || entryWrap.hidden) return;
+    entryWrap.style.top = vv.offsetTop + 'px';
+    entryWrap.style.height = vv.height + 'px';
+    entryWrap.classList.toggle('kb', innerHeight - vv.height > 120);
+  }
+  if (vv) { vv.addEventListener('resize', fitSheet); vv.addEventListener('scroll', fitSheet); }
+
+  // ---------- Edit ----------
+
+  const nameInput = $('#name');
+  const scoreInput = $('#score');
+  const preview = $('#preview');
+  const swatchesEl = $('#swatches');
+  let editing = null;
+
+  swatchesEl.innerHTML =
+    COLORS.map((c, i) => `<button type="button" class="swatch" data-color="${c}" style="--c:${c}" aria-label="${COLOR_NAMES[i]}"></button>`).join('') +
+    `<label class="swatch custom"><input type="color" id="custom-color" aria-label="Pick any colour"></label>`;
+  const customInput = $('#custom-color');
+  const customSwatch = customInput.parentElement;
+
+  function openEdit(id, opts = {}) {
+    const p = find(id);
+    if (!p) return;
+    editing = { id, isNew: !!opts.isNew };
+    nameInput.value = p.name;
+    scoreInput.value = p.score;
+    paintEdit(p);
+    go('edit');
+    // Focus straight away so phones raise the keyboard inside the tap.
+    nameInput.focus({ preventScroll: true });
+    if (opts.isNew) nameInput.select();
+  }
+
+  function paintEdit(p) {
+    preview.style.setProperty('--c', p.color);
+    preview.classList.toggle('ink', isLight(p.color));
+    let matched = false;
+    swatchesEl.querySelectorAll('[data-color]').forEach((s) => {
+      const on = s.dataset.color === p.color;
+      matched = matched || on;
+      s.setAttribute('aria-pressed', on);
+    });
+    customSwatch.classList.toggle('on', !matched);
+    customInput.value = p.color;
+  }
+
+  function commitEdit() {
+    if (!editing) return;
+    const p = find(editing.id);
+    if (p) {
+      const name = nameInput.value.trim();
+      p.name = name || p.name;
+      const n = parseInt(scoreInput.value, 10);
+      if (Number.isFinite(n) && n !== p.score) {
+        record(p.id, n - p.score, true);
+        p.score = n;
+      }
+      save();
+    }
+    editing = null;
+    nameInput.blur();
+  }
+
+  preview.addEventListener('submit', (e) => { e.preventDefault(); back(); });
+
+  swatchesEl.addEventListener('click', (e) => {
+    const s = e.target.closest('[data-color]');
+    if (!s || !editing) return;
+    const p = find(editing.id);
+    p.color = s.dataset.color;
+    save();
+    paintEdit(p);
+  });
+
+  customInput.addEventListener('input', () => {
+    if (!editing) return;
+    const p = find(editing.id);
+    p.color = customInput.value;
+    save();
+    paintEdit(p);
+  });
+
+  document.querySelectorAll('[data-nudge]').forEach((b) => b.addEventListener('click', () => {
+    const n = (parseInt(scoreInput.value, 10) || 0) + Number(b.dataset.nudge) * state.settings.step;
+    scoreInput.value = n;
+  }));
+
+  $('#delete').addEventListener('click', () => {
+    if (!editing) return;
+    const idx = state.players.findIndex((p) => p.id === editing.id);
+    const removed = state.players[idx];
+    state.players.splice(idx, 1);
+    editing = null;
+    save();
+    back();
+    toast(`Deleted ${removed.name}`, () => {
+      state.players.splice(Math.min(idx, state.players.length), 0, removed);
+      save();
+      renderBoard();
+    });
+  });
+
+  // ---------- History ----------
+
+  const chartEl = $('#chart');
+  const legendEl = $('#legend');
+  const changesEl = $('#changes');
+  const readoutEl = $('#readout');
+  let chart = null;
+  let picked = null;
+
+  $('#open-history').addEventListener('click', () => { picked = null; go('history'); });
+
+  // Each player's score as steps: [time, score] from when they joined to the latest change.
+  function buildSeries() {
+    const g = state.game;
+    return state.players.map((p) => {
+      const b = g.base[p.id] || { score: p.score, t: g.startedAt };
+      const pts = [[b.t, b.score]];
+      let v = b.score;
+      for (const e of g.log) if (e.pid === p.id) { v += e.d; pts.push([e.t, v]); }
+      return { p, pts, color: lineColor(p.color) };
+    });
+  }
+
+  function valueAt(s, t) {
+    if (t < s.pts[0][0]) return null;
+    let v = s.pts[0][1];
+    for (const [pt, pv] of s.pts) { if (pt > t) break; v = pv; }
+    return v;
+  }
+
+  function renderHistory() {
+    const series = buildSeries();
+    const changes = state.game.log.filter((e) => find(e.pid));
+    const hasData = changes.length > 0;
+    $('#history-body').hidden = !hasData;
+    $('#history-empty').hidden = hasData;
+    if (!hasData) { chart = null; return; }
+    if (picked && !find(picked)) picked = null;
+    drawChart(series);
+    renderLegend();
+    paintPicked();
+    renderChanges(changes);
+  }
+
+  let measureCtx = null;
+  function textWidth(text, size = 12) {
+    measureCtx = measureCtx || document.createElement('canvas').getContext('2d');
+    measureCtx.font = `${size}px ${getComputedStyle(document.body).fontFamily}`;
+    return measureCtx.measureText(text).width;
+  }
+
+  function niceTicks(min, max, count) {
+    if (min === max) { min -= 1; max += 1; }
+    const raw = (max - min) / count;
+    const mag = 10 ** Math.floor(Math.log10(raw));
+    const step = Math.max(1, [1, 2, 5, 10].map((m) => m * mag).find((v) => v >= raw));
+    const lo = Math.floor(min / step) * step;
+    const hi = Math.ceil(max / step) * step;
+    const ticks = [];
+    for (let v = lo; v <= hi + step / 2; v += step) ticks.push(v);
+    return ticks;
+  }
+
+  const TIME_STEPS = [10e3, 15e3, 30e3, 60e3, 120e3, 300e3, 600e3, 900e3, 1800e3, 3600e3, 7200e3, 10800e3, 21600e3, 43200e3, 86400e3];
+  function elapsedLabel(ms, step) {
+    if (ms === 0) return 'Start';
+    if (step < 60e3) return `${Math.floor(ms / 60e3)}:${String(Math.round(ms / 1e3) % 60).padStart(2, '0')}`;
+    if (ms < 3600e3) return `${Math.round(ms / 60e3)} min`;
+    const h = Math.floor(ms / 3600e3);
+    const m = Math.round((ms % 3600e3) / 60e3);
+    return m ? `${h} h ${m}` : `${h} h`;
+  }
+
+  function drawChart(series) {
+    const W = Math.max(280, chartEl.clientWidth);
+    const H = W < 520 ? 230 : 300;
+    const all = series.flatMap((s) => s.pts);
+    const tMin = Math.min(...series.map((s) => s.pts[0][0]));
+    const tMax = Math.max(tMin + 10e3, ...all.map((p) => p[0]));
+    const yTicks = niceTicks(Math.min(...all.map((p) => p[1])), Math.max(...all.map((p) => p[1])), H < 260 ? 5 : 6);
+    const lo = yTicks[0];
+    const hi = yTicks[yTicks.length - 1];
+    const top = 12;
+    const bottom = 30;
+    const left = Math.ceil(Math.max(...yTicks.map((v) => textWidth(fmt(v))))) + 12;
+    const Y = (v) => top + (hi - v) / (hi - lo) * (H - top - bottom);
+
+    // Name each line at its end when there are few players and the ends don't crowd each other.
+    const names = series.map((s) => (s.p.name.length > 12 ? s.p.name.slice(0, 11) + '…' : s.p.name));
+    const ends = series.map((s) => Y(s.pts[s.pts.length - 1][1])).sort((a, b) => a - b);
+    const labelEnds = series.length <= 4 && ends.every((y, i) => i === 0 || y - ends[i - 1] >= 16);
+    const right = labelEnds ? Math.ceil(Math.max(...names.map((n) => textWidth(n, 13)))) + 16 : 10;
+    const X = (t) => left + (t - tMin) / (tMax - tMin) * (W - left - right);
+    const x1 = W - right;
+
+    let svg = '';
+    for (const v of yTicks) {
+      const y = Math.round(Y(v)) + 0.5;
+      svg += `<line x1="${left}" x2="${x1}" y1="${y}" y2="${y}" stroke="${v === 0 && lo < 0 ? '#48484a' : '#2c2c2e'}" stroke-width="1"/>`;
+      svg += `<text x="${left - 10}" y="${y}" text-anchor="end" dominant-baseline="middle">${fmt(v)}</text>`;
+    }
+    const maxTicks = Math.max(2, Math.floor((x1 - left) / 72));
+    const span = tMax - tMin;
+    const step = TIME_STEPS.find((c) => span / c <= maxTicks) || 86400e3;
+    // Labels never collide: one that would hang off the right edge is right-aligned, or skipped if that still overlaps.
+    let prevEnd = -Infinity;
+    for (let k = 0; k * step <= span; k++) {
+      const x = X(tMin + k * step);
+      const label = elapsedLabel(k * step, step);
+      const w = textWidth(label);
+      let anchor = k === 0 ? 'start' : 'middle';
+      let from = k === 0 ? x : x - w / 2;
+      if (k > 0 && from + w > W) { anchor = 'end'; from = x - w; }
+      if (from < prevEnd + 10) continue;
+      svg += `<text x="${x}" y="${H - 8}" text-anchor="${anchor}">${label}</text>`;
+      prevEnd = from + w;
+    }
+    series.forEach((s, i) => {
+      let d = `M${X(s.pts[0][0]).toFixed(1)},${Y(s.pts[0][1]).toFixed(1)}`;
+      for (let j = 1; j < s.pts.length; j++) d += `H${X(s.pts[j][0]).toFixed(1)}V${Y(s.pts[j][1]).toFixed(1)}`;
+      d += `H${x1}`;
+      const endY = Y(s.pts[s.pts.length - 1][1]);
+      svg += `<g class="series" data-pid="${esc(s.p.id)}">
+        <path d="${d}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle cx="${x1}" cy="${endY}" r="4" fill="${s.color}" stroke="#000" stroke-width="2"/>
+        ${labelEnds ? `<text class="end" x="${x1 + 10}" y="${endY}" dominant-baseline="middle">${esc(names[i])}</text>` : ''}
+      </g>`;
+    });
+    svg += '<g id="cross"></g>';
+    chartEl.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true">${svg}</svg>`;
+
+    const times = [...new Set(all.map((p) => p[0]))].sort((a, b) => a - b);
+    chart = { series, times, X, Y, top, bottom: H - bottom, left, right: x1, W, focus: null };
+    paintPicked();
+  }
+
+  // Crosshair: snaps to the nearest change; the legend shows every player's score at that moment.
+  function setFocus(t) {
+    if (!chart) return;
+    chart.focus = t;
+    const cross = chartEl.querySelector('#cross');
+    if (t == null) {
+      cross.innerHTML = '';
+    } else {
+      const x = chart.X(t);
+      let g = `<line x1="${x}" x2="${x}" y1="${chart.top}" y2="${chart.bottom}" stroke="#8e8e93" stroke-width="1"/>`;
+      for (const s of chart.series) {
+        const v = valueAt(s, t);
+        if (v != null && (!picked || picked === s.p.id)) g += `<circle cx="${x}" cy="${chart.Y(v)}" r="4" fill="${s.color}" stroke="#000" stroke-width="2"/>`;
+      }
+      cross.innerHTML = g;
+    }
+    paintLegendValues();
+  }
+
+  function timeFromPointer(e) {
+    const box = chartEl.getBoundingClientRect();
+    const scale = chart.W / box.width;
+    const x = (e.clientX - box.left) * scale;
+    let best = chart.times[0];
+    for (const t of chart.times) if (Math.abs(chart.X(t) - x) < Math.abs(chart.X(best) - x)) best = t;
+    return best;
+  }
+
+  chartEl.addEventListener('pointerdown', (e) => { if (chart) setFocus(timeFromPointer(e)); });
+  chartEl.addEventListener('pointermove', (e) => { if (chart && (e.pointerType === 'mouse' || e.buttons)) setFocus(timeFromPointer(e)); });
+  chartEl.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') setFocus(null); });
+  chartEl.addEventListener('keydown', (e) => {
+    if (!chart) return;
+    const i = chart.focus == null ? chart.times.length : chart.times.indexOf(chart.focus);
+    const last = chart.times.length - 1;
+    let next;
+    if (e.key === 'ArrowLeft') next = Math.max(0, i - 1);
+    else if (e.key === 'ArrowRight') next = Math.min(last, i + 1);
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = last;
+    else if (e.key === 'Escape' && chart.focus != null) { e.stopPropagation(); setFocus(null); return; }
+    else return;
+    e.preventDefault();
+    setFocus(chart.times[next]);
+  });
+
+  new ResizeObserver(() => {
+    if (current !== 'history' || !chart || Math.abs(chartEl.clientWidth - chart.W) <= 1) return;
+    drawChart(buildSeries());
+    paintLegendValues();
+  }).observe(chartEl);
+
+  // Standings double as the legend: sorted by current score, values follow the crosshair.
+  // Built once per render and then updated in place, so a tap never lands on a replaced button.
+  function renderLegend() {
+    const rows = chart.series.slice().sort((a, b) => b.p.score - a.p.score);
+    legendEl.innerHTML = rows.map((s) =>
+      `<li><button data-pid="${esc(s.p.id)}" aria-pressed="false">
+        <span class="key" style="--c:${s.color}"></span><span>${esc(s.p.name)}</span><span class="val"></span>
+      </button></li>`).join('');
+    paintLegendValues();
+  }
+
+  function paintLegendValues() {
+    if (!chart) return;
+    const t = chart.focus;
+    readoutEl.textContent = t == null ? 'Scores now' : `Scores at ${clock(t)}`;
+    for (const b of legendEl.querySelectorAll('[data-pid]')) {
+      const s = chart.series.find((x) => x.p.id === b.dataset.pid);
+      const v = t == null ? s.p.score : valueAt(s, t);
+      b.querySelector('.val').textContent = v == null ? '–' : fmt(v);
+    }
+  }
+
+  legendEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-pid]');
+    if (!b) return;
+    picked = picked === b.dataset.pid ? null : b.dataset.pid;
+    paintPicked();
+    setFocus(chart.focus);
+  });
+
+  function paintPicked() {
+    chartEl.querySelectorAll('.series').forEach((g) => {
+      g.classList.toggle('dim', !!picked && g.dataset.pid !== picked);
+      if (g.dataset.pid === picked) g.parentNode.insertBefore(g, chartEl.querySelector('#cross'));
+    });
+    legendEl.classList.toggle('picked', !!picked);
+    legendEl.querySelectorAll('[data-pid]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.pid === picked));
+    $('#readout-hint').textContent = picked ? 'Tap again to show everyone' : 'Tap a name to pick out their line';
+  }
+
+  // The table twin of the chart: newest change first, with the score it left.
+  function renderChanges(changes) {
+    const totals = new Map();
+    const rows = [];
+    for (const e of changes) {
+      const base = state.game.base[e.pid] ? state.game.base[e.pid].score : 0;
+      const v = (totals.has(e.pid) ? totals.get(e.pid) : base) + e.d;
+      totals.set(e.pid, v);
+      rows.push([e, v]);
+    }
+    const log = state.game.log;
+    changesEl.innerHTML = rows.reverse().map(([e, v]) => {
+      const p = find(e.pid);
+      return `<tr>
+        <td><span class="dot" style="--c:${lineColor(p.color)}"></span>${esc(p.name)}</td>
+        <td class="when">${clock(e.t)}</td>
+        <td class="num amt">${signed(e.d)}</td>
+        <td class="num">${fmt(v)}</td>
+        <td class="x"><button data-i="${log.indexOf(e)}" aria-label="Remove ${signed(e.d)} for ${esc(p.name)} at ${clock(e.t)}"><svg><use href="#i-close"/></svg></button></td>
+      </tr>`;
+    }).join('') + `<tr class="start"><td>Game started</td><td class="when">${clock(state.game.startedAt)}</td><td></td><td></td><td></td></tr>`;
+  }
+
+  changesEl.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-i]');
+    if (!b) return;
+    const entryObj = state.game.log[Number(b.dataset.i)];
+    if (!entryObj) return;
+    const p = find(entryObj.pid);
+    const i = removeEntry(entryObj);
+    renderHistory();
+    toast(`Removed ${signed(entryObj.d)} for ${p.name}`, () => { restoreEntry(entryObj, i); if (current === 'history') renderHistory(); });
+  });
+
+  // ---------- Settings ----------
+
+  $('#open-settings').addEventListener('click', () => { paintSettings(); go('settings'); });
+
+  function paintSettings() {
+    document.querySelectorAll('[data-setting]').forEach((group) => {
+      const value = String(state.settings[group.dataset.setting]);
+      group.querySelectorAll('[data-value]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.value === value));
+    });
+    $('#start').value = state.settings.start;
+    $('#awake').checked = state.settings.awake;
+  }
+
+  document.querySelectorAll('[data-setting]').forEach((group) => group.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-value]');
+    if (!b) return;
+    const key = group.dataset.setting;
+    state.settings[key] = key === 'step' ? Number(b.dataset.value) : b.dataset.value;
+    save();
+    paintSettings();
+  }));
+
+  const startInput = $('#start');
+  startInput.addEventListener('change', () => {
+    const n = parseInt(startInput.value, 10);
+    state.settings.start = Number.isFinite(n) ? n : 0;
+    save();
+    paintSettings();
+  });
+  document.querySelectorAll('[data-start-nudge]').forEach((b) => b.addEventListener('click', () => {
+    state.settings.start += Number(b.dataset.startNudge);
+    save();
+    paintSettings();
+  }));
+
+  $('#awake').addEventListener('change', (e) => {
+    state.settings.awake = e.target.checked;
+    save();
+    if (state.settings.awake) requestWake(); else releaseWake();
+  });
+  if (!('wakeLock' in navigator)) {
+    $('#awake').disabled = true;
+    $('#awake-note').textContent = 'This browser can’t keep the screen on.';
+  }
+
+  $('#sort').addEventListener('click', () => {
+    const before = state.players.slice();
+    state.players.sort((a, b) => b.score - a.score);
+    save();
+    back();
+    toast('Sorted by score', () => { state.players = before; save(); renderBoard(); });
+  });
+
+  $('#clear').addEventListener('click', () => {
+    if (!state.players.length) { back(); return; }
+    const before = state.players.slice();
+    state.players = [];
+    save();
+    back();
+    toast('Deleted all counters', () => { state.players = before; save(); renderBoard(); });
+  });
+
+  // ---------- Keep the screen on ----------
+
+  let wake = null;
+  async function requestWake() {
+    if (!state.settings.awake || !('wakeLock' in navigator) || wake || document.visibilityState !== 'visible') return;
+    try {
+      wake = await navigator.wakeLock.request('screen');
+      wake.addEventListener('release', () => { wake = null; });
+    } catch (_) { wake = null; }
+  }
+  function releaseWake() { if (wake) wake.release(); wake = null; }
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') requestWake(); });
+  // Some browsers only grant the lock after a tap.
+  addEventListener('pointerdown', requestWake, { passive: true });
+
+  // ---------- Toast ----------
+
+  const toastEl = $('#toast');
+  let toastTimer = 0;
+  let undoFn = null;
+  function toast(text, undo) {
+    $('#toast-text').textContent = text;
+    undoFn = undo || null;
+    $('#toast-undo').hidden = !undo;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, undo ? 5000 : 2200);
+  }
+  function hideToast() { toastEl.classList.remove('show'); undoFn = null; }
+  $('#toast-undo').addEventListener('click', () => { const fn = undoFn; hideToast(); if (fn) fn(); });
+
+  // Another tab changed the scores: follow it.
+  addEventListener('storage', (e) => {
+    if (e.key !== KEY) return;
+    state = load();
+    if (current === 'board') renderBoard();
+    if (current === 'history') renderHistory();
+  });
+
+  renderBoard();
+  requestWake();
+  // Works offline once loaded (see sw.js). Fails quietly when opened as a file.
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

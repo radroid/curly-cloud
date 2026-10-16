@@ -19,6 +19,7 @@ bun run test             # Vitest (D1 emulated with node:sqlite)
 bun run typecheck        # tsc --noEmit
 bun run preview          # OpenNext build + wrangler dev (closest to production)
 bun run deploy           # Build and deploy to Cloudflare (curlycloud.dev, live)
+bun run counter:deploy   # Deploy the score counter (counter.curlycloud.dev, live; Workers Builds skips it)
 bun run db:migrate:local # Apply migrations/ to the local D1
 bun run cf-typegen       # Regenerate cloudflare-env.d.ts after editing wrangler.jsonc
 bun run clone:seed       # Load the public resume into the knowledge base
@@ -46,6 +47,7 @@ isolated end-to-end check use `bun run preview` on another port, and stop it whe
 - `content/` — public data: `resume.ts` (single source for site, terminal, MCP, public corpus), `topics.ts`, `questions/`.
 - `interview/raj-interview.html` — standalone interview stack. Answers export to `private/` (gitignored).
 - `migrations/` — D1 schema. `test/helpers/d1.ts` runs the same SQL in tests.
+- `counter/` — the score counter at counter.curlycloud.dev: one static page (`public/index.html`) on its own Worker, `score-counter`. Scores stay in the visitor's localStorage. `bun run counter:dev` serves it on port 8790.
 
 ## Privacy rules (don't break these)
 

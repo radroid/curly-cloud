@@ -1,0 +1,16 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  // The score counter at counter.curlycloud.dev: static files, no Worker code. Workers Builds deploys
+  // only the main site, so ship changes here with `bun run counter:deploy`.
+  "name": "score-counter",
+  "compatibility_date": "2025-12-19",
+  "assets": { "directory": "./public" },
+  "routes": [
+    {
+      "pattern": "counter.curlycloud.dev",
+      "custom_domain": true
+    }
+  ],
+  "workers_dev": false,
+  "preview_urls": false
+}
