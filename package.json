@@ -6,6 +6,8 @@
     "cloud-build": "opennextjs-cloudflare build",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "counter:dev": "wrangler dev --config counter/wrangler.jsonc --port 8790",
+    "counter:deploy": "wrangler deploy --config counter/wrangler.jsonc",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "start": "next start",
     "typecheck": "tsc --noEmit",
